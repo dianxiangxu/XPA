@@ -1,0 +1,37 @@
+
+Changes made to Balana
+
+Condition.java
+	public Expression getExpression() {
+		return expression;
+	}
+
+AnyOfSelection.java
+	public Object getAllOfSelections() {
+		return allOfSelections;
+	}
+
+AllOfSelection.java
+	public List<TargetMatch> getMatches() {
+		return matches;
+	}
+
+TargetMatch.java
+	public Evaluatable getEval() {
+		return eval;
+	}
+
+	public AttributeValue getAttrValue() {
+		return attrValue;
+	}
+
+Apply.java
+	public List getList() {
+		return xprs;
+	}
+
+FileBasedPolicyFinderModule.java
+	public Map<URI, AbstractPolicy> getPolicies() {
+		return policies;
+	}
+    

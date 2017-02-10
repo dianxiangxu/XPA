@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><xacml-ctx:Request ReturnPolicyIdList="true" CombinedDecision="false" xmlns:xacml-ctx="urn:oasis:names:tc:xacml:3.0:core:schema:wd-17">
+   <xacml-ctx:Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:action" >
+      <xacml-ctx:Attribute AttributeId="com.axiomatics.hl7.action.id" IncludeInResult="true">
+         <xacml-ctx:AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">update</xacml-ctx:AttributeValue>
+      </xacml-ctx:Attribute>
+   </xacml-ctx:Attributes>
+   <xacml-ctx:Attributes Category="urn:oasis:names:tc:xacml:1.0:subject-category:access-subject" >
+      <xacml-ctx:Attribute AttributeId="com.axiomatics.hl7.user.role" IncludeInResult="true">
+         <xacml-ctx:AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">physician</xacml-ctx:AttributeValue>
+      </xacml-ctx:Attribute>
+      <xacml-ctx:Attribute AttributeId="com.axiomatics.hl7.user.requestorId" IncludeInResult="true">
+         <xacml-ctx:AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">123</xacml-ctx:AttributeValue>
+      </xacml-ctx:Attribute>
+   </xacml-ctx:Attributes>
+   <xacml-ctx:Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:resource" >
+      <xacml-ctx:Attribute AttributeId="com.axiomatics.hl7.patient.primaryPhysician" IncludeInResult="true">
+         <xacml-ctx:AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">123</xacml-ctx:AttributeValue>
+      </xacml-ctx:Attribute>
+      <xacml-ctx:Attribute AttributeId="com.axiomatics.hl7.object.objectType" IncludeInResult="true">
+         <xacml-ctx:AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">progress note</xacml-ctx:AttributeValue>
+      </xacml-ctx:Attribute>
+      <xacml-ctx:Attribute AttributeId="com.axiomatics.hl7.object.author" IncludeInResult="true">
+         <xacml-ctx:AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">123</xacml-ctx:AttributeValue>
+      </xacml-ctx:Attribute>
+   </xacml-ctx:Attributes>
+   <xacml-ctx:Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:environment" >
+   </xacml-ctx:Attributes>
+</xacml-ctx:Request>

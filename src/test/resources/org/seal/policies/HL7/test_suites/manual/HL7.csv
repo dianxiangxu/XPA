@@ -1,0 +1,10 @@
+admissionClerkMedicalRecordAccess.xml,NotApplicable
+alternatePrivilegedHealthcareProfessionalAccess.xml,Permit
+clinicalObjectAccess.xml,Permit
+createAssessment.xml,Permit
+createNote.xml,Permit
+healthRelatedProfessionalAccess.xml,Permit
+physicianAccessMedicalRecords.xml,Permit
+readPaymentHistory.xml,Permit
+updateCarePlan.xml,Permit
+updateNote.xml,Permit

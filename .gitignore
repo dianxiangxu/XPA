@@ -1,0 +1,199 @@
+.gitignore.swp
+.gitignore~
+
+#project specific ignores
+Z3_input
+Z3_output
+
+Z3-str/str
+Z3-str/z3/bin/
+Z3-str/z3/lib.srcs
+Z3-str/z3/obj/
+Z3-str/z3/shell.srcs
+
+#ignore temprorary experiment result files
+experiments/
+Experiments/*
+!Experiments/conference3/
+Experiments/conference3/*
+!Experiments/conference3/conference3.xml
+
+!Experiments/conference3-fa-wdeny/
+Experiments/conference3-fa-wdeny/*
+!Experiments/conference3-fa-wdeny/conference3-fa-wdeny.xml
+
+!Experiments/conference3-dup/
+Experiments/conference3-dup/*
+!Experiments/conference3-dup/conference3-dup.xml
+
+!Experiments/conference3-pud/
+Experiments/conference3-pud/*
+!Experiments/conference3-pud/conference3-pud.xml
+
+!Experiments/fedora-rule3/
+Experiments/fedora-rule3/*
+!Experiments/fedora-rule3/fedora-rule3.xml
+
+!Experiments/fedora-rule3-po/
+Experiments/fedora-rule3-po/*
+!Experiments/fedora-rule3-po/fedora-rule3-po.xml
+
+!Experiments/itrust3/
+Experiments/itrust3/*
+!Experiments/itrust3/itrust3.xml
+
+!Experiments/itrust3-10/
+Experiments/itrust3-10/*
+!Experiments/itrust3-10/itrust3-10.xml
+
+!Experiments/itrust3-20/
+Experiments/itrust3-20/*
+!Experiments/itrust3-20/itrust3-20.xml
+
+!Experiments/itrust3-40/
+Experiments/itrust3-40/*
+!Experiments/itrust3-40/itrust3-40.xml
+
+!Experiments/itrust3-5/
+Experiments/itrust3-5/*
+!Experiments/itrust3-5/itrust3-5.xml
+
+!Experiments/kmarket-blue-policy/
+Experiments/kmarket-blue-policy/*
+!Experiments/kmarket-blue-policy/kmarket-blue-policy.xml
+
+!Experiments/kmarket-gold-policy/
+Experiments/kmarket-gold-policy/*
+!Experiments/kmarket-gold-policy/kmarket-gold-policy.xml
+
+!Experiments/kmarket-sliver-policy/
+Experiments/kmarket-sliver-policy/*
+!Experiments/kmarket-sliver-policy/kmarket-sliver-policy.xml
+
+!Experiments/obligation3/
+Experiments/obligation3/*
+!Experiments/obligation3/obligation3.xml
+
+!Experiments/pluto3/
+Experiments/pluto3/*
+!Experiments/pluto3/pluto3.xml
+
+!Experiments/Simpson1/
+Experiments/Simpson1/*
+!Experiments/Simpson1/Simpson1.xml
+
+!Experiments/Simpson2/
+Experiments/Simpson2/*
+!Experiments/Simpson2/Simpson2.xml
+
+#ignore cpp temporary files
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+#ignore java temporary files
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+#intelliJ files
+xpa.iml
+.idea/
+
+#maven files
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Exclude maven wrapper
+!/.mvn/wrapper/maven-wrapper.jar
+
+#eclipse files
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# Eclipse Core
+.project
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# PyDev specific (Python IDE for Eclipse)
+*.pydevproject
+
+# CDT-specific (C/C++ Development Tooling)
+.cproject
+
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific (PHP Development Tools)
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# Tern plugin
+.tern-project
+
+# TeXlipse plugin
+.texlipse
+
+# STS (Spring Tool Suite)
+.springBeans
+

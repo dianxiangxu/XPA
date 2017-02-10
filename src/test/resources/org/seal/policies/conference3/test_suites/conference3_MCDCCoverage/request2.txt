@@ -1,0 +1,12 @@
+<Request xmlns="urn:oasis:names:tc:xacml:3.0:core:schema:wd-17" CombinedDecision="false" ReturnPolicyIdList="false">
+<Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:action">
+<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">write</AttributeValue>
+</Attribute>
+</Attributes>
+<Attributes Category="oz0k8e64id">
+<Attribute AttributeId="sw3jor1h3g" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">Indeterminate</AttributeValue>
+</Attribute>
+</Attributes>
+</Request>
