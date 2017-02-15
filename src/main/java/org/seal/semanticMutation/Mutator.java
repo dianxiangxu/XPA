@@ -137,7 +137,8 @@ public class Mutator {
         }
         List<Node> childNodes = getChildNodeList(node);
         for (Node child : childNodes) {
-            if (!child.getLocalName().equals("#text")) {
+            String name = child.getLocalName();
+            if (!"#text".equals(child.getLocalName())) {
                 return false;
             }
         }
@@ -675,6 +676,59 @@ public class Mutator {
             mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
             //restore doc
             parent.removeChild(clone);
+        }
+        return mutants;
+    }
+
+    /**
+     * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
+     * move a rule whose effect is deny before a rule whose effect is permit.
+     *
+     * This mutation operator should be used for fault localization, because the positions of policy elements will be
+     * changed after moving the rules.
+     */
+    public List<Mutant> createFirstDenyRuleMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(targetXpathString);
+        String mutantName = "FDR";
+        List<Mutant> mutants = new ArrayList<>();
+        String PolicyXpathString = targetXpathString.replace("/*[local-name()='Target' and 1]", "");
+        Node policyNode = ((NodeList) xPath.evaluate(PolicyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
+        String firstApplicableCombiningAlgo = "urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable";
+        if (policyNode.getLocalName().equals("Policy")
+                && policyNode.getAttributes().getNamedItem("RuleCombiningAlgId").getNodeValue().equals(firstApplicableCombiningAlgo)) {
+            List<Node> childNodes = getChildNodeList(policyNode);
+            int i = 0;
+            Node permitNode = null;
+            for (; i < childNodes.size(); i++) {
+                Node child = childNodes.get(i);
+                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals("Permit")) {
+                    permitNode = child;
+                    break;
+                }
+            }
+            if (permitNode == null) {
+                return mutants;
+            }
+            Node denyNode = null;
+            for (; i < childNodes.size(); i++) {
+                Node child = childNodes.get(i);
+                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals("Deny")) {
+                    denyNode = child;
+                    break;
+                }
+            }
+            if (denyNode == null) {
+                return mutants;
+            }
+            //change doc
+            Node denyNodeNext = denyNode.getNextSibling();
+            policyNode.removeChild(denyNode);
+            policyNode.insertBefore(denyNode, permitNode);
+            AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
+            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            //restore doc
+            policyNode.removeChild(denyNode);
+            policyNode.insertBefore(denyNode, denyNodeNext);
         }
         return mutants;
     }
