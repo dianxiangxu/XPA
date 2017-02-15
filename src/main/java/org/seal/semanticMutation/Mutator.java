@@ -137,8 +137,7 @@ public class Mutator {
         }
         List<Node> childNodes = getChildNodeList(node);
         for (Node child : childNodes) {
-            String name = child.getLocalName();
-            if (!"#text".equals(child.getLocalName())) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
                 return false;
             }
         }
@@ -161,6 +160,15 @@ public class Mutator {
         node.appendChild(child);
         System.out.println(XpathSolver.nodeToString(node, false, true));
 
+    }
+
+    private static List<Node> getChildNodeList(Node parent) {
+        List<Node> childNodes = new ArrayList<>();
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            childNodes.add(children.item(i));
+        }
+        return childNodes;
     }
 
     /**
@@ -731,14 +739,5 @@ public class Mutator {
             policyNode.insertBefore(denyNode, denyNodeNext);
         }
         return mutants;
-    }
-
-    private static List<Node> getChildNodeList(Node parent) {
-        List<Node> childNodes = new ArrayList<>();
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            childNodes.add(children.item(i));
-        }
-        return childNodes;
     }
 }
