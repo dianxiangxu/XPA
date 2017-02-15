@@ -135,15 +135,13 @@ public class Mutator {
         if (node == null) {
             return true;
         }
-        NodeList children = node.getChildNodes();
-        boolean isEmptyTarget = true;
-        for (int i = 0; i < children.getLength(); i++) {
-            // we don't use "if (child.getNodeName().equals("AnyOf"))" here for backward compatibility with XACML 2.0.
-            if (!children.item(i).getNodeName().equals("#text")) {
-                isEmptyTarget = false;
+        List<Node> childNodes = getChildNodeList(node);
+        for (Node child : childNodes) {
+            if (!child.getLocalName().equals("#text")) {
+                return false;
             }
         }
-        return isEmptyTarget;
+        return true;
     }
 
     public static void main(String[] args) throws ParserConfigurationException, ParsingException, SAXException, IOException, XPathExpressionException {
@@ -218,10 +216,8 @@ public class Mutator {
         Node node = nodes.item(0);
         if (node != null && !isEmptyNode(node)) {
             //change doc
-            List<Node> children = new ArrayList<>();
-            while (node.hasChildNodes()) {
-                Node child = node.getFirstChild();
-                children.add(child);
+            List<Node> children = getChildNodeList(node);
+            for (Node child : children) {
                 node.removeChild(child);
             }
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
@@ -305,11 +301,7 @@ public class Mutator {
                 Node cloned = matchNode.cloneNode(true);
                 clonedNodes.add(cloned);
                 //find the AttributeValue child node
-                List<Node> attributeValueNodes = findChildrenByLocalName(cloned, "AttributeValue");
-                if (attributeValueNodes.size() == 0) {
-                    throw new RuntimeException("couldn't find AttributeValue in Mathch");
-                }
-                Node attributeValueNode = attributeValueNodes.get(0);
+                Node attributeValueNode = findNodeByLocalNameRecursively(cloned, "AttributeValue");
                 //set MatchId and AttributeValue according to DataType
                 String dataType = attributeValueNode.getAttributes().getNamedItem("DataType").getNodeValue();
                 if (!equalsFunctionMap.containsKey(dataType)) {
@@ -330,21 +322,6 @@ public class Mutator {
 //            System.out.println(XpathSolver.nodeToString(matchNode.getParentNode(), false, true));
         }
         return list;
-    }
-
-    /**
-     * @return all the child nodes of input node whose local name equals to input argument localName
-     */
-    private List<Node> findChildrenByLocalName(Node node, String localName) {
-        List<Node> matchedChildNodes = new ArrayList<>();
-        NodeList childNodes = node.getChildNodes();
-        for (int i = 0; i < childNodes.getLength(); i++) {
-            Node child = childNodes.item(i);
-            if (localName.equals(child.getLocalName())) {
-                matchedChildNodes.add(child);
-            }
-        }
-        return matchedChildNodes;
     }
 
     /**
@@ -532,11 +509,7 @@ public class Mutator {
         String conditionXpathString = xpathString + "/*[local-name()='Condition' and 1]";
         Node conditionNode = ((NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         if (!isEmptyNode(conditionNode)) {
-            List<Node> childNodes = new ArrayList<>();
-            NodeList children = conditionNode.getChildNodes();
-            for (int i = 0; i < children.getLength(); i++) {
-                childNodes.add(children.item(i));
-            }
+            List<Node> childNodes = getChildNodeList(conditionNode);
             //change doc
             for (Node child : childNodes) {
                 conditionNode.removeChild(child);
@@ -580,11 +553,7 @@ public class Mutator {
             Node applyNode = findNodeByLocalNameRecursively(conditionNode, "Apply");
             String notFunctionString = "urn:oasis:names:tc:xacml:1.0:function:not";
             if (applyNode != null && applyNode.getAttributes().getNamedItem("FunctionId").getNodeValue().equals(notFunctionString)) {
-                List<Node> childNodes = new ArrayList<>();
-                NodeList children = applyNode.getChildNodes();
-                for (int i = 0; i < children.getLength(); i++) {
-                    childNodes.add(children.item(i));
-                }
+                List<Node> childNodes = getChildNodeList(applyNode);
                 //change doc
                 for (Node child : childNodes) {
                     applyNode.removeChild(child);
@@ -708,5 +677,14 @@ public class Mutator {
             parent.removeChild(clone);
         }
         return mutants;
+    }
+
+    private static List<Node> getChildNodeList(Node parent) {
+        List<Node> childNodes = new ArrayList<>();
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            childNodes.add(children.item(i));
+        }
+        return childNodes;
     }
 }
