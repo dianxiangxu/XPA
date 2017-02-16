@@ -18,7 +18,6 @@ import org.xml.sax.SAXException;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.ComparisonControllers;
 import org.xmlunit.diff.Diff;
-import sun.security.util.PolicyUtil;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -499,6 +498,40 @@ public class MutatorTest {
 //                System.out.println(policyXpathString);
                 Node node = ((NodeList) xPath.evaluate(policyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
                 List<Mutant> mutants = mutator.createFirstDenyRuleMutants(xpathString);
+                String firstApplicableCombiningAlgo = "urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable";
+                if (!Mutator.isEmptyNode(node)
+                        && node.getLocalName().equals("Policy")
+                        && node.getAttributes().getNamedItem("RuleCombiningAlgId").getNodeValue().equals(firstApplicableCombiningAlgo)) {
+//                    System.out.println(XpathSolver.nodeToString(node, false, true));
+                    for (Mutant mutant : mutants) {
+                        Document newDoc = PolicyLoader.getDocument(IOUtils.toInputStream(mutant.encode(), Charset.defaultCharset()));
+                        NodeList nodes = (NodeList) xPath.evaluate(policyXpathString, newDoc.getDocumentElement(), XPathConstants.NODESET);
+                        Assert.assertEquals(1, nodes.getLength());
+                        Node newNode = nodes.item(0);
+//                        System.out.println(XpathSolver.nodeToString(newNode, false, true));
+                    }
+                } else {
+                    Assert.assertEquals(0, mutants.size());
+                }
+//                System.out.println("===========");
+            }
+        }
+    }
+
+    @Test
+    public void createFirstPermitRuleMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
+        //use HL7.testFPR.xml instead of HL7.xml because the later doesn't have deny rules in front of permit rules
+        File file = new File("src/test/resources/org/seal/policies/HL7/HL7.testFPR.xml");
+        AbstractPolicy policy = PolicyLoader.loadPolicy(file);
+        //note that a local doc and mutator variable is used
+        Document doc = PolicyLoader.getDocument(IOUtils.toInputStream(policy.encode(), Charset.defaultCharset()));
+        Mutator mutator = new Mutator(new Mutant(policy, ""));
+        for (String xpathString : xpathList) {
+            if (isTargetXpathString(xpathString)) {
+                String policyXpathString = xpathString.replace("/*[local-name()='Target' and 1]", "");
+//                System.out.println(policyXpathString);
+                Node node = ((NodeList) xPath.evaluate(policyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
+                List<Mutant> mutants = mutator.createFirstPermitRuleMutants(xpathString);
                 String firstApplicableCombiningAlgo = "urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable";
                 if (!Mutator.isEmptyNode(node)
                         && node.getLocalName().equals("Policy")

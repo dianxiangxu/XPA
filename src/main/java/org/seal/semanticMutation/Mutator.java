@@ -241,7 +241,7 @@ public class Mutator {
 
     /**
      * Make Rule Condition always true
-     *
+     * <p />
      * We cannot remove all child nodes of Condition as we do to policy target and rule target, because
      * Condition.getInstance() will throw a null pointer exception. So here the whole Condition node is removed from the
      * rule node.
@@ -291,6 +291,7 @@ public class Mutator {
      * If Match element exists, we can make the Target always evaluate to false by adding two conflicting Match elements
      * to the parent of Match element. For example, if the Match element says role == "physician", then we add 2 Match
      * elements: role == "a" and role == "b".
+     * <p />
      * First make 2 clones of the Match element, for each clone: find the AttributeValue element in the Match element,
      * get the DataType attribute from the AttributeValue. Set the MatchId attribute according to DataType. And set the
      * text content of AttributeValue element according the DataType. For example, if DataType is string, we set MatchId
@@ -334,7 +335,8 @@ public class Mutator {
     }
 
     /**
-     * Make Rule Condition always false
+     * Make Rule Condition always false.
+     * <p />
      * First find the condition node, then remove and replace it with a condition node we built. The condition node we
      * built is always false because it has two conflicting conditions, e.g. role == "a" and role == "b".
      */
@@ -647,6 +649,7 @@ public class Mutator {
     /**
      * add a new rule. The new rule is based on this rule, but its effect is flipped, or its target is always true if
      * the target of this rule is not always true.
+     * <p />
      * Note that this mutation method should not be used for fault localization as it will cause the position of the
      * following policy elements to shift by 1.
      */
@@ -690,15 +693,53 @@ public class Mutator {
 
     /**
      * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
-     * move a rule whose effect is deny before a rule whose effect is permit.
-     *
+     * move a rule whose effect is deny before a rule whose effect is permit. The fault location shall be the location of
+     * the target.
+     * <p />
      * This mutation operator should be used for fault localization, because the positions of policy elements will be
      * changed after moving the rules.
      */
     public List<Mutant> createFirstDenyRuleMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        return createFirstPermitOrDenyRuleMutants(targetXpathString, "FDR");
+    }
+
+    /**
+     * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
+     * move a rule whose effect is deny before a rule whose effect is permit. The fault location shall be the location of
+     * the target.
+     * <p/>
+     * This mutation operator should be used for fault localization, because the positions of policy elements will be
+     * changed after moving the rules.
+     */
+    public List<Mutant> createFirstPermitRuleMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        return createFirstPermitOrDenyRuleMutants(targetXpathString, "FPR");
+    }
+
+
+    /**
+     * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
+     * move a rule whose effect is effectA before a rule whose effect is effectB. The fault location shall be the location of
+     * the target.
+     * <p/>
+     * effectA and effectB must be different. When effectA == "Permit" and effectB == "Deny", generates first deny rule mutants. When effectA == "Deny" and
+     * effectB == "Permit", generates first permit rule mutants.
+     */
+    private List<Mutant> createFirstPermitOrDenyRuleMutants(String targetXpathString, String mutantName) throws XPathExpressionException, ParsingException {
         int faultLocation = xpathMapping.get(targetXpathString);
-        String mutantName = "FDR";
         List<Mutant> mutants = new ArrayList<>();
+        String effectA, effectB;
+        switch (mutantName) {
+            case "FDR":
+                effectA = "Permit";
+                effectB = "Deny";
+                break;
+            case "FPR":
+                effectA = "Deny";
+                effectB = "Permit";
+                break;
+            default:
+                return mutants;
+        }
         String PolicyXpathString = targetXpathString.replace("/*[local-name()='Target' and 1]", "");
         Node policyNode = ((NodeList) xPath.evaluate(PolicyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         String firstApplicableCombiningAlgo = "urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable";
@@ -706,37 +747,37 @@ public class Mutator {
                 && policyNode.getAttributes().getNamedItem("RuleCombiningAlgId").getNodeValue().equals(firstApplicableCombiningAlgo)) {
             List<Node> childNodes = getChildNodeList(policyNode);
             int i = 0;
-            Node permitNode = null;
+            Node nodeA = null;
             for (; i < childNodes.size(); i++) {
                 Node child = childNodes.get(i);
-                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals("Permit")) {
-                    permitNode = child;
+                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals(effectA)) {
+                    nodeA = child;
                     break;
                 }
             }
-            if (permitNode == null) {
+            if (nodeA == null) {
                 return mutants;
             }
-            Node denyNode = null;
+            Node nodeB = null;
             for (; i < childNodes.size(); i++) {
                 Node child = childNodes.get(i);
-                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals("Deny")) {
-                    denyNode = child;
+                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals(effectB)) {
+                    nodeB = child;
                     break;
                 }
             }
-            if (denyNode == null) {
+            if (nodeB == null) {
                 return mutants;
             }
             //change doc
-            Node denyNodeNext = denyNode.getNextSibling();
-            policyNode.removeChild(denyNode);
-            policyNode.insertBefore(denyNode, permitNode);
+            Node nodeBNext = nodeB.getNextSibling();
+            policyNode.removeChild(nodeB);
+            policyNode.insertBefore(nodeB, nodeA);
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
             mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
             //restore doc
-            policyNode.removeChild(denyNode);
-            policyNode.insertBefore(denyNode, denyNodeNext);
+            policyNode.removeChild(nodeB);
+            policyNode.insertBefore(nodeB, nodeBNext);
         }
         return mutants;
     }
