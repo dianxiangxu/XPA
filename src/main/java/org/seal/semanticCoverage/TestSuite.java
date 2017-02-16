@@ -20,12 +20,15 @@ import java.util.List;
  */
 public class TestSuite {
     private static Log logger = LogFactory.getLog(TestSuite.class);
-    private List<String> requestFileNames;
+    /**
+     * having a note for each request can ease debugging process.
+     */
+    private List<String> requestNotes;
     private List<String> requests;
     private List<String> oracles;
 
-    private TestSuite(List<String> requestFileNames, List<String> requests, List<String> oracles) {
-        this.requestFileNames = requestFileNames;
+    public TestSuite(List<String> requestNotes, List<String> requests, List<String> oracles) {
+        this.requestNotes = requestNotes;
         this.requests = requests;
         this.oracles = oracles;
     }
