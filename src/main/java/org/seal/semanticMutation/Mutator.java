@@ -218,6 +218,13 @@ public class Mutator {
     /**
      * Make a Target always true by removing all its child nodes. According to the specification of XACML, a Target is
      * always evaluated to true if it is empty.
+     * <p />
+     * We remove all the child nodes of a target instead of simply deleting the target node, because according to
+     * XACML 3.0 specification, a Policy or PolicySet element must have a Target element as its child node, and a Rule
+     * may have a Target element as its child. By removing child nodes of a target we can deal with different kinds of
+     * Target elements in a uniform way.
+     * <p />
+     * see http://docs.oasis-open.org/xacml/3.0/xacml-3.0-core-spec-os-en.html#_Toc325047111 Section 5.6 Element Target
      */
     private List<Mutant> createTargetTrueMutants(String targetXpathString, String mutantName, int faultLocation) throws XPathExpressionException, ParsingException, IOException, ParserConfigurationException, SAXException {
         List<Mutant> list = new ArrayList<>();
@@ -781,4 +788,5 @@ public class Mutator {
         }
         return mutants;
     }
+
 }
