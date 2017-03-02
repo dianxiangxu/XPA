@@ -129,7 +129,7 @@ public class Mutator {
         xPath = XPathFactory.newInstance().newXPath();
     }
 
-    static boolean isEmptyNode(Node node) {
+    public static boolean isEmptyNode(Node node) {
         // When the target is empty, it may have one child node that contains only text "\n"; when the target is not empty,
         // it may have three nodes: "\n", AnyOf element and "\n".
         if (node == null) {
@@ -162,13 +162,33 @@ public class Mutator {
 
     }
 
-    private static List<Node> getChildNodeList(Node parent) {
+    public static List<Node> getChildNodeList(Node parent) {
         List<Node> childNodes = new ArrayList<>();
         NodeList children = parent.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
             childNodes.add(children.item(i));
         }
         return childNodes;
+    }
+
+    /**
+     * recursively look for a node such that node.getLocalName() equals localName
+     *
+     * @return the node we found, or null if there's no such node
+     */
+    private static Node findNodeByLocalNameRecursively(Node node, String localName) {
+        if (localName.equals(node.getLocalName())) {
+            return node;
+        }
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            Node target = findNodeByLocalNameRecursively(child, localName);
+            if (target != null) {
+                return target;
+            }
+        }
+        return null;
     }
 
     /**
@@ -393,26 +413,6 @@ public class Mutator {
             }
         }
         return mutants;
-    }
-
-    /**
-     * recursively look for a node such that node.getLocalName() equals localName
-     *
-     * @return the node we found, or null if there's no such node
-     */
-    private Node findNodeByLocalNameRecursively(Node node, String localName) {
-        if (localName.equals(node.getLocalName())) {
-            return node;
-        }
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            Node target = findNodeByLocalNameRecursively(child, localName);
-            if (target != null) {
-                return target;
-            }
-        }
-        return null;
     }
 
     /**
