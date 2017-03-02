@@ -186,7 +186,7 @@ public class TestPanelDemo extends JPanel {
 			policyx.initBalana(this.demo);
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				PolicySpreadSheetTestSuite OnetrueOtherFalse = new PolicySpreadSheetTestSuite(
-						policyx.generate_OneTrueOtherFalse(this),
+						RuleCoverageTestGenerator.generateTests(this,policy),
 						demo.getWorkingPolicyFilePath());
 				workingTestSuiteFileName = getTestsuiteXLSfileName("_Exclusive");
 				OnetrueOtherFalse.writeToExcelFile(workingTestSuiteFileName);
@@ -286,7 +286,7 @@ public class TestPanelDemo extends JPanel {
 		}
 		if (!hasTests()) {
 			JOptionPane.showMessageDialog(demo, "There are no tests.");
-			return;
+			return; 
 		}
 
 		try {
