@@ -25,11 +25,11 @@ import java.util.regex.Pattern;
  * Created by shuaipeng on 10/20/16.
  */
 public class XpathSolver {
+    static Pattern policyPattern = Pattern.compile("(?:\\w+:)*Policy");
+    static Pattern policysetPattern = Pattern.compile("(?:\\w+:)*PolicySet");
+    static Pattern rulePattern = Pattern.compile("(?:\\w+:)*Rule");
+    static Pattern targetPattern = Pattern.compile("(?:\\w+:)*Target");
     private static Log logger = LogFactory.getLog(XpathSolver.class);
-    private static Pattern policyPattern = Pattern.compile("(?:\\w+:)*Policy");
-    private static Pattern policysetPattern = Pattern.compile("(?:\\w+:)*PolicySet");
-    private static Pattern rulePattern = Pattern.compile("(?:\\w+:)*Rule");
-    private static Pattern targetPattern = Pattern.compile("(?:\\w+:)*Target");
 
     /**
      * get the string representation of a DOM node, used for debugging

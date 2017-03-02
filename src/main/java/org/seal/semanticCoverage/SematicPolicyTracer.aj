@@ -22,11 +22,13 @@ import org.wso2.balana.PolicySet;
 public privileged aspect SematicPolicyTracer {
 	private static Log logger = LogFactory.getLog(SematicPolicyTracer.class);
 
-	pointcut ruleEvaluationPointcut(Rule rule, EvaluationCtx context): call(AbstractResult Rule.evaluate(*)) && target(rule) && args(context);
+	pointcut ruleEvaluationPointcut(Rule rule, EvaluationCtx context):
+	        call(AbstractResult Rule.evaluate(*)) && target(rule) && args(context);
 
 	// replace the evaluate method in the Rule class to record the result of
 	// each rule evaluation
-	AbstractResult around(Rule rule, EvaluationCtx context): ruleEvaluationPointcut(rule, context) {
+	AbstractResult around(Rule rule, EvaluationCtx context):
+	        ruleEvaluationPointcut(rule, context) {
 		// If the Target is null then it's supposed to inherit from the
 		// parent policy, so we skip the matching step assuming we wouldn't
 		// be here unless the parent matched
@@ -52,7 +54,7 @@ public privileged aspect SematicPolicyTracer {
 				// start of change
 				Coverage ruleCoverage = new RuleCoverage(
 						RuleCoverage.IntermediateCoverage.FALSE,
-						RuleCoverage.IntermediateCoverage.NOTEVALUATED,
+						RuleCoverage.IntermediateCoverage.NOT_EVALUATED,
 						Result.DECISION_NOT_APPLICABLE, rule.getId().toString());
 				PolicyCoverageFactory.addCoverage(ruleCoverage, xPath);
 
@@ -70,7 +72,7 @@ public privileged aspect SematicPolicyTracer {
 						// start of change
 						Coverage ruleCoverage = new RuleCoverage(
 								RuleCoverage.IntermediateCoverage.ERROR,
-								RuleCoverage.IntermediateCoverage.NOTEVALUATED,
+								RuleCoverage.IntermediateCoverage.NOT_EVALUATED,
 								Result.DECISION_INDETERMINATE_PERMIT, rule.getId().toString());
 						PolicyCoverageFactory.addCoverage(ruleCoverage, xPath);
 						// end of change
@@ -82,7 +84,7 @@ public privileged aspect SematicPolicyTracer {
 						// start of change
 						Coverage ruleCoverage = new RuleCoverage(
 								RuleCoverage.IntermediateCoverage.ERROR,
-								RuleCoverage.IntermediateCoverage.NOTEVALUATED,
+								RuleCoverage.IntermediateCoverage.NOT_EVALUATED,
 								Result.DECISION_INDETERMINATE_DENY, rule.getId().toString());
 						PolicyCoverageFactory.addCoverage(ruleCoverage, xPath);
 						// end of change
@@ -94,7 +96,7 @@ public privileged aspect SematicPolicyTracer {
 				// start of change
 				Coverage ruleCoverage = new RuleCoverage(
 						RuleCoverage.IntermediateCoverage.ERROR,
-						RuleCoverage.IntermediateCoverage.NOTEVALUATED,
+						RuleCoverage.IntermediateCoverage.NOT_EVALUATED,
 						Result.DECISION_INDETERMINATE, rule.getId().toString());
 				PolicyCoverageFactory.addCoverage(ruleCoverage, xPath);
 				// end of change
@@ -193,10 +195,12 @@ public privileged aspect SematicPolicyTracer {
 	}
 
 	// record the entry of policy evaluation
-	before(AbstractPolicy policy, EvaluationCtx context): target(policy) && call(* AbstractPolicy.evaluate(*)) && args(context) {
+	before(AbstractPolicy policy, EvaluationCtx context):
+	        target(policy) && call(* AbstractPolicy.evaluate(*)) && args(context) {
 		logger.debug("enter Policy ID: " + policy.getId());
     	AbstractTarget policyTarget = policy.getTarget();
-    	int result = MatchResult.MATCH; // assume that there is no policy target (considered a match)
+    	// assume that there is no policy target (considered a match)
+    	int result = MatchResult.MATCH;
         if (policyTarget != null) {
         	MatchResult matchResult = policyTarget.match(context);
             result = matchResult.getResult();
@@ -206,33 +210,43 @@ public privileged aspect SematicPolicyTracer {
 	}
 
 	// record the result of policy evaluation
-	after(AbstractPolicy policy) returning(AbstractResult result): target(policy) && call(* AbstractPolicy.evaluate(*))  {
+	after(AbstractPolicy policy) returning(AbstractResult result):
+	        target(policy) && call(* AbstractPolicy.evaluate(*))  {
 		logger.debug("leave Policy ID:" + policy.getId());
 	}
 
-	pointcut runNewTest(AbstractPolicy policy, String request,
-			String oracleString): call(boolean TestSuite.runTest(AbstractPolicy, String, String)) && args(policy, request, oracleString);
+	pointcut runNewTest(AbstractPolicy policy, String request, String oracleString):
+	        call(boolean TestSuite.runTest(AbstractPolicy, String, String))
+	            && args(policy, request, oracleString);
 
-	before(AbstractPolicy policy, String request, String oracleString) : runNewTest(policy, request, oracleString) {
+	before(AbstractPolicy policy, String request, String oracleString) :
+	        runNewTest(policy, request, oracleString) {
 		logger.debug("start running a test on " + policy.getId());
 		PolicyCoverageFactory.newRow();
 	}
 
-	pointcut runNewTestSuite(TestSuite testSuite, AbstractPolicy policy): call(List<Boolean> TestSuite.runTests(AbstractPolicy)) && target(testSuite) && args(policy);
+	pointcut runNewTestSuite(TestSuite testSuite, AbstractPolicy policy):
+	        call(List<Boolean> TestSuite.runTests(AbstractPolicy))
+	            && target(testSuite) && args(policy);
 
-	before(TestSuite testSuite, AbstractPolicy policy): runNewTestSuite(testSuite, policy) {
+	before(TestSuite testSuite, AbstractPolicy policy):
+	        runNewTestSuite(testSuite, policy) {
 		logger.debug("start running test suite on " + policy.getId());
 		PolicyCoverageFactory.init(policy);
 	}
 	
-	after(TestSuite testSuite, AbstractPolicy policy) returning(List<Boolean> results): runNewTestSuite(testSuite, policy) {
+	after(TestSuite testSuite, AbstractPolicy policy) returning(List<Boolean> results):
+	        runNewTestSuite(testSuite, policy) {
 		logger.debug("finished running test suite on " + policy.getId());
 		PolicyCoverageFactory.setResults(results);
 	}
 	
-	pointcut encodePolicySet(PolicySet policySet, StringBuilder builder): call(void AbstractPolicy.encode(StringBuilder)) && target(policySet) && args(builder);
+	pointcut encodePolicySet(PolicySet policySet, StringBuilder builder):
+	        call(void AbstractPolicy.encode(StringBuilder))
+	            && target(policySet) && args(builder);
 
-	void around(PolicySet policySet, StringBuilder builder): encodePolicySet(policySet, builder) {
+	void around(PolicySet policySet, StringBuilder builder):
+	        encodePolicySet(policySet, builder) {
         String xacmlVersionId = policySet.getMetaData().getXACMLIdentifier();
         // add xacml version ID
         builder.append("<PolicySet xmlns=\"" + xacmlVersionId + "\""  + " PolicySetId=\"").

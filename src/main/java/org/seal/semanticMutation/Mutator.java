@@ -129,21 +129,19 @@ public class Mutator {
         xPath = XPathFactory.newInstance().newXPath();
     }
 
-    static boolean isEmptyNode(Node node) {
+    public static boolean isEmptyNode(Node node) {
         // When the target is empty, it may have one child node that contains only text "\n"; when the target is not empty,
         // it may have three nodes: "\n", AnyOf element and "\n".
         if (node == null) {
             return true;
         }
-        NodeList children = node.getChildNodes();
-        boolean isEmptyTarget = true;
-        for (int i = 0; i < children.getLength(); i++) {
-            // we don't use "if (child.getNodeName().equals("AnyOf"))" here for backward compatibility with XACML 2.0.
-            if (!children.item(i).getNodeName().equals("#text")) {
-                isEmptyTarget = false;
+        List<Node> childNodes = getChildNodeList(node);
+        for (Node child : childNodes) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                return false;
             }
         }
-        return isEmptyTarget;
+        return true;
     }
 
     public static void main(String[] args) throws ParserConfigurationException, ParsingException, SAXException, IOException, XPathExpressionException {
@@ -162,6 +160,35 @@ public class Mutator {
         node.appendChild(child);
         System.out.println(XpathSolver.nodeToString(node, false, true));
 
+    }
+
+    public static List<Node> getChildNodeList(Node parent) {
+        List<Node> childNodes = new ArrayList<>();
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            childNodes.add(children.item(i));
+        }
+        return childNodes;
+    }
+
+    /**
+     * recursively look for a node such that node.getLocalName() equals localName
+     *
+     * @return the node we found, or null if there's no such node
+     */
+    private static Node findNodeByLocalNameRecursively(Node node, String localName) {
+        if (localName.equals(node.getLocalName())) {
+            return node;
+        }
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            Node target = findNodeByLocalNameRecursively(child, localName);
+            if (target != null) {
+                return target;
+            }
+        }
+        return null;
     }
 
     /**
@@ -218,10 +245,8 @@ public class Mutator {
         Node node = nodes.item(0);
         if (node != null && !isEmptyNode(node)) {
             //change doc
-            List<Node> children = new ArrayList<>();
-            while (node.hasChildNodes()) {
-                Node child = node.getFirstChild();
-                children.add(child);
+            List<Node> children = getChildNodeList(node);
+            for (Node child : children) {
                 node.removeChild(child);
             }
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
@@ -236,7 +261,7 @@ public class Mutator {
 
     /**
      * Make Rule Condition always true
-     *
+     * <p />
      * We cannot remove all child nodes of Condition as we do to policy target and rule target, because
      * Condition.getInstance() will throw a null pointer exception. So here the whole Condition node is removed from the
      * rule node.
@@ -286,6 +311,7 @@ public class Mutator {
      * If Match element exists, we can make the Target always evaluate to false by adding two conflicting Match elements
      * to the parent of Match element. For example, if the Match element says role == "physician", then we add 2 Match
      * elements: role == "a" and role == "b".
+     * <p />
      * First make 2 clones of the Match element, for each clone: find the AttributeValue element in the Match element,
      * get the DataType attribute from the AttributeValue. Set the MatchId attribute according to DataType. And set the
      * text content of AttributeValue element according the DataType. For example, if DataType is string, we set MatchId
@@ -305,11 +331,7 @@ public class Mutator {
                 Node cloned = matchNode.cloneNode(true);
                 clonedNodes.add(cloned);
                 //find the AttributeValue child node
-                List<Node> attributeValueNodes = findChildrenByLocalName(cloned, "AttributeValue");
-                if (attributeValueNodes.size() == 0) {
-                    throw new RuntimeException("couldn't find AttributeValue in Mathch");
-                }
-                Node attributeValueNode = attributeValueNodes.get(0);
+                Node attributeValueNode = findNodeByLocalNameRecursively(cloned, "AttributeValue");
                 //set MatchId and AttributeValue according to DataType
                 String dataType = attributeValueNode.getAttributes().getNamedItem("DataType").getNodeValue();
                 if (!equalsFunctionMap.containsKey(dataType)) {
@@ -333,22 +355,8 @@ public class Mutator {
     }
 
     /**
-     * @return all the child nodes of input node whose local name equals to input argument localName
-     */
-    private List<Node> findChildrenByLocalName(Node node, String localName) {
-        List<Node> matchedChildNodes = new ArrayList<>();
-        NodeList childNodes = node.getChildNodes();
-        for (int i = 0; i < childNodes.getLength(); i++) {
-            Node child = childNodes.item(i);
-            if (localName.equals(child.getLocalName())) {
-                matchedChildNodes.add(child);
-            }
-        }
-        return matchedChildNodes;
-    }
-
-    /**
-     * Make Rule Condition always false
+     * Make Rule Condition always false.
+     * <p />
      * First find the condition node, then remove and replace it with a condition node we built. The condition node we
      * built is always false because it has two conflicting conditions, e.g. role == "a" and role == "b".
      */
@@ -405,26 +413,6 @@ public class Mutator {
             }
         }
         return mutants;
-    }
-
-    /**
-     * recursively look for a node such that node.getLocalName() equals localName
-     *
-     * @return the node we found, or null if there's no such node
-     */
-    private Node findNodeByLocalNameRecursively(Node node, String localName) {
-        if (localName.equals(node.getLocalName())) {
-            return node;
-        }
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            Node target = findNodeByLocalNameRecursively(child, localName);
-            if (target != null) {
-                return target;
-            }
-        }
-        return null;
     }
 
     /**
@@ -532,11 +520,7 @@ public class Mutator {
         String conditionXpathString = xpathString + "/*[local-name()='Condition' and 1]";
         Node conditionNode = ((NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         if (!isEmptyNode(conditionNode)) {
-            List<Node> childNodes = new ArrayList<>();
-            NodeList children = conditionNode.getChildNodes();
-            for (int i = 0; i < children.getLength(); i++) {
-                childNodes.add(children.item(i));
-            }
+            List<Node> childNodes = getChildNodeList(conditionNode);
             //change doc
             for (Node child : childNodes) {
                 conditionNode.removeChild(child);
@@ -580,11 +564,7 @@ public class Mutator {
             Node applyNode = findNodeByLocalNameRecursively(conditionNode, "Apply");
             String notFunctionString = "urn:oasis:names:tc:xacml:1.0:function:not";
             if (applyNode != null && applyNode.getAttributes().getNamedItem("FunctionId").getNodeValue().equals(notFunctionString)) {
-                List<Node> childNodes = new ArrayList<>();
-                NodeList children = applyNode.getChildNodes();
-                for (int i = 0; i < children.getLength(); i++) {
-                    childNodes.add(children.item(i));
-                }
+                List<Node> childNodes = getChildNodeList(applyNode);
                 //change doc
                 for (Node child : childNodes) {
                     applyNode.removeChild(child);
@@ -669,6 +649,7 @@ public class Mutator {
     /**
      * add a new rule. The new rule is based on this rule, but its effect is flipped, or its target is always true if
      * the target of this rule is not always true.
+     * <p />
      * Note that this mutation method should not be used for fault localization as it will cause the position of the
      * following policy elements to shift by 1.
      */
@@ -706,6 +687,97 @@ public class Mutator {
             mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
             //restore doc
             parent.removeChild(clone);
+        }
+        return mutants;
+    }
+
+    /**
+     * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
+     * move a rule whose effect is deny before a rule whose effect is permit. The fault location shall be the location of
+     * the target.
+     * <p />
+     * This mutation operator should be used for fault localization, because the positions of policy elements will be
+     * changed after moving the rules.
+     */
+    public List<Mutant> createFirstDenyRuleMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        return createFirstPermitOrDenyRuleMutants(targetXpathString, "FDR");
+    }
+
+    /**
+     * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
+     * move a rule whose effect is deny before a rule whose effect is permit. The fault location shall be the location of
+     * the target.
+     * <p/>
+     * This mutation operator should be used for fault localization, because the positions of policy elements will be
+     * changed after moving the rules.
+     */
+    public List<Mutant> createFirstPermitRuleMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        return createFirstPermitOrDenyRuleMutants(targetXpathString, "FPR");
+    }
+
+
+    /**
+     * If the targetXpathString points to a Policy target, and rule combining algorithm of the policy is first-applicable,
+     * move a rule whose effect is effectA before a rule whose effect is effectB. The fault location shall be the location of
+     * the target.
+     * <p/>
+     * effectA and effectB must be different. When effectA == "Permit" and effectB == "Deny", generates first deny rule mutants. When effectA == "Deny" and
+     * effectB == "Permit", generates first permit rule mutants.
+     */
+    private List<Mutant> createFirstPermitOrDenyRuleMutants(String targetXpathString, String mutantName) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(targetXpathString);
+        List<Mutant> mutants = new ArrayList<>();
+        String effectA, effectB;
+        switch (mutantName) {
+            case "FDR":
+                effectA = "Permit";
+                effectB = "Deny";
+                break;
+            case "FPR":
+                effectA = "Deny";
+                effectB = "Permit";
+                break;
+            default:
+                return mutants;
+        }
+        String PolicyXpathString = targetXpathString.replace("/*[local-name()='Target' and 1]", "");
+        Node policyNode = ((NodeList) xPath.evaluate(PolicyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
+        String firstApplicableCombiningAlgo = "urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable";
+        if (policyNode.getLocalName().equals("Policy")
+                && policyNode.getAttributes().getNamedItem("RuleCombiningAlgId").getNodeValue().equals(firstApplicableCombiningAlgo)) {
+            List<Node> childNodes = getChildNodeList(policyNode);
+            int i = 0;
+            Node nodeA = null;
+            for (; i < childNodes.size(); i++) {
+                Node child = childNodes.get(i);
+                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals(effectA)) {
+                    nodeA = child;
+                    break;
+                }
+            }
+            if (nodeA == null) {
+                return mutants;
+            }
+            Node nodeB = null;
+            for (; i < childNodes.size(); i++) {
+                Node child = childNodes.get(i);
+                if ("Rule".equals(child.getLocalName()) && child.getAttributes().getNamedItem("Effect").getNodeValue().equals(effectB)) {
+                    nodeB = child;
+                    break;
+                }
+            }
+            if (nodeB == null) {
+                return mutants;
+            }
+            //change doc
+            Node nodeBNext = nodeB.getNextSibling();
+            policyNode.removeChild(nodeB);
+            policyNode.insertBefore(nodeB, nodeA);
+            AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
+            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            //restore doc
+            policyNode.removeChild(nodeB);
+            policyNode.insertBefore(nodeB, nodeBNext);
         }
         return mutants;
     }

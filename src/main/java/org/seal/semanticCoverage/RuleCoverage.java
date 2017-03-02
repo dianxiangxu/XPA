@@ -19,20 +19,20 @@ public class RuleCoverage extends Coverage {
         // get combine semanticCoverage
         if ((targetResult == IntermediateCoverage.TRUE || targetResult == IntermediateCoverage.EMPTY)
                 && (conditionResult == IntermediateCoverage.TRUE || conditionResult == IntermediateCoverage.EMPTY))
-            combined = CombinedCoverage.BOTHTRUE;
+            combined = CombinedCoverage.BOTH_TRUE;
         else if (targetResult == IntermediateCoverage.FALSE)
-            combined = CombinedCoverage.FALSETARGET;
+            combined = CombinedCoverage.FALSE_TARGET;
         else if (conditionResult == IntermediateCoverage.FALSE)
-            combined = CombinedCoverage.FALSECONDITION;
+            combined = CombinedCoverage.FALSE_CONDITION;
         else if (targetResult == IntermediateCoverage.ERROR)
-            combined = CombinedCoverage.ERRORTARGET;
+            combined = CombinedCoverage.ERROR_TARGET;
         else
-            combined = CombinedCoverage.ERRORCONDITION;
+            combined = CombinedCoverage.ERROR_CONDITION;
         // get rule decision semanticCoverage
-        if (combined == CombinedCoverage.BOTHTRUE)
+        if (combined == CombinedCoverage.BOTH_TRUE)
             ruleDecisionCoverage = RuleDecisionCoverage.EFFECT;
-        else if (combined == CombinedCoverage.FALSETARGET
-                || combined == CombinedCoverage.FALSECONDITION)
+        else if (combined == CombinedCoverage.FALSE_TARGET
+                || combined == CombinedCoverage.FALSE_CONDITION)
             ruleDecisionCoverage = RuleDecisionCoverage.NA;
         else
             ruleDecisionCoverage = RuleDecisionCoverage.INDETERMINATE;
@@ -51,11 +51,11 @@ public class RuleCoverage extends Coverage {
     }
 
     public enum IntermediateCoverage {
-        TRUE, FALSE, ERROR, EMPTY, NOTEVALUATED
+        TRUE, FALSE, ERROR, EMPTY, NOT_EVALUATED
     }
 
     enum CombinedCoverage {
-        BOTHTRUE, FALSETARGET, FALSECONDITION, ERRORTARGET, ERRORCONDITION
+        BOTH_TRUE, FALSE_TARGET, FALSE_CONDITION, ERROR_TARGET, ERROR_CONDITION
     }
 
     public enum RuleDecisionCoverage {
