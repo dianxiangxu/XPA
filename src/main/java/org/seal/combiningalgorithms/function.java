@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.wso2.balana.Policy;
+import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.PolicyTreeElement;
 import org.wso2.balana.Rule;
 import org.wso2.balana.combine.CombinerElement;
@@ -326,7 +326,7 @@ public class function {
 	// }
 	// }
 
-	public boolean allPermitRule(Policy policy) {
+	public boolean allPermitRule(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		for (CombinerElement rule : childElements) {
 			PolicyTreeElement tree = rule.getElement();
@@ -340,7 +340,7 @@ public class function {
 		return true;
 	}
 
-	public boolean allDenyRule(Policy policy) {
+	public boolean allDenyRule(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		for (CombinerElement rule : childElements) {
 			PolicyTreeElement tree = rule.getElement();
@@ -355,7 +355,7 @@ public class function {
 	}
 
 	// NING SHEN 4/30 if the last rule is default rule
-	public boolean checkDefaultRule(Policy policy) {
+	public boolean checkDefaultRule(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		int size = childElements.size();
 		CombinerElement lastOne = childElements.get(size - 1);
@@ -380,7 +380,7 @@ public class function {
 	}
 
 	// NING SHEN 4/30 RETURN THE EFFECT OF LAST RULE(DEFAULT)
-	public String DefaultEffect(Policy policy) {
+	public String DefaultEffect(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		int size = childElements.size();
 		CombinerElement lastOne = childElements.get(size - 1);

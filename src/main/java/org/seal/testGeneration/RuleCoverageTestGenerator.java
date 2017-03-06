@@ -1,17 +1,32 @@
 package org.seal.testGeneration;
+import static org.seal.policyUtils.XpathSolver.policyPattern;
+import static org.seal.policyUtils.XpathSolver.policysetPattern;
+import static org.seal.policyUtils.XpathSolver.rulePattern;
+
 import org.seal.combiningalgorithms.Call_Z3str;
 import org.seal.combiningalgorithms.MyAttr;
 import org.seal.combiningalgorithms.algorithm;
 import org.seal.combiningalgorithms.function;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.wso2.balana.DOMHelper;
+import org.wso2.balana.ParsingException;
+import org.wso2.balana.PolicyMetaData;
 import org.wso2.balana.PolicyTreeElement;
 import org.wso2.balana.Rule;
 import org.wso2.balana.TargetMatch;
+import org.seal.policyUtils.PolicyLoader;
+import org.seal.policyUtils.XpathSolver;
+import org.seal.semanticMutation.Mutator;
 import org.seal.testGeneration.TestPanelDemo;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.Policy;
 import org.wso2.balana.attr.IntegerAttribute;
 import org.wso2.balana.attr.StringAttribute;
@@ -32,7 +48,7 @@ import org.wso2.balana.xacml3.AnyOfSelection;
 import org.wso2.balana.xacml3.Target;
 
 
-/**
+/**tri
  * Created by roshanshrestha on 2/10/17.
  */
 public class RuleCoverageTestGenerator {
@@ -41,9 +57,51 @@ public class RuleCoverageTestGenerator {
 	public static HashMap nameMap = new HashMap();
 	public static HashMap typeMap = new HashMap();
 	static algorithm al = new algorithm();
+    private static boolean debug = false;
+    public static int count ;
 
 	
-    public static ArrayList<PolicySpreadSheetTestRecord> generateTests(TestPanelDemo testPanel, Policy policy) {
+    public static ArrayList<PolicySpreadSheetTestRecord> generateTests(TestPanelDemo testPanel, String policyFile){
+        ArrayList<PolicySpreadSheetTestRecord> generator = new ArrayList<PolicySpreadSheetTestRecord>();
+        //List<Rule> rules = getRuleFromPolicy(policy);
+        Document doc=null;
+        try{
+         doc = PolicyLoader.getDocument(new FileInputStream(policyFile));
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        function f = new function();
+        int ruleNo = 0;
+        File file = new File(testPanel.getTestOutputDestination("_Exclusive"));
+        if (!file.isDirectory() && !file.exists()) {
+            file.mkdir();
+        } else {
+            f.deleteFile(file);
+        }
+        long startTime = System.currentTimeMillis();
+        List<String> paths = new ArrayList<String>();
+        List<String> expressions = new ArrayList<String>();
+        AbstractPolicy policy=null;
+        try{
+        	policy = PolicyLoader.loadPolicy(doc);
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        PolicyMetaData metaData = policy.getMetaData();
+        ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
+        StringBuffer sb = new StringBuffer();
+        count = 0;
+        try{
+        dfs( doc.getDocumentElement(), paths, expressions, metaData, sb,f,testPanel,generator,null);
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("Test generation time ： " + (endTime - startTime) + "ms");
+        return generator;
+    }
+    
+    public static ArrayList<PolicySpreadSheetTestRecord> generateTests2(TestPanelDemo testPanel, Policy policy) {
         ArrayList<PolicySpreadSheetTestRecord> generator = new ArrayList<PolicySpreadSheetTestRecord>();
         List<Rule> rules = getRuleFromPolicy(policy);
         function f = new function();
@@ -80,7 +138,8 @@ public class RuleCoverageTestGenerator {
                 if (f.isDefaultRule(fRule))
                     continue;
                 sb.append(FalseTarget_FalseCondition(fRule, collector) + "\n");
-                // sb.append(False_Condition(fRule, collector) + "\n");
+
+           // sb.append(False_Condition(fRule, collector) + "\n");
             }
             boolean sat = z3str(sb.toString(), nameMap, typeMap);
             if (sat == true) {
@@ -120,8 +179,7 @@ public class RuleCoverageTestGenerator {
         System.out.println("Test generation time ： " + (endTime - startTime) + "ms");
         return generator;
     }
-    
-    public static List<Rule> getRuleFromPolicy(Policy policy) {
+    public static List<Rule> getRuleFromPolicy(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		List<Rule> Elements = new ArrayList<Rule>();
 		for (CombinerElement element : childElements) {
@@ -138,7 +196,7 @@ public class RuleCoverageTestGenerator {
     private static boolean generateDefaultRule(
 			ArrayList<PolicySpreadSheetTestRecord> generator,
 			TestPanelDemo testPanel, int order, List<Rule> rules, int testNo,
-			String coverageName, Policy policy) {
+			String coverageName, AbstractPolicy policy) {
 		function f = new function();
 		StringBuffer sb = new StringBuffer();
 		ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
@@ -149,7 +207,7 @@ public class RuleCoverageTestGenerator {
 		boolean sat = z3str(sb.toString(), nameMap, typeMap);
 		if (sat) {
 			try {
-				z3.getValue(collector, nameMap);
+			z3.getValue(collector, nameMap);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -173,10 +231,23 @@ public class RuleCoverageTestGenerator {
 		return false;
 	}
     
-    public static StringBuffer TruePolicyTarget(Policy policy,
+    public static StringBuffer TruePolicyTarget(AbstractPolicy policy,
 			ArrayList<MyAttr> collector) {
 		StringBuffer sb = new StringBuffer();
 		Target target = (Target) policy.getTarget();
+		if (target != null) {
+			sb.append(getTargetAttribute(target, collector));
+		}
+		if (sb.toString().equals("(and )")) {
+			return new StringBuffer();
+		}
+		return sb;
+	}
+    
+    public static StringBuffer TruePolicyTarget(Target target,
+			ArrayList<MyAttr> collector) {
+		StringBuffer sb = new StringBuffer();
+		//Target target = (Target) policy.getTarget();
 		if (target != null) {
 			sb.append(getTargetAttribute(target, collector));
 		}
@@ -208,7 +279,7 @@ public class RuleCoverageTestGenerator {
 			StringBuffer sb = new StringBuffer();
 			if (expression instanceof Apply) {
 				Apply apply = (Apply) expression;
-				sb = ApplyStatements(apply, "", sb, collector);
+			sb = ApplyStatements(apply, "", sb, collector);
 			}
 			return sb.toString();
 		}
@@ -232,7 +303,7 @@ public class RuleCoverageTestGenerator {
 									.equals(input.getName())) {
 								continue;
 							}
-							allBuilder.append(" ("
+						allBuilder.append(" ("
 									+ al.returnFunction(match
 											.getMatchFunction().encode()) + " "
 									+ getName(attribute.getId().toString())
@@ -253,7 +324,7 @@ public class RuleCoverageTestGenerator {
 								allBuilder.append(value + ")");
 							}
 							getType(getName(attribute.getId().toString()),
-									attribute.getType().toString());
+								    								attribute.getType().toString());
 							MyAttr myattr = new MyAttr(attribute.getId()
 									.toString(), attribute.getCategory()
 									.toString(), attribute.getType().toString());
@@ -338,7 +409,7 @@ public class RuleCoverageTestGenerator {
 		}
 		return "";
 	}
-
+    
     public static StringBuffer FalseTarget_FalseCondition(Rule rule,
 			ArrayList<MyAttr> collector) {
 		StringBuffer targetsb = new StringBuffer();
@@ -346,8 +417,25 @@ public class RuleCoverageTestGenerator {
 		StringBuffer sb = new StringBuffer();
 		Target target = (Target) rule.getTarget();
 		targetsb.append(getTargetAttribute(target, collector));
-		conditionsb
-				.append(getConditionAttribute(rule.getCondition(), collector));
+		conditionsb.append(getConditionAttribute(rule.getCondition(), collector));
+		sb.append("(not (and ");
+		sb.append(targetsb);
+		sb.append(conditionsb);
+		sb.append("))");
+		return sb;
+	}
+    
+    public static StringBuffer FalseTarget_FalseCondition(Target target,Condition condition,
+			ArrayList<MyAttr> collector) {
+		StringBuffer targetsb = new StringBuffer();
+		StringBuffer conditionsb = new StringBuffer();
+		StringBuffer sb = new StringBuffer();
+		
+		targetsb.append(getTargetAttribute(target, collector));
+		conditionsb.append(getConditionAttribute(condition, collector));
+		if(targetsb.equals("")&& conditionsb.equals("")){
+			System.out.println("");
+		}
 		sb.append("(not (and ");
 		sb.append(targetsb);
 		sb.append(conditionsb);
@@ -558,4 +646,153 @@ public class RuleCoverageTestGenerator {
 		return sb;
 	}
 
+    
+
+	private static void dfs(Element node, List<String> path, List<String> expressions, PolicyMetaData metaData, StringBuffer sb, function f,TestPanelDemo testPanel,ArrayList<PolicySpreadSheetTestRecord> generator,List<String> falseTargetFalseCondition) throws ParsingException {
+        String name = DOMHelper.getLocalName(node);
+        Target target = null;
+        Condition condition = null;
+        if (rulePattern.matcher(name).matches()) {
+        	
+            Node targetNode = findInChildNodes(node, "Target");
+            if (!Mutator.isEmptyNode(targetNode)) {
+                if (debug) {
+                    path.add(XpathSolver.buildNodeXpath(targetNode));
+                } else {
+                    target = Target.getInstance(targetNode, metaData);
+                    String targetExpression = buildTargetExpression(target);
+                    path.add(targetExpression);
+                }
+            }
+            Node conditionNode = findInChildNodes(node, "Condition");
+            
+            if (!Mutator.isEmptyNode(conditionNode)) {
+                if (debug) {
+                    path.add(XpathSolver.buildNodeXpath(conditionNode));
+                } else {
+                    condition = Condition.getInstance(conditionNode, metaData, null);
+                    String conditionExpression = buildConditionExpression(condition);
+                    path.add(conditionExpression);
+                }
+            }
+            expressions.add(concatenateExpressions(path));
+            if (!Mutator.isEmptyNode(targetNode)) {
+                path.remove(path.size() - 1);
+            }
+            if (!Mutator.isEmptyNode(conditionNode)) {
+                path.remove(path.size() - 1);
+            }
+            if (condition == null && target == null) {
+            	//TODO default rule
+            }
+            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
+            StringBuffer ruleExpression = new StringBuffer();
+            ruleExpression.append(True_Target(target, collector) + "\n");
+            ruleExpression.append(True_Condition(condition, collector) + "\n");
+            //TODO : need to handle this in more effective approach
+            if(!falseTargetFalseCondition.equals("(not (and ))")){
+            	falseTargetFalseCondition.add(FalseTarget_FalseCondition(target,condition, collector) + "\n");
+            }
+            StringBuffer falsifyPreviousRules = new StringBuffer();
+            for(int i = 0; i< falseTargetFalseCondition.size()-1;i++){
+            	falsifyPreviousRules.append(falseTargetFalseCondition.get(i));
+            }
+            String expresion = sb.toString()+ruleExpression+falsifyPreviousRules;
+            boolean sat = z3str(expresion, nameMap, typeMap);
+            if (sat == true) {
+                try {
+                    z3.getValue(collector, nameMap);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                String request = f.print(collector);
+                try {
+                	count++;
+                    String filePath = testPanel
+                            .getTestOutputDestination("_Exclusive")
+                            + File.separator + "request" + count + ".txt";
+
+                    FileWriter fw = new FileWriter(filePath);
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    bw.write(request);
+                    bw.close();
+
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
+                // generate target object
+                PolicySpreadSheetTestRecord psstr = new PolicySpreadSheetTestRecord(
+                        PolicySpreadSheetTestSuite.TEST_KEYWORD + " " + count,
+                        "request" + count + ".txt", request, "");
+                generator.add(psstr);
+                
+            }
+            return;
+        }
+        if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
+            Node targetNode = findInChildNodes(node, "Target");
+            if (targetNode != null) {
+                if (debug) {
+                    path.add(XpathSolver.buildNodeXpath(targetNode));
+                } else {
+                    target = Target.getInstance(targetNode, metaData);
+                    String targetExpression = buildTargetExpression(target);
+                    path.add(targetExpression);
+                }
+            }
+            NodeList children = node.getChildNodes();
+            falseTargetFalseCondition= null;
+            if(policyPattern.matcher(name).matches()){
+            	falseTargetFalseCondition = new ArrayList<String>();
+            }
+            for (int i = 0; i < children.getLength(); i++) {
+                Node child = children.item(i);
+                
+                if (child instanceof Element) {
+                	dfs((Element) child, path, expressions, metaData,sb,f,testPanel,generator,falseTargetFalseCondition);
+                }
+            }
+            path.remove(path.size() - 1);
+            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
+
+            sb.append(TruePolicyTarget(target, collector) + "\n");
+            System.out.println(sb);
+        }
+    }
+	private static Node findInChildNodes(Node parent, String localName) {
+        List<Node> childNodes = Mutator.getChildNodeList(parent);
+        for (Node child : childNodes) {
+            if (localName.equals(child.getLocalName())) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    private static String concatenateExpressions(List<String> path) {
+        //TODO construct an expression from a list expressions
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < path.size(); i++) {
+            if (i == 0) {
+                sb.append(path.get(i));
+            } else {
+                sb.append("\n").append(path.get(i));
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String buildTargetExpression(Target target) {
+        //TODO build expression from Target
+        return target.encode();
+    }
+
+    private static String buildConditionExpression(Condition condition) {
+        //TODO build expression from Condition
+        return condition.encode();
+    }
+	
 }

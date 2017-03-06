@@ -24,7 +24,7 @@ import org.seal.mcdc.MCDC_converter2;
 import org.seal.mutation.PolicyMutator;
 import org.wso2.balana.Balana;
 import org.wso2.balana.MatchResult;
-import org.wso2.balana.Policy;
+import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.PolicyTreeElement;
 import org.wso2.balana.Rule;
@@ -126,9 +126,9 @@ public class PolicyXDemo {
 		}
 	}
 
-	Policy policy;
+	AbstractPolicy policy;
 
-	public PolicyXDemo(Policy policy) {
+	public PolicyXDemo(AbstractPolicy policy) {
 		this.policy = policy;
 		this.policyName = policy.getId().toString();
 		this.rule_table = new boolean[getRuleFromPolicy(policy).size()][7];
@@ -2705,7 +2705,7 @@ public class PolicyXDemo {
 		return rule.evaluate(ec).getDecision();
 	}
 
-	public int PolicyEvaluate(Policy policy, String request) {
+	public int PolicyEvaluate(AbstractPolicy policy, String request) {
 		RequestCtxFactory rc = new RequestCtxFactory();
 		AbstractRequestCtx ar = null;
 		try {
@@ -2722,7 +2722,7 @@ public class PolicyXDemo {
 		return policy.evaluate(ec).getDecision();
 	}
 
-	public List<Rule> getRuleFromPolicy(Policy policy) {
+	public List<Rule> getRuleFromPolicy(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		List<Rule> Elements = new ArrayList<Rule>();
 		for (CombinerElement element : childElements) {
@@ -2736,7 +2736,7 @@ public class PolicyXDemo {
 		return Elements;
 	}
 
-	public List<Rule> getPermitRuleFromPolicy(Policy policy) {
+	public List<Rule> getPermitRuleFromPolicy(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		List<Rule> permitElements = new ArrayList<Rule>();
 		for (CombinerElement element : childElements) {
@@ -2751,7 +2751,7 @@ public class PolicyXDemo {
 		return permitElements;
 	}
 
-	public List<Rule> getDenyRuleFromPolicy(Policy policy) {
+	public List<Rule> getDenyRuleFromPolicy(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		List<Rule> permitElements = new ArrayList<Rule>();
 		for (CombinerElement element : childElements) {
@@ -2766,7 +2766,7 @@ public class PolicyXDemo {
 		return permitElements;
 	}
 
-	public StringBuffer TruePolicyTarget(Policy policy,
+	public StringBuffer TruePolicyTarget(AbstractPolicy policy,
 			ArrayList<MyAttr> collector) {
 		StringBuffer sb = new StringBuffer();
 		Target target = (Target) policy.getTarget();
@@ -2924,7 +2924,7 @@ public class PolicyXDemo {
 		return true;
 	}
 
-	public boolean oneRuleIndeterminate(Rule rule, Policy policy) {
+	public boolean oneRuleIndeterminate(Rule rule, AbstractPolicy policy) {
 		// TODO
 		// problem here, what if there is only one condition attr in this rule?
 		// Indeterminate -> NA
@@ -2979,7 +2979,7 @@ public class PolicyXDemo {
 		}
 	}
 
-	public boolean allIndeterminate(Policy policy) {
+	public boolean allIndeterminate(AbstractPolicy policy) {
 		// return one unique attribute that not existing in any rules
 		List<CombinerElement> childElements = policy.getChildElements();
 		List<Rule> ruleElements = new ArrayList<Rule>();
@@ -3193,7 +3193,7 @@ public class PolicyXDemo {
 		
 	}
 
-	public PolicyTable buildDecisionCoverage(Policy policy) {
+	public PolicyTable buildDecisionCoverage(AbstractPolicy policy) {
 		PolicyTable policytable = new PolicyTable();
 		List<Rule> rules = getRuleFromPolicy(policy);
 		Target target = (Target) policy.getTarget(); // get policy target
@@ -3239,7 +3239,7 @@ public class PolicyXDemo {
 		return policytable;
 	}
 	
-	public PolicyTable buildDecisionCoverage_NoId(Policy policy){
+	public PolicyTable buildDecisionCoverage_NoId(AbstractPolicy policy){
 		PolicyTable policytable = new PolicyTable();
 		List<Rule> rules = getRuleFromPolicy(policy);
 		Target target = (Target) policy.getTarget(); // get policy target
@@ -3701,7 +3701,7 @@ public class PolicyXDemo {
 		return sb;
 	}
 
-	public void updateDecisionTable(Policy policy, PolicyTable policytable,
+	public void updateDecisionTable(AbstractPolicy policy, PolicyTable policytable,
 			String request, int start) {
 		List<Rule> rules = getRuleFromPolicy(policy);
 		for (int i = 0; i < start; i++) {
@@ -3769,7 +3769,7 @@ public class PolicyXDemo {
 		System.out.println();
 	}
 
-	private void updateMCDCTable(Policy policy, PolicyTable policytable,
+	private void updateMCDCTable(AbstractPolicy policy, PolicyTable policytable,
 			String request, int start) {
 		List<Rule> rules = getRuleFromPolicy(policy);
 		for (int i = 0; i < start; i++) {
@@ -3911,7 +3911,7 @@ public class PolicyXDemo {
 		}
 	}
 
-	public PolicyTable buildMCDC_Table(Policy policy, MCDC_converter2 converter, boolean isUnique) {
+	public PolicyTable buildMCDC_Table(AbstractPolicy policy, MCDC_converter2 converter, boolean isUnique) {
 		PolicyTable policytable = new PolicyTable();
 		List<Rule> rules = getRuleFromPolicy(policy);
 		// Target target = (Target) policy.getTarget();
@@ -4016,7 +4016,7 @@ public class PolicyXDemo {
 	}
 	
 	
-	public PolicyTable buildMCDC_Table_NoId(Policy policy, MCDC_converter2 converter, boolean isUnique) {
+	public PolicyTable buildMCDC_Table_NoId(AbstractPolicy policy, MCDC_converter2 converter, boolean isUnique) {
 		PolicyTable policytable = new PolicyTable();
 		List<Rule> rules = getRuleFromPolicy(policy);
 		// Target target = (Target) policy.getTarget();
