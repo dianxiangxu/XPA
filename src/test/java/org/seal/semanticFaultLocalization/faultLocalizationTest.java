@@ -4,11 +4,11 @@ import com.opencsv.CSVWriter;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.Coverage;
 import org.seal.semanticCoverage.PolicyCoverageFactory;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
-import org.seal.policyUtils.PolicyLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,8 @@ public class faultLocalizationTest {
             if (FaultLocalizationExperiment.booleanListAnd(results))
                 continue;
             List<List<Coverage>> coverageMatrix = PolicyCoverageFactory.getCoverageMatrix();
-            SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(coverageMatrix);
+            SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(coverageMatrix,
+                    PolicyCoverageFactory.getResults());
             List<String> aveNumElemToInspcetList = new ArrayList<>();
             for (String faultLocalizeMethod : faultLocalizeMethods) {
                 SpectrumBasedDiagnosisResults diagnosisResults = new SpectrumBasedDiagnosisResults(
