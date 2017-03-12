@@ -22,6 +22,18 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
+ * An example XPath express:
+ * “/*[local-name()=’PolicySet’ and @PolicySetId=’KMarketBluePolicy’]/*[local-name()=’Rule’ and @RuleId=’total-amount’]”.
+ * <p />
+ * The XPath expression means that starting from the root node, first look for a node whose local-name is PolicySet,
+ * and has an attribute “PolicySetId” that equals to “’KMarketBluePolicy’”; then from the child nodes of this node, look
+ * for a node whose local-name is “Rule”, and has an attribute “RuleId” that equals to “total-amount”.  The “*” in the
+ * XPath expression means ignoring namespace prefix.
+ * <p />
+ * The same rule can also be selected by the relative XPath
+ * “//*[local-name()=’Rule’ and @RuleId=’total-amount’]”. The double slash at the beginning of the path expression means
+ * that this is a relative path so the node is not necessarily a child of the root node.
+ * <p />
  * Created by shuaipeng on 10/20/16.
  */
 public class XpathSolver {
