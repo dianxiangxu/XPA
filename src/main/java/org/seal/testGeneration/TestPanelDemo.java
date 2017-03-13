@@ -17,13 +17,14 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.seal.combiningalgorithms.PolicyXDemo;
-import org.seal.combiningalgorithms.loadPolicy;
+import org.seal.combiningalgorithms.loadPolicyDemo;
 import org.seal.coverage.PolicyRunner;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
 import org.seal.gui.ResultConverter;
 import org.seal.mcdc.MCDC_converter2;
 import org.umu.editor.XMLFileFilter;
+import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.Policy;
 
 public class TestPanelDemo extends JPanel {
@@ -180,8 +181,8 @@ public class TestPanelDemo extends JPanel {
 				JOptionPane.OK_CANCEL_OPTION);
 		
 		if (result == JOptionPane.OK_OPTION) {
-			loadPolicy lp = new loadPolicy();
-			Policy policy = lp.getPolicy(demo.getWorkingPolicyFilePath());
+			loadPolicyDemo lp = new loadPolicyDemo();
+			AbstractPolicy policy = lp.getPolicy(demo.getWorkingPolicyFilePath());
 			PolicyXDemo policyx = new PolicyXDemo(policy);
 			policyx.initBalana(this.demo);
 			if (exclusiveRuleCoverageRadio.isSelected()) {

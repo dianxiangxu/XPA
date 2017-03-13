@@ -48,7 +48,7 @@ import org.wso2.balana.xacml3.AnyOfSelection;
 import org.wso2.balana.xacml3.Target;
 
 
-/**tri
+/**
  * Created by roshanshrestha on 2/10/17.
  */
 public class RuleCoverageTestGenerator {
@@ -459,7 +459,7 @@ public class RuleCoverageTestGenerator {
 		if (apply.getFunction().encode()
 				.contains("urn:oasis:names:tc:xacml:1.0:function:and")) {
 			StringBuffer newsb = new StringBuffer();
-			;
+			
 			for (Object element : apply.getList()) {
 				if (element instanceof Apply) {
 					Apply childApply = (Apply) element;
@@ -592,6 +592,9 @@ public class RuleCoverageTestGenerator {
 			}
 			if (type.contains("integer")) {
 				typeMap.put(name, "Int");
+			}
+			if(type.contains("boolean")){
+				typeMap.put(name, "Boolean");
 			}
 			return typeMap.get(name).toString();
 		}
@@ -734,13 +737,17 @@ public class RuleCoverageTestGenerator {
         }
         if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
             Node targetNode = findInChildNodes(node, "Target");
+            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
+
             if (targetNode != null) {
                 if (debug) {
                     path.add(XpathSolver.buildNodeXpath(targetNode));
                 } else {
                     target = Target.getInstance(targetNode, metaData);
-                    String targetExpression = buildTargetExpression(target);
-                    path.add(targetExpression);
+                    //String targetExpression = buildTargetExpression(target);
+                    sb.append(True_Target(target, collector) + "\n");
+
+                    //path.add(targetExpression);
                 }
             }
             NodeList children = node.getChildNodes();
@@ -756,9 +763,8 @@ public class RuleCoverageTestGenerator {
                 }
             }
             path.remove(path.size() - 1);
-            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
-
-            sb.append(TruePolicyTarget(target, collector) + "\n");
+           
+            //sb.append(TruePolicyTarget(target, collector) + "\n");
             System.out.println(sb);
         }
     }
