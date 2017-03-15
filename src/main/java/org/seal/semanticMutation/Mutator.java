@@ -162,6 +162,14 @@ public class Mutator {
 
     }
 
+    static boolean isRuleXpathString(String xPathString) {
+        return xPathString.contains("[local-name()='Rule'");
+    }
+
+    static boolean isTargetXpathString(String xPathString) {
+        return xPathString.contains("[local-name()='Target'");
+    }
+
     public static List<Node> getChildNodeList(Node parent) {
         List<Node> childNodes = new ArrayList<>();
         NodeList children = parent.getChildNodes();
@@ -189,6 +197,40 @@ public class Mutator {
             }
         }
         return null;
+    }
+
+    /**
+     * @param bugPosition
+     * @return all the mutants that can be generated at this bug position, whether can be repaired or not.
+     * @throws XPathExpressionException
+     * @throws ParsingException
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws IOException
+     */
+    public List<Mutant> generateMutants(int bugPosition) throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
+        String xpath = xpathList.get(bugPosition);
+        List<Mutant> mutants = new ArrayList<>();
+        if (isRuleXpathString(xpath)) {
+            mutants.addAll(createRuleEffectFlippingMutants(xpath));
+            mutants.addAll(createRuleTargetTrueMutants(xpath));
+            mutants.addAll(createRuleConditionTrueMutants(xpath));
+            mutants.addAll(createRuleTargetFalseMutants(xpath));
+            mutants.addAll(createRuleConditionFalseMutants(xpath));
+            mutants.addAll(createRuleChangeComparisonFunctionMutants(xpath));
+            mutants.addAll(createAddNotFunctionMutants(xpath));
+            mutants.addAll(createRemoveNotFunctionMutants(xpath));
+            mutants.addAll(createRemoveRuleMutants(xpath));
+            mutants.addAll(createAddNewRuleMutants(xpath));
+        } else if (isTargetXpathString(xpath)) {
+            mutants.addAll(createPolicyTargetTrueMutants(xpath));
+            mutants.addAll(createPolicyTargetFalseMutants(xpath));
+            mutants.addAll(createPolicyTargetChangeComparisonFunctionMutants(xpath));
+            mutants.addAll(createCombiningAlgorithmMutants(xpath));
+            mutants.addAll(createFirstDenyRuleMutants(xpath));
+            mutants.addAll(createFirstPermitRuleMutants(xpath));
+        }
+        return mutants;
     }
 
     /**
@@ -221,18 +263,18 @@ public class Mutator {
     /**
      * Make Policy Target always true
      */
-    public List<Mutant> createPolicyTargetTrueMutants(String xpathString) throws XPathExpressionException, ParsingException, IOException, ParserConfigurationException, SAXException {
-        int faultLocation = xpathMapping.get(xpathString);
-        return createTargetTrueMutants(xpathString, "PTT", faultLocation);
+    public List<Mutant> createPolicyTargetTrueMutants(String targetXpathString) throws XPathExpressionException, ParsingException, IOException, ParserConfigurationException, SAXException {
+        int faultLocation = xpathMapping.get(targetXpathString);
+        return createTargetTrueMutants(targetXpathString, "PTT", faultLocation);
 
     }
 
     /**
      * Make Rule Target always true
      */
-    public List<Mutant> createRuleTargetTrueMutants(String xpathString) throws XPathExpressionException, ParsingException, IOException, ParserConfigurationException, SAXException {
-        int faultLocation = xpathMapping.get(xpathString);
-        return createTargetTrueMutants(xpathString + "/*[local-name()='Target' and 1]", "RTT", faultLocation);
+    public List<Mutant> createRuleTargetTrueMutants(String ruleXpathString) throws XPathExpressionException, ParsingException, IOException, ParserConfigurationException, SAXException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
+        return createTargetTrueMutants(ruleXpathString + "/*[local-name()='Target' and 1]", "RTT", faultLocation);
     }
 
     /**
@@ -273,10 +315,10 @@ public class Mutator {
      * Condition.getInstance() will throw a null pointer exception. So here the whole Condition node is removed from the
      * rule node.
      */
-    public List<Mutant> createRuleConditionTrueMutants(String xpathString) throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createRuleConditionTrueMutants(String ruleXpathString) throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "RCT";
-        String conditionXpathString = xpathString + "/*[local-name()='Condition' and 1]";
+        String conditionXpathString = ruleXpathString + "/*[local-name()='Condition' and 1]";
         List<Mutant> list = new ArrayList<>();
         NodeList nodes = (NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET);
         Node node = nodes.item(0);
@@ -295,22 +337,22 @@ public class Mutator {
     /**
      * Make Rule Target always false
      */
-    public List<Mutant> createRuleTargetFalseMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createRuleTargetFalseMutants(String ruleXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "RTT";
-        String matchXpathString = xpathString + "/*[local-name()='Target' and 1]/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
+        String matchXpathString = ruleXpathString + "/*[local-name()='Target' and 1]/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
         return createTargetFalseMutants(matchXpathString, faultLocation, mutantName);
     }
 
     /**
      * Make the Target of a Policy or PolicySet always false
      *
-     * @param xpathString xpath to the Target of a Policy or PolicySet
+     * @param targetXpathString xpath to the Target of a Policy or PolicySet
      */
-    public List<Mutant> createPolicyTargetFalseMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createPolicyTargetFalseMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(targetXpathString);
         String mutantName = "PTT";
-        String matchXpathString = xpathString + "/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
+        String matchXpathString = targetXpathString + "/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
         return createTargetFalseMutants(matchXpathString, faultLocation, mutantName);
     }
 
@@ -367,11 +409,11 @@ public class Mutator {
      * First find the condition node, then remove and replace it with a condition node we built. The condition node we
      * built is always false because it has two conflicting conditions, e.g. role == "a" and role == "b".
      */
-    public List<Mutant> createRuleConditionFalseMutants(String xpathString) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createRuleConditionFalseMutants(String ruleXpathString) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException, ParsingException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "RCF";
         List<Mutant> mutants = new ArrayList<>();
-        String conditionXpathString = xpathString + "/*[local-name()='Condition' and 1]";
+        String conditionXpathString = ruleXpathString + "/*[local-name()='Condition' and 1]";
         Node conditionNode = ((NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         if (conditionNode != null && !isEmptyNode(conditionNode)) {
             Node attributeDesignator = findNodeByLocalNameRecursively(conditionNode, "AttributeDesignator");
@@ -426,28 +468,28 @@ public class Mutator {
      * Change the comparison function in the target of a policy or a policy set. For example, change "==" to ">", ">=",
      * "<" or "<=".
      *
-     * @param xpathString xpath string to the target of a policy or a policy set
+     * @param targetXpathString xpath string to the target of a policy or a policy set
      * @return a list of mutants generated using this semanticMutation operator, or an empty list if this semanticMutation operator is
      * not applicable this rule
      */
-    public List<Mutant> createPolicyTargetChangeComparisonFunctionMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createPolicyTargetChangeComparisonFunctionMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(targetXpathString);
         String mutantName = "CCF";
-        return createTargetChangeComparisonFunctionMutants(xpathString, faultLocation, mutantName);
+        return createTargetChangeComparisonFunctionMutants(targetXpathString, faultLocation, mutantName);
     }
 
     /**
      * Change the comparison functions in a rule. The changed comparison function can be in a the target or the condition
      * of the rule.
-     * @param xpathString xpath string to a rule element
+     * @param ruleXpathString xpath string to a rule element
      */
-    public List<Mutant> createRuleChangeComparisonFunctionMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createRuleChangeComparisonFunctionMutants(String ruleXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "CCF";
         List<Mutant> mutants = new ArrayList<>();
-        String ruleTargetXpathString = xpathString + "/*[local-name()='Target' and 1]";
+        String ruleTargetXpathString = ruleXpathString + "/*[local-name()='Target' and 1]";
         mutants.addAll(createTargetChangeComparisonFunctionMutants(ruleTargetXpathString, faultLocation, mutantName));
-        mutants.addAll(createRuleConditionChangeComparisonFunctionMutants(xpathString, faultLocation, mutantName));
+        mutants.addAll(createRuleConditionChangeComparisonFunctionMutants(ruleXpathString, faultLocation, mutantName));
         return mutants;
     }
 
@@ -518,13 +560,13 @@ public class Mutator {
     /**
      * add a not function in the Condition element
      *
-     * @param xpathString xpath string to a rule
+     * @param ruleXpathString xpath string to a rule
      */
-    public List<Mutant> createAddNotFunctionMutants(String xpathString) throws XPathExpressionException, ParsingException, ParserConfigurationException, IOException, SAXException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createAddNotFunctionMutants(String ruleXpathString) throws XPathExpressionException, ParsingException, ParserConfigurationException, IOException, SAXException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "ANF";
         List<Mutant> mutants = new ArrayList<>();
-        String conditionXpathString = xpathString + "/*[local-name()='Condition' and 1]";
+        String conditionXpathString = ruleXpathString + "/*[local-name()='Condition' and 1]";
         Node conditionNode = ((NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         if (!isEmptyNode(conditionNode)) {
             List<Node> childNodes = getChildNodeList(conditionNode);
@@ -559,13 +601,13 @@ public class Mutator {
     /**
      * remove the outmost not function in the Condition element, if there is such
      *
-     * @param xpathString xpath string to a rule
+     * @param ruleXpathString xpath string to a rule
      */
-    public List<Mutant> createRemoveNotFunctionMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createRemoveNotFunctionMutants(String ruleXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "RNF";
         List<Mutant> mutants = new ArrayList<>();
-        String conditionXpathString = xpathString + "/*[local-name()='Condition' and 1]";
+        String conditionXpathString = ruleXpathString + "/*[local-name()='Condition' and 1]";
         Node conditionNode = ((NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         if (!isEmptyNode(conditionNode)) {
             Node applyNode = findNodeByLocalNameRecursively(conditionNode, "Apply");
@@ -635,11 +677,11 @@ public class Mutator {
      * Note that this mutation method should not be used for fault localization as it will cause the position of the
      * following policy elements to shift by 1.
      */
-    public List<Mutant> createRemoveRuleMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createRemoveRuleMutants(String ruleXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "RER";
         List<Mutant> mutants = new ArrayList<>();
-        Node ruleNode = ((NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
+        Node ruleNode = ((NodeList) xPath.evaluate(ruleXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         Node parent = ruleNode.getParentNode();
         //change doc
         Node nextSibling = ruleNode.getNextSibling();
@@ -660,11 +702,11 @@ public class Mutator {
      * Note that this mutation method should not be used for fault localization as it will cause the position of the
      * following policy elements to shift by 1.
      */
-    public List<Mutant> createAddNewRuleMutants(String xpathString) throws XPathExpressionException, ParsingException {
-        int faultLocation = xpathMapping.get(xpathString);
+    public List<Mutant> createAddNewRuleMutants(String ruleXpathString) throws XPathExpressionException, ParsingException {
+        int faultLocation = xpathMapping.get(ruleXpathString);
         String mutantName = "ANR";
         List<Mutant> mutants = new ArrayList<>();
-        Node ruleNode = ((NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
+        Node ruleNode = ((NodeList) xPath.evaluate(ruleXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         Node parent = ruleNode.getParentNode();
         //make a clone of the rule, flip the Effect of the clone, and insert it before the rule
         Node clone = ruleNode.cloneNode(true);
