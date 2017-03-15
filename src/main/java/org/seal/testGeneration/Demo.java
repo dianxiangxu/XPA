@@ -451,7 +451,9 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		mainTabbedPane.validate();
 		mainTabbedPane.updateUI();
 	}
-	
+	public void setEditorPanel(AbstractPolicyEditor editorPanel){
+		this.editorPanel =   editorPanel;
+	}
 	private void createMainTabbedPane() {
 		editorPanel = new PolicyEditorPanel();
 //		editorPanel = new EditorPanel(this);

@@ -745,11 +745,14 @@ public class RuleCoverageTestGenerator {
                 } else {
                     target = Target.getInstance(targetNode, metaData);
                     //String targetExpression = buildTargetExpression(target);
+                    StringBuilder str = new StringBuilder();
+                    if(target.getAnyOfSelections().size()>0){
                     sb.append(True_Target(target, collector) + "\n");
-
+                    }
                     //path.add(targetExpression);
                 }
             }
+            
             NodeList children = node.getChildNodes();
             falseTargetFalseCondition= null;
             if(policyPattern.matcher(name).matches()){
@@ -762,10 +765,9 @@ public class RuleCoverageTestGenerator {
                 	dfs((Element) child, path, expressions, metaData,sb,f,testPanel,generator,falseTargetFalseCondition);
                 }
             }
-            path.remove(path.size() - 1);
-           
-            //sb.append(TruePolicyTarget(target, collector) + "\n");
-            System.out.println(sb);
+            if(path.size()>0){
+            	path.remove(path.size() - 1);
+            }
         }
     }
 	private static Node findInChildNodes(Node parent, String localName) {
