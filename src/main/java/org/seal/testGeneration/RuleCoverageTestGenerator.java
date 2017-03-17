@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.wso2.balana.AbstractPolicy;
@@ -59,11 +60,11 @@ public class RuleCoverageTestGenerator {
 	static algorithm al = new algorithm();
     private static boolean debug = false;
     public static int count ;
+    private static ArrayList<MyAttr> falseCollector;
 
 	
     public static ArrayList<PolicySpreadSheetTestRecord> generateTests(TestPanelDemo testPanel, String policyFile){
         ArrayList<PolicySpreadSheetTestRecord> generator = new ArrayList<PolicySpreadSheetTestRecord>();
-        //List<Rule> rules = getRuleFromPolicy(policy);
         Document doc=null;
         try{
          doc = PolicyLoader.getDocument(new FileInputStream(policyFile));
@@ -71,6 +72,7 @@ public class RuleCoverageTestGenerator {
         	e.printStackTrace();
         }
         function f = new function();
+        falseCollector = new ArrayList<MyAttr>();
         int ruleNo = 0;
         File file = new File(testPanel.getTestOutputDestination("_Exclusive"));
         if (!file.isDirectory() && !file.exists()) {
@@ -101,85 +103,7 @@ public class RuleCoverageTestGenerator {
         return generator;
     }
     
-    public static ArrayList<PolicySpreadSheetTestRecord> generateTests2(TestPanelDemo testPanel, Policy policy) {
-        ArrayList<PolicySpreadSheetTestRecord> generator = new ArrayList<PolicySpreadSheetTestRecord>();
-        List<Rule> rules = getRuleFromPolicy(policy);
-        function f = new function();
-        int count = 1;
-        int ruleNo = 0;
-        File file = new File(testPanel.getTestOutputDestination("_Exclusive"));
-        if (!file.isDirectory() && !file.exists()) {
-            file.mkdir();
-        } else {
-            f.deleteFile(file);
-        }
-        long startTime = System.currentTimeMillis();
-        for (Rule rule : rules) {
-            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
-            StringBuffer sb = new StringBuffer();
-            if (rule.getCondition() == null && rule.getTarget() == null) {
-                boolean success = generateDefaultRule(generator,
-                        testPanel, ruleNo, rules, count, "_Exclusive",policy);
-                if(success)
-                    count++;
-                continue;
-            }
-            sb = new StringBuffer();
-            sb.append(TruePolicyTarget(policy, collector) + "\n");
-            System.out.println("Policy Target: " +sb);
-            sb.append(True_Target((Target) rule.getTarget(), collector) + "\n");
-            System.out.println("Rule Target: " +sb);
-            sb.append(True_Condition(rule.getCondition(), collector) + "\n");
-            System.out.println("Rule Condition: " +sb);
-            
-            for (Rule fRule : rules) {
-                if (fRule.getId().equals(rule.getId()))
-                    break;
-                if (f.isDefaultRule(fRule))
-                    continue;
-                sb.append(FalseTarget_FalseCondition(fRule, collector) + "\n");
-
-           // sb.append(False_Condition(fRule, collector) + "\n");
-            }
-            boolean sat = z3str(sb.toString(), nameMap, typeMap);
-            if (sat == true) {
-                try {
-                    z3.getValue(collector, nameMap);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                String request = f.print(collector);
-                try {
-                    String path = testPanel
-                            .getTestOutputDestination("_Exclusive")
-                            + File.separator + "request" + count + ".txt";
-
-                    FileWriter fw = new FileWriter(path);
-                    BufferedWriter bw = new BufferedWriter(fw);
-                    bw.write(request);
-                    bw.close();
-
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-
-                // generate target object
-                PolicySpreadSheetTestRecord psstr = new PolicySpreadSheetTestRecord(
-                        PolicySpreadSheetTestSuite.TEST_KEYWORD + " " + count,
-                        "request" + count + ".txt", request, "");
-                generator.add(psstr);
-                count++;
-            }
-            ruleNo++;
-        }
-
-        long endTime = System.currentTimeMillis();
-        System.out.println("Test generation time ： " + (endTime - startTime) + "ms");
-        return generator;
-    }
-    public static List<Rule> getRuleFromPolicy(AbstractPolicy policy) {
+        public static List<Rule> getRuleFromPolicy(AbstractPolicy policy) {
 		List<CombinerElement> childElements = policy.getChildElements();
 		List<Rule> Elements = new ArrayList<Rule>();
 		for (CombinerElement element : childElements) {
@@ -685,13 +609,17 @@ public class RuleCoverageTestGenerator {
             if (!Mutator.isEmptyNode(conditionNode)) {
                 path.remove(path.size() - 1);
             }
-            if (condition == null && target == null) {
-            	//TODO default rule
-            }
+           
             ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
             StringBuffer ruleExpression = new StringBuffer();
             ruleExpression.append(True_Target(target, collector) + "\n");
             ruleExpression.append(True_Condition(condition, collector) + "\n");
+            
+            if (condition != null || target != null) {
+            	falseCollector=collector;
+                
+            }
+            
             //TODO : need to handle this in more effective approach
             if(!falseTargetFalseCondition.equals("(not (and ))")){
             	falseTargetFalseCondition.add(FalseTarget_FalseCondition(target,condition, collector) + "\n");
@@ -702,14 +630,31 @@ public class RuleCoverageTestGenerator {
             }
             String expresion = sb.toString()+ruleExpression+falsifyPreviousRules;
             boolean sat = z3str(expresion, nameMap, typeMap);
+            HashMap mp = nameMap;
+            HashMap mp2 = typeMap;
+            
             if (sat == true) {
                 try {
-                    z3.getValue(collector, nameMap);
+                    if (condition == null && target == null) {
+                    	z3.getValue(falseCollector, nameMap);
+                        	
+                    }else{
+                    	z3.getValue(collector, nameMap);
+                        
+                    }
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                String request = f.print(collector);
+                String request;
+                if (condition == null && target == null) {
+                	//TODO default rule
+                	//System.out.println("");
+                	request = f.print(falseCollector);
+                	System.out.println(falseCollector.get(0));
+                }else{
+                	request = f.print(collector);
+                }
                 try {
                 	count++;
                     String filePath = testPanel
