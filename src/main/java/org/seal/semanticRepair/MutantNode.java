@@ -1,11 +1,22 @@
 package org.seal.semanticRepair;
 
+import org.apache.commons.io.IOUtils;
+import org.seal.policyUtils.PolicyLoader;
+import org.seal.policyUtils.XpathSolver;
 import org.seal.semanticCoverage.PolicyCoverageFactory;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticFaultLocalization.SpectrumBasedDiagnosisResults;
 import org.seal.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
 import org.seal.semanticMutation.Mutant;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -94,8 +105,15 @@ public class MutantNode implements Comparable<MutantNode> {
         return true;
     }
 
-    private List<Integer> getRandomSuspicionRank(Mutant mutant) {
-        //TODO how to get number of policy elements?
-        return null;
+    private List<Integer> getRandomSuspicionRank(Mutant mutant) throws ParserConfigurationException, SAXException, IOException {
+        InputStream stream = IOUtils.toInputStream(mutant.encode(), Charset.defaultCharset());
+        Document doc = PolicyLoader.getDocument(stream);
+        List<String> xpathList = XpathSolver.getEntryListRelativeXPath(doc);
+        List<Integer> randomSuspicionRank = new ArrayList<>();
+        for (int i = 0; i < xpathList.size(); i++) {
+            randomSuspicionRank.add(i);
+        }
+        Collections.shuffle(randomSuspicionRank);
+        return randomSuspicionRank;
     }
 }

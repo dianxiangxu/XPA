@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -37,6 +39,8 @@ public class Mutator {
     private static Map<String, List<String>> comparisonFunctionMap = new HashMap<>();
     private static List<String> ruleCombiningAlgorithms;
     private static List<String> policyCombiningAlgorithms;
+    private static Set<String> ruleMutationMethods = new HashSet<>();
+    private static Set<String> targetMutationMethods = new HashSet<>();
 
     static {
         /*
@@ -111,6 +115,24 @@ public class Mutator {
                 "urn:oasis:names:tc:xacml:3.0:policy-combining-algorithm:ordered-permit-overrides",
                 "urn:oasis:names:tc:xacml:3.0:policy-combining-algorithm:deny-unless-permit",
                 "urn:oasis:names:tc:xacml:3.0:policy-combining-algorithm:permit-unless-deny");
+
+        ruleMutationMethods.add("createRuleEffectFlippingMutants");
+        ruleMutationMethods.add("createRuleTargetTrueMutants");
+        ruleMutationMethods.add("createRuleConditionTrueMutants");
+        ruleMutationMethods.add("createRuleTargetFalseMutants");
+        ruleMutationMethods.add("createRuleConditionFalseMutants");
+        ruleMutationMethods.add("createRuleChangeComparisonFunctionMutants");
+        ruleMutationMethods.add("createAddNotFunctionMutants");
+        ruleMutationMethods.add("createRemoveNotFunctionMutants");
+        ruleMutationMethods.add("createRemoveRuleMutants");
+        ruleMutationMethods.add("createAddNewRuleMutants");
+
+        targetMutationMethods.add("createPolicyTargetTrueMutants");
+        targetMutationMethods.add("createPolicyTargetFalseMutants");
+        targetMutationMethods.add("createPolicyTargetChangeComparisonFunctionMutants");
+        targetMutationMethods.add("createCombiningAlgorithmMutants");
+        targetMutationMethods.add("createFirstDenyRuleMutants");
+        targetMutationMethods.add("createFirstPermitRuleMutants");
     }
 
     private List<String> xpathList;
@@ -208,7 +230,7 @@ public class Mutator {
      * @throws SAXException
      * @throws IOException
      */
-    public List<Mutant> generateMutants(int bugPosition) throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
+    public List<Mutant> generateAllMutants(int bugPosition) throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         String xpath = xpathList.get(bugPosition);
         List<Mutant> mutants = new ArrayList<>();
         if (isRuleXpathString(xpath)) {
@@ -233,6 +255,21 @@ public class Mutator {
         return mutants;
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Mutant> generateSelectedMutants(List<String> mutationMethods) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        Class<?> cls = this.getClass();
+        List<Mutant> mutants = new ArrayList<>();
+        for (String xpath : xpathList) {
+            for (String mutationMethod : mutationMethods) {
+                if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) ||
+                        isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
+                    Method method = cls.getDeclaredMethod(mutationMethod, String.class);
+                    mutants.addAll((ArrayList) method.invoke(this, xpath));
+                }
+            }
+        }
+        return mutants;
+    }
     /**
      * flip rule effect
      */

@@ -25,9 +25,9 @@ public class Repairer {
         return result;
     }
 
-    String repair(Mutant policyToRepair, TestSuite testSuite, String faultLocalizeMethod, int maxSearchLayer) throws Exception {
+    String repair(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws Exception {
         Queue<MutantNode> queue = new PriorityQueue<>();
-        queue.add(new MutantNode(null, policyToRepair, testSuite, faultLocalizeMethod, 0, 0));
+        queue.add(new MutantNode(null, policyToRepair, testSuite, scoringMethod, 0, 0));
         MutantNode node = null;
         boolean foundRepair = false;
         while (!queue.isEmpty()) {
@@ -48,9 +48,9 @@ public class Repairer {
             Mutator mutator = new Mutator(node.getMutant());
             int rank = 1;
             for (int bugPosition : suspicionRank) {
-                List<Mutant> mutantList = mutator.generateMutants(bugPosition);
+                List<Mutant> mutantList = mutator.generateAllMutants(bugPosition);
                 for (Mutant mutant : mutantList) {
-                    queue.add(new MutantNode(node, mutant, testSuite, faultLocalizeMethod, rank, node.getLayer() + 1));
+                    queue.add(new MutantNode(node, mutant, testSuite, scoringMethod, rank, node.getLayer() + 1));
                 }
                 rank++;
             }
