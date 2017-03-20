@@ -14,9 +14,9 @@ public class RuleCoverageTestGeneratorTest {
 	public void testGenerateTests() throws Exception {
 		Demo demo = new Demo();
 		TestPanelDemo testPanelDemo = new TestPanelDemo(demo);
-		String[] policies = {"conference3"};
+		String[] policies = {"conference3","fedora-rule3","itrust3","kmarket-blue-policy","kmarket-gold-policy","kmarket-sliver-policy","obligation3","pluto3"};
 		for(int l = 0; l < policies.length;l++){
-			String conference3 = System.getProperty("user.dir")+"/Experiments/"+ policies[l]+"/conference3.xml";
+			String conference3 = System.getProperty("user.dir")+"/Experiments/"+ policies[l]+"/"+ policies[l] +".xml";
 			PolicyEditorPanelDemo policyEditor = new PolicyEditorPanelDemo();
 			policyEditor.openFile(conference3);
 			demo.setEditorPanel(policyEditor);

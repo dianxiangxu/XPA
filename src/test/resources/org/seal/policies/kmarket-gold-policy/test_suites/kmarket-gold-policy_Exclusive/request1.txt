@@ -1,0 +1,12 @@
+<Request xmlns="urn:oasis:names:tc:xacml:3.0:core:schema:wd-17" CombinedDecision="false" ReturnPolicyIdList="false">
+<Attributes Category="urn:oasis:names:tc:xacml:1.0:subject-category:access-subject">
+<Attribute AttributeId="http://kmarket.com/id/role" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">gold</AttributeValue>
+</Attribute>
+</Attributes>
+<Attributes Category="http://kmarket.com/category">
+<Attribute AttributeId="http://kmarket.com/id/totalAmount" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#integer">1001</AttributeValue>
+</Attribute>
+</Attributes>
+</Request>

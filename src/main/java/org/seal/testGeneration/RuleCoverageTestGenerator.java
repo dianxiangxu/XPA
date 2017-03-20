@@ -59,42 +59,34 @@ public class RuleCoverageTestGenerator {
 	public static HashMap typeMap = new HashMap();
 	static algorithm al = new algorithm();
     private static boolean debug = false;
-    public static int count ;
-    private static ArrayList<MyAttr> falseCollector;
-
+    private static int count ;
+    private static  PolicyMetaData metaData;
+    private static function f;
+    private static TestPanelDemo testPanel;
+    private static ArrayList<PolicySpreadSheetTestRecord> generator;
 	
     public static ArrayList<PolicySpreadSheetTestRecord> generateTests(TestPanelDemo testPanel, String policyFile){
-        ArrayList<PolicySpreadSheetTestRecord> generator = new ArrayList<PolicySpreadSheetTestRecord>();
         Document doc=null;
         try{
          doc = PolicyLoader.getDocument(new FileInputStream(policyFile));
         }catch(Exception e){
         	e.printStackTrace();
         }
-        function f = new function();
-        falseCollector = new ArrayList<MyAttr>();
-        int ruleNo = 0;
-        File file = new File(testPanel.getTestOutputDestination("_Exclusive"));
-        if (!file.isDirectory() && !file.exists()) {
-            file.mkdir();
-        } else {
-            f.deleteFile(file);
-        }
-        long startTime = System.currentTimeMillis();
-        List<String> paths = new ArrayList<String>();
-        List<String> expressions = new ArrayList<String>();
         AbstractPolicy policy=null;
         try{
         	policy = PolicyLoader.loadPolicy(doc);
         }catch(Exception e){
         	e.printStackTrace();
         }
-        PolicyMetaData metaData = policy.getMetaData();
-        ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
-        StringBuffer sb = new StringBuffer();
-        count = 0;
+        
+        initDependencies(policy,testPanel);
+       
+        ArrayList<MyAttr> rootCollector = new ArrayList<MyAttr>();
+        StringBuffer preExpression = new StringBuffer();
+        long startTime = System.currentTimeMillis();
+        List<String> paths = new ArrayList<String>();
         try{
-        dfs( doc.getDocumentElement(), paths, expressions, metaData, sb,f,testPanel,generator,null);
+        	dfs( doc.getDocumentElement(), paths, preExpression,null,rootCollector);
         }catch(Exception e){
         	e.printStackTrace();
         }
@@ -103,58 +95,140 @@ public class RuleCoverageTestGenerator {
         return generator;
     }
     
+       
+    private static void dfs(Element node, List<String> path, StringBuffer preExpression,List<Rule> previousRules,  ArrayList<MyAttr> rootCollector) throws ParsingException {
+	    String name = DOMHelper.getLocalName(node);
+	    Target target = null;
+	    Condition condition = null;
+	    if (rulePattern.matcher(name).matches()) {
+	        Node targetNode = findInChildNodes(node, "Target");
+	        if (!Mutator.isEmptyNode(targetNode)) {
+	            if (debug) {
+	                path.add(XpathSolver.buildNodeXpath(targetNode));
+	            } else {
+	                target = Target.getInstance(targetNode, metaData);
+	                String targetExpression = buildTargetExpression(target);
+	                path.add(targetExpression);
+	            }
+	        }
+	        Node conditionNode = findInChildNodes(node, "Condition");
+	        
+	        if (!Mutator.isEmptyNode(conditionNode)) {
+	            if (debug) {
+	                path.add(XpathSolver.buildNodeXpath(conditionNode));
+	            } else {
+	                condition = Condition.getInstance(conditionNode, metaData, null);
+	                String conditionExpression = buildConditionExpression(condition);
+	                path.add(conditionExpression);
+	            }
+	        }
+	        
+            if (!Mutator.isEmptyNode(targetNode)) {
+                    path.remove(path.size() - 1);
+                }
+                if (!Mutator.isEmptyNode(conditionNode)) {
+                    path.remove(path.size() - 1);
+                }
+               
+                ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
+                collector.addAll(rootCollector);
+                StringBuffer ruleExpression = new StringBuffer();
+                ruleExpression.append(True_Target(target, collector) + "\n");
+                ruleExpression.append(True_Condition(condition, collector) + "\n");
+                
+                StringBuffer falsifyPreviousRules = new StringBuffer();
+                for(Rule rule:previousRules){
+    				falsifyPreviousRules.append(FalseTarget_FalseCondition(rule, collector) + "\n");
+                }                
+                String expresion = preExpression.toString()+ruleExpression+falsifyPreviousRules;
+                boolean sat = z3str(expresion, nameMap, typeMap);
+                if (sat == true) {
+                    try {
+                    	z3.getValue(collector, nameMap);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    String request = f.print(collector);
+                    try {
+                    	count++;
+                        String filePath = testPanel.getTestOutputDestination("_Exclusive") + File.separator + "request" + count + ".txt";
+                        FileWriter fw = new FileWriter(filePath);
+                        BufferedWriter bw = new BufferedWriter(fw);
+                        bw.write(request);
+                        bw.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    PolicySpreadSheetTestRecord psstr = new PolicySpreadSheetTestRecord(PolicySpreadSheetTestSuite.TEST_KEYWORD + " " + count, "request" + count + ".txt", request, "");
+                    generator.add(psstr);
+                }
+                previousRules.add(Rule.getInstance(node, metaData, null));
+                return;
+            }
+            if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
+                Node targetNode = findInChildNodes(node, "Target");
+                if (targetNode != null) {
+                    if (debug) {
+                        path.add(XpathSolver.buildNodeXpath(targetNode));
+                    } else {
+                        target = Target.getInstance(targetNode, metaData);
+                        //String targetExpression = buildTargetExpression(target);
+                        StringBuilder str = new StringBuilder();
+                        if(target.getAnyOfSelections().size()>0){
+                        preExpression.append(True_Target(target, rootCollector) + "\n");
+                        }
+                        //path.add(targetExpression);
+                    }
+                }
+                
+                NodeList children = node.getChildNodes();
+                previousRules = null;
+                if(policyPattern.matcher(name).matches()){
+                	previousRules = new ArrayList<Rule>();
+                }
+                for (int i = 0; i < children.getLength(); i++) {
+                    Node child = children.item(i);
+                    
+                    if (child instanceof Element) {
+                    	dfs((Element) child, path, preExpression,previousRules,rootCollector);
+                    }
+                }
+                if(path.size()>0){
+                	path.remove(path.size() - 1);
+                }
+            }
+        }
+
+        private static void initDependencies(AbstractPolicy policy,TestPanelDemo testPanel){
+        	 RuleCoverageTestGenerator.testPanel = testPanel;
+             RuleCoverageTestGenerator.generator = new ArrayList<PolicySpreadSheetTestRecord>();
+             f = new function();
+             metaData = policy.getMetaData();
+             count = 0;
+             File file = new File(testPanel.getTestOutputDestination("_Exclusive"));
+             if (!file.isDirectory() && !file.exists()) {
+                 file.mkdirs();
+             } else {
+                 f.deleteFile(file);
+             }
+        }
+        
         public static List<Rule> getRuleFromPolicy(AbstractPolicy policy) {
-		List<CombinerElement> childElements = policy.getChildElements();
-		List<Rule> Elements = new ArrayList<Rule>();
-		for (CombinerElement element : childElements) {
-			PolicyTreeElement tree1 = element.getElement();
-			Rule rule = null;
-			if (tree1 instanceof Rule) {
-				rule = (Rule) tree1;
-				Elements.add(rule);
-			}
-		}
-		return Elements;
-	}
-    
-    private static boolean generateDefaultRule(
-			ArrayList<PolicySpreadSheetTestRecord> generator,
-			TestPanelDemo testPanel, int order, List<Rule> rules, int testNo,
-			String coverageName, AbstractPolicy policy) {
-		function f = new function();
-		StringBuffer sb = new StringBuffer();
-		ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
-		sb.append(TruePolicyTarget(policy, collector));
-		for (int i = 0; i < order; i++) {
-			sb.append(FalseTarget_FalseCondition(rules.get(i), collector) + "\n");
-		}
-		boolean sat = z3str(sb.toString(), nameMap, typeMap);
-		if (sat) {
-			try {
-			z3.getValue(collector, nameMap);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			String request = f.print(collector);
-			try {
-				String path = testPanel.getTestOutputDestination(coverageName)
-						+ File.separator + "request" + testNo + ".txt";
-				FileWriter fw = new FileWriter(path);
-				BufferedWriter bw = new BufferedWriter(fw);
-				bw.write(request);
-				bw.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			PolicySpreadSheetTestRecord psstr = new PolicySpreadSheetTestRecord(
-					PolicySpreadSheetTestSuite.TEST_KEYWORD + " " + testNo,
-					"request" + testNo + ".txt", request, "");
-			generator.add(psstr);
-			return true;
-		}
-		return false;
-	}
-    
+    		List<CombinerElement> childElements = policy.getChildElements();
+    		List<Rule> Elements = new ArrayList<Rule>();
+    		for (CombinerElement element : childElements) {
+    			PolicyTreeElement tree1 = element.getElement();
+    			Rule rule = null;
+    			if (tree1 instanceof Rule) {
+    				rule = (Rule) tree1;
+    				Elements.add(rule);
+    			}
+    		}
+    		return Elements;
+    	}
+        
+   
     public static StringBuffer TruePolicyTarget(AbstractPolicy policy,
 			ArrayList<MyAttr> collector) {
 		StringBuffer sb = new StringBuffer();
@@ -575,147 +649,7 @@ public class RuleCoverageTestGenerator {
 
     
 
-	private static void dfs(Element node, List<String> path, List<String> expressions, PolicyMetaData metaData, StringBuffer sb, function f,TestPanelDemo testPanel,ArrayList<PolicySpreadSheetTestRecord> generator,List<String> falseTargetFalseCondition) throws ParsingException {
-        String name = DOMHelper.getLocalName(node);
-        Target target = null;
-        Condition condition = null;
-        if (rulePattern.matcher(name).matches()) {
-        	
-            Node targetNode = findInChildNodes(node, "Target");
-            if (!Mutator.isEmptyNode(targetNode)) {
-                if (debug) {
-                    path.add(XpathSolver.buildNodeXpath(targetNode));
-                } else {
-                    target = Target.getInstance(targetNode, metaData);
-                    String targetExpression = buildTargetExpression(target);
-                    path.add(targetExpression);
-                }
-            }
-            Node conditionNode = findInChildNodes(node, "Condition");
-            
-            if (!Mutator.isEmptyNode(conditionNode)) {
-                if (debug) {
-                    path.add(XpathSolver.buildNodeXpath(conditionNode));
-                } else {
-                    condition = Condition.getInstance(conditionNode, metaData, null);
-                    String conditionExpression = buildConditionExpression(condition);
-                    path.add(conditionExpression);
-                }
-            }
-            expressions.add(concatenateExpressions(path));
-            if (!Mutator.isEmptyNode(targetNode)) {
-                path.remove(path.size() - 1);
-            }
-            if (!Mutator.isEmptyNode(conditionNode)) {
-                path.remove(path.size() - 1);
-            }
-           
-            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
-            StringBuffer ruleExpression = new StringBuffer();
-            ruleExpression.append(True_Target(target, collector) + "\n");
-            ruleExpression.append(True_Condition(condition, collector) + "\n");
-            
-            if (condition != null || target != null) {
-            	falseCollector=collector;
-                
-            }
-            
-            //TODO : need to handle this in more effective approach
-            if(!falseTargetFalseCondition.equals("(not (and ))")){
-            	falseTargetFalseCondition.add(FalseTarget_FalseCondition(target,condition, collector) + "\n");
-            }
-            StringBuffer falsifyPreviousRules = new StringBuffer();
-            for(int i = 0; i< falseTargetFalseCondition.size()-1;i++){
-            	falsifyPreviousRules.append(falseTargetFalseCondition.get(i));
-            }
-            String expresion = sb.toString()+ruleExpression+falsifyPreviousRules;
-            boolean sat = z3str(expresion, nameMap, typeMap);
-            HashMap mp = nameMap;
-            HashMap mp2 = typeMap;
-            
-            if (sat == true) {
-                try {
-                    if (condition == null && target == null) {
-                    	z3.getValue(falseCollector, nameMap);
-                        	
-                    }else{
-                    	z3.getValue(collector, nameMap);
-                        
-                    }
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                String request;
-                if (condition == null && target == null) {
-                	//TODO default rule
-                	//System.out.println("");
-                	request = f.print(falseCollector);
-                	System.out.println(falseCollector.get(0));
-                }else{
-                	request = f.print(collector);
-                }
-                try {
-                	count++;
-                    String filePath = testPanel
-                            .getTestOutputDestination("_Exclusive")
-                            + File.separator + "request" + count + ".txt";
-
-                    FileWriter fw = new FileWriter(filePath);
-                    BufferedWriter bw = new BufferedWriter(fw);
-                    bw.write(request);
-                    bw.close();
-
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-
-                // generate target object
-                PolicySpreadSheetTestRecord psstr = new PolicySpreadSheetTestRecord(
-                        PolicySpreadSheetTestSuite.TEST_KEYWORD + " " + count,
-                        "request" + count + ".txt", request, "");
-                generator.add(psstr);
-                
-            }
-            return;
-        }
-        if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
-            Node targetNode = findInChildNodes(node, "Target");
-            ArrayList<MyAttr> collector = new ArrayList<MyAttr>();
-
-            if (targetNode != null) {
-                if (debug) {
-                    path.add(XpathSolver.buildNodeXpath(targetNode));
-                } else {
-                    target = Target.getInstance(targetNode, metaData);
-                    //String targetExpression = buildTargetExpression(target);
-                    StringBuilder str = new StringBuilder();
-                    if(target.getAnyOfSelections().size()>0){
-                    sb.append(True_Target(target, collector) + "\n");
-                    }
-                    //path.add(targetExpression);
-                }
-            }
-            
-            NodeList children = node.getChildNodes();
-            falseTargetFalseCondition= null;
-            if(policyPattern.matcher(name).matches()){
-            	falseTargetFalseCondition = new ArrayList<String>();
-            }
-            for (int i = 0; i < children.getLength(); i++) {
-                Node child = children.item(i);
-                
-                if (child instanceof Element) {
-                	dfs((Element) child, path, expressions, metaData,sb,f,testPanel,generator,falseTargetFalseCondition);
-                }
-            }
-            if(path.size()>0){
-            	path.remove(path.size() - 1);
-            }
-        }
-    }
-	private static Node findInChildNodes(Node parent, String localName) {
+		private static Node findInChildNodes(Node parent, String localName) {
         List<Node> childNodes = Mutator.getChildNodeList(parent);
         for (Node child : childNodes) {
             if (localName.equals(child.getLocalName())) {
@@ -726,7 +660,6 @@ public class RuleCoverageTestGenerator {
     }
 
     private static String concatenateExpressions(List<String> path) {
-        //TODO construct an expression from a list expressions
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < path.size(); i++) {
             if (i == 0) {
@@ -739,12 +672,10 @@ public class RuleCoverageTestGenerator {
     }
 
     private static String buildTargetExpression(Target target) {
-        //TODO build expression from Target
         return target.encode();
     }
 
     private static String buildConditionExpression(Condition condition) {
-        //TODO build expression from Condition
         return condition.encode();
     }
 	
