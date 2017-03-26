@@ -139,6 +139,7 @@ public class Mutator {
     private Map<String, Integer> xpathMapping;
     private Document doc;
     private XPath xPath;
+    private String baseMutantName;
 
     public Mutator(Mutant baseMutant) throws ParserConfigurationException, SAXException, IOException {
         InputStream stream = IOUtils.toInputStream(baseMutant.encode(), Charset.defaultCharset());
@@ -149,6 +150,7 @@ public class Mutator {
             xpathMapping.put(xpathList.get(i), i);
         }
         xPath = XPathFactory.newInstance().newXPath();
+        baseMutantName = baseMutant.getName();
     }
 
     public static boolean isEmptyNode(Node node) {
@@ -292,7 +294,7 @@ public class Mutator {
                 node.getAttributes().getNamedItem("Effect").setTextContent("Deny");
             }
             int faultLocation = xpathMapping.get(ruleXpathString);
-            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), "CRE" + faultLocation));
+            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + "CRE" + faultLocation));
         }
         return list;
     }
@@ -336,7 +338,7 @@ public class Mutator {
                 node.removeChild(child);
             }
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc
             for (Node child : children) {
                 node.appendChild(child);
@@ -364,7 +366,7 @@ public class Mutator {
             Node ruleNode = node.getParentNode();
             ruleNode.removeChild(node);
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc
             ruleNode.appendChild(node);
         }
@@ -430,7 +432,7 @@ public class Mutator {
             }
 //            System.out.println(XpathSolver.nodeToString(matchNode.getParentNode(), false, true));
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc by removing the two conflicting Match nodes from parent
             for (Node cloned : clonedNodes) {
                 matchNode.getParentNode().removeChild(cloned);
@@ -491,7 +493,7 @@ public class Mutator {
                 parent.appendChild(importedFalseConditionNode);
 //                System.out.println(XpathSolver.nodeToString(parent, false, true));
                 AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+                mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
                 //restore doc
                 parent.removeChild(importedFalseConditionNode);
                 parent.appendChild(conditionNode);
@@ -551,7 +553,7 @@ public class Mutator {
                             //change doc
                             functionNode.getAttributes().getNamedItem("FunctionId").setNodeValue(comparisonFunction);
                             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+                            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
                         }
                     }
                     //restore doc
@@ -583,7 +585,7 @@ public class Mutator {
                         matchNode.getAttributes().getNamedItem("MatchId").setNodeValue(comparisonFunction);
 //                        System.out.println(XpathSolver.nodeToString(matchNode, false, true));
                         AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+                        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
                     }
                 }
                 //restore doc
@@ -622,7 +624,7 @@ public class Mutator {
             }
             conditionNode.appendChild(importedNotFunctionNode);
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc
             for (Node child : childNodes) {
                 importedNotFunctionNode.removeChild(child);
@@ -661,7 +663,7 @@ public class Mutator {
                     parent.appendChild(child);
                 }
                 AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+                mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
                 //restore doc
                 for (Node child : childNodes) {
                     parent.removeChild(child);
@@ -700,7 +702,7 @@ public class Mutator {
                 if (!combiningAlgoId.equals(originalCombiningAlgId)) {
                     policyNode.getAttributes().getNamedItem(combiningAlgAttribute).setNodeValue(combiningAlgoId);
                     AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                    mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+                    mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
                 }
             }
             //restore doc
@@ -724,7 +726,7 @@ public class Mutator {
         Node nextSibling = ruleNode.getNextSibling();
         parent.removeChild(ruleNode);
         AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
         //restore
         //use insertBefore() instead of appendChild() because we want to restore the Rule node to the same previous index
         // as for combining algorithms like "first applicable", the order of rules matters
@@ -755,7 +757,7 @@ public class Mutator {
         //change doc
         parent.insertBefore(clone, ruleNode);
         AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
         //restore doc
         parent.removeChild(clone);
         //if the rule has a Target, make a clone of the rule, make the target of the clone always true, and insert it before the rule.
@@ -770,7 +772,7 @@ public class Mutator {
             //change doc
             parent.insertBefore(clone, ruleNode);
             newPolicy = PolicyLoader.loadPolicy(doc);
-            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc
             parent.removeChild(clone);
         }
@@ -860,7 +862,7 @@ public class Mutator {
             policyNode.removeChild(nodeB);
             policyNode.insertBefore(nodeB, nodeA);
             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), mutantName + faultLocation));
+            mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc
             policyNode.removeChild(nodeB);
             policyNode.insertBefore(nodeB, nodeBNext);

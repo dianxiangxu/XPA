@@ -3,7 +3,13 @@ package org.seal.semanticRepair;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticMutation.Mutator;
+import org.wso2.balana.ParsingException;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -17,7 +23,7 @@ public class Repairer {
      * @param booleanList
      * @return result of logical AND on all elements of the boolean array
      */
-    static boolean booleanListAnd(List<Boolean> booleanList) {
+    private static boolean booleanListAnd(List<Boolean> booleanList) {
         boolean result = true;
         for (boolean b : booleanList) {
             result = result && b;
@@ -25,15 +31,13 @@ public class Repairer {
         return result;
     }
 
-    String repair(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws Exception {
+    String repair(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException, ParsingException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Queue<MutantNode> queue = new PriorityQueue<>();
         queue.add(new MutantNode(null, policyToRepair, testSuite, scoringMethod, 0, 0));
         MutantNode node = null;
         boolean foundRepair = false;
         while (!queue.isEmpty()) {
             node = queue.poll();
-//			System.out.println("queue size: " + queue.size());
-//			System.out.println();
             List<Boolean> testResults = node.getTestResult();
             if (booleanListAnd(testResults)) {
                 foundRepair = true;
@@ -55,6 +59,7 @@ public class Repairer {
                 rank++;
             }
         }
+        assert node != null;
         String res = node.getMutant().getName();
         if (foundRepair)
             return res;

@@ -14,6 +14,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,16 +57,17 @@ public class MutantNode implements Comparable<MutantNode> {
         this.mutant = mutant;
     }
 
-    List<Boolean> getTestResult() throws Exception {
-        if (testResult == null)
+    List<Boolean> getTestResult() {
+        if (testResult == null) {
             testResult = testSuite.runTests(mutant);
+        }
         return testResult;
     }
 
     /**
      * make sure to run tests before calling this method
      */
-    List<Integer> getSuspicionRank() throws Exception {
+    List<Integer> getSuspicionRank() throws IOException, SAXException, ParserConfigurationException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (scoringMethod.equals("random")) {
             return getRandomSuspicionRank(mutant);
         }
@@ -90,13 +92,18 @@ public class MutantNode implements Comparable<MutantNode> {
         return totalRank;
     }
 
-    boolean isPromising() throws Exception {
-        if (parent == null)
-            return true;
-        return failedTestsIsSubset();
+    /**
+     * The faulty policy is at the root of the tree, and of course is promising. We assume that the faults are independent,
+     * and that if the failed tests of a mutant is the subset of the failed tests of its parent, the mutant is promising.
+     *
+     * @return
+     * @throws Exception
+     */
+    boolean isPromising() {
+        return parent == null || failedTestsIsSubset();
     }
 
-    private boolean failedTestsIsSubset() throws Exception {
+    private boolean failedTestsIsSubset() {
         List<Boolean> result = getTestResult();
         List<Boolean> parentResult = parent.getTestResult();
         for (int i = 0; i < result.size(); i++)

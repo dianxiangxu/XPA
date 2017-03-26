@@ -8,22 +8,26 @@ import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticMutation.Mutator;
 import org.wso2.balana.AbstractPolicy;
+import org.wso2.balana.ParsingException;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by shuaipeng on 3/17/17.
  */
 public class ExperimentOnRepair {
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws IllegalAccessException, InvocationTargetException, SAXException, XPathExpressionException, ParsingException, ParserConfigurationException, NoSuchMethodException, IOException {
+        ExperimentOnRepair experimentOnRepair = new ExperimentOnRepair();
+        experimentOnRepair.startExperiment();
     }
 
     private static List<Mutant> createMultiFaultMutants(AbstractPolicy policy, int numFaults,
@@ -67,7 +71,14 @@ public class ExperimentOnRepair {
         writer.flushQuietly();
     }
 
-    public void startExperiment() throws Exception {
+    static private long[] timeUtile(long totalSeconds) {
+        long hours = totalSeconds / 60 / 60;
+        long minutes = totalSeconds / 60 - 60 * hours;
+        long seconds = totalSeconds % 60;
+        return new long[]{hours, minutes, seconds};
+    }
+
+    public void startExperiment() throws ParserConfigurationException, ParsingException, SAXException, IOException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, XPathExpressionException {
         File policyFile = new File("src/test/resources/org/seal/policies/HL7/HL7.xml");
         AbstractPolicy policy = PolicyLoader.loadPolicy(policyFile);
         File testsCSVfile = new File("src/test/resources/org/seal/policies/HL7/test_suites/manual/HL7.csv");
@@ -94,16 +105,47 @@ public class ExperimentOnRepair {
         writeCSVTitleRow(timingWriter, scoringMethods);
         writeCSVTitleRow(repairResultWriter, scoringMethods);
         Repairer repairer = new Repairer();
+
+        long startTime = System.currentTimeMillis();
+        int outerCnt = 0;
+        long seed = 1;
+        Random rn = new Random();
+        rn.setSeed(seed);
         for (Mutant faultyPolicy : faultyPolicies) {
+            double probability = 0.1;
+            if (rn.nextDouble() > probability) {
+                outerCnt++;
+                continue;
+            }
+            int innerCnt = 0;
             List<String> durationList = new ArrayList<>();
             List<String> repairedFileList = new ArrayList<>();
             for (String scoringMethod : scoringMethods) {
+                innerCnt++;
+                long start = System.currentTimeMillis();
                 String repaired = repairer.repair(faultyPolicy, testSuite, scoringMethod, numFaults);
-                repairedFileList.add(repaired);
+                long end = System.currentTimeMillis();
+                System.out.println("faulty policy: " + faultyPolicy.getName() + ", faultlocalizer: " + scoringMethod);
+                long currentTime = System.currentTimeMillis();
+                long elapsedSeconds = (currentTime - startTime) / 1000;
+                long[] time = timeUtile(elapsedSeconds);
+                System.out.println("elapsed time: " + time[0] + " hours, " + time[1] + " minutes, " + time[2] + " seconds");
+                double ratio = ((double) innerCnt + outerCnt * scoringMethods.size()) / scoringMethods.size() / faultyPolicies.size();
+                System.out.println("finished " + ratio * 100 + "%");
+                long estimatedRemainingSeconds = (long) (elapsedSeconds * (1 / ratio - 1));
+                time = timeUtile(estimatedRemainingSeconds);
+                System.out.println("estimated remaining time: " + time[0] + " hours, " + time[1] + " minutes, " + time[2] + " seconds");
+                durationList.add(Long.toString(end - start));
+                if (repaired != null) {
+                    repairedFileList.add(repaired);
+                } else {
+                    repairedFileList.add("cannot repair");
+                }
                 //TODO get time takes to repair a faulty policy, add to durationList
             }
             writeCSVResultRow(timingWriter, faultyPolicy.getName(), durationList);
             writeCSVResultRow(repairResultWriter, faultyPolicy.getName(), repairedFileList);
+            outerCnt++;
         }
         timingWriter.close();
         repairResultWriter.close();
