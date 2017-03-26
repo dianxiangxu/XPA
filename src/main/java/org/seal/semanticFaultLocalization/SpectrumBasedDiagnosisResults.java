@@ -10,7 +10,7 @@ import java.util.List;
 public class SpectrumBasedDiagnosisResults {
     private List<PolicyElementCoefficient> coefficientList = new ArrayList<>();
 
-    SpectrumBasedDiagnosisResults(double[] coefficients) {
+    public SpectrumBasedDiagnosisResults(double[] coefficients) {
         for (int i = 0; i < coefficients.length; i++) {
             coefficientList.add(new PolicyElementCoefficient(coefficients[i], i));
         }
@@ -37,7 +37,7 @@ public class SpectrumBasedDiagnosisResults {
         }
     }
 
-    List<Integer> getIndexRankedBySuspicion() {
+    public List<Integer> getIndexRankedBySuspicion() {
         List<Integer> indexRankedBySuspicion = new ArrayList<>();
         for (PolicyElementCoefficient coefficient : coefficientList)
             indexRankedBySuspicion.add(coefficient.getIndex());

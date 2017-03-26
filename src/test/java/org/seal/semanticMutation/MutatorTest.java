@@ -38,14 +38,6 @@ public class MutatorTest {
     private Mutator mutator;
     private Document doc;
 
-    private boolean isRuleXpathString(String xPathString) {
-        return xPathString.contains("[local-name()='Rule'");
-    }
-
-    private boolean isTargetXpathString(String xPathString) {
-        return xPathString.contains("[local-name()='Target'");
-    }
-
     @Before
     public void initialize() throws ParserConfigurationException, ParsingException, SAXException, IOException {
         File file = new File("src/test/resources/org/seal/policies/HL7/HL7.xml");
@@ -79,7 +71,7 @@ public class MutatorTest {
     @Test
     public void createRuleEffectFlippingMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
                 Node node = nodes.item(0);
@@ -102,7 +94,7 @@ public class MutatorTest {
     @Test
     public void createPolicyTargetTrueMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isTargetXpathString(xpathString)) {
+            if (Mutator.isTargetXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
@@ -130,7 +122,7 @@ public class MutatorTest {
     @Test
     public void createRuleTargetTrueMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
                 String targetXpathString = xpathString + "/*[local-name()='Target' and 1]";
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(targetXpathString, doc.getDocumentElement(), XPathConstants.NODESET);
@@ -159,7 +151,7 @@ public class MutatorTest {
     @Test
     public void createRuleConditionTrueMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 Node ruleNode = ((NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
 //                System.out.println(XpathSolver.nodeToString(ruleNode, false, true));
@@ -188,7 +180,7 @@ public class MutatorTest {
     @Test
     public void createRuleTargetFalseMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 List<Mutant> mutants = mutator.createRuleTargetFalseMutants(xpathString);
                 String targetXpathString = xpathString + "/*[local-name()='Target' and 1]";
@@ -200,7 +192,7 @@ public class MutatorTest {
     @Test
     public void createPolicyTargetFalseMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isTargetXpathString(xpathString)) {
+            if (Mutator.isTargetXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 createTargetFalseMutantsTest(xpathString, mutator.createPolicyTargetFalseMutants(xpathString));
             }
@@ -251,7 +243,7 @@ public class MutatorTest {
     @Test
     public void createRuleConditionFalseMutantsTest() throws ParserConfigurationException, ParsingException, SAXException, XPathExpressionException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Node node = nodes.item(0);
@@ -299,7 +291,7 @@ public class MutatorTest {
     @Test
     public void createPolicyTargetChangeComparisonFunctionMutantsTest() throws XPathExpressionException, ParserConfigurationException, SAXException, IOException, ParsingException {
         for (String xpathString : xpathList) {
-            if (isTargetXpathString(xpathString)) {
+            if (Mutator.isTargetXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
@@ -326,7 +318,7 @@ public class MutatorTest {
     @Test
     public void createRuleChangeComparisonFunctionMutantsTest() throws XPathExpressionException, ParserConfigurationException, SAXException, IOException, ParsingException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
@@ -353,7 +345,7 @@ public class MutatorTest {
     @Test
     public void createAddNotFunctionMutantsTest() throws XPathExpressionException, ParserConfigurationException, ParsingException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
@@ -386,7 +378,7 @@ public class MutatorTest {
         Document doc = PolicyLoader.getDocument(IOUtils.toInputStream(policy.encode(), Charset.defaultCharset()));
         Mutator mutator = new Mutator(new Mutant(policy, ""));
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 //check if there the first Apply element's FunctionId is not function
                 String notFunctionXpathString = xpathString + "/*[local-name()='Condition' and 1]/*[local-name()='Apply' and @FunctionId='urn:oasis:names:tc:xacml:1.0:function:not']";
@@ -416,7 +408,7 @@ public class MutatorTest {
     @Test
     public void createCombiningAlgorithmMutantsTest() throws XPathExpressionException, ParserConfigurationException, ParsingException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isTargetXpathString(xpathString)) {
+            if (Mutator.isTargetXpathString(xpathString)) {
                 String policyXpathString = xpathString.replace("/*[local-name()='Target' and 1]", "");
 //                System.out.println(policyXpathString);
                 Node node = ((NodeList) xPath.evaluate(policyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
@@ -445,7 +437,7 @@ public class MutatorTest {
     @Test
     public void createRemoveRuleMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
@@ -467,7 +459,7 @@ public class MutatorTest {
     @Test
     public void createAddNewRuleMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isRuleXpathString(xpathString)) {
+            if (Mutator.isRuleXpathString(xpathString)) {
 //                System.out.println(xpathString);
                 NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
                 Assert.assertEquals(1, nodes.getLength());
@@ -493,7 +485,7 @@ public class MutatorTest {
     @Test
     public void createFirstDenyRuleMutantsTest() throws XPathExpressionException, ParsingException, ParserConfigurationException, SAXException, IOException {
         for (String xpathString : xpathList) {
-            if (isTargetXpathString(xpathString)) {
+            if (Mutator.isTargetXpathString(xpathString)) {
                 String policyXpathString = xpathString.replace("/*[local-name()='Target' and 1]", "");
 //                System.out.println(policyXpathString);
                 Node node = ((NodeList) xPath.evaluate(policyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
@@ -527,7 +519,7 @@ public class MutatorTest {
         Document doc = PolicyLoader.getDocument(IOUtils.toInputStream(policy.encode(), Charset.defaultCharset()));
         Mutator mutator = new Mutator(new Mutant(policy, ""));
         for (String xpathString : xpathList) {
-            if (isTargetXpathString(xpathString)) {
+            if (Mutator.isTargetXpathString(xpathString)) {
                 String policyXpathString = xpathString.replace("/*[local-name()='Target' and 1]", "");
 //                System.out.println(policyXpathString);
                 Node node = ((NodeList) xPath.evaluate(policyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);

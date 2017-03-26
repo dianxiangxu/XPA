@@ -34,6 +34,7 @@ public class FaultLocalizationExperiment {
         } catch (SAXException e) {
             e.printStackTrace();
         }
+        //TODO use files in src/test/resources
 //        String mutantsCSVfileName = "experiments/conference3/mutants/mutants.csv";
         String mutantsCSVfileName = "experiments/HL7/mutants/manual/mutants.csv";
         File mutantsCSVfile = new File(mutantsCSVfileName);
