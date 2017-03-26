@@ -3,8 +3,12 @@ package org.seal.semanticCoverage;
 import org.junit.Test;
 import org.seal.policyUtils.PolicyLoader;
 import org.wso2.balana.AbstractPolicy;
+import org.wso2.balana.ParsingException;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
@@ -51,5 +55,18 @@ public class PolicyRunnerTest {
         List<Boolean> results = testSuite.runTests(policy);
         for (boolean result : results)
             assertTrue(result);
+    }
+
+    /**
+     * test for the bug fix of "PermitUnlessDeny" Policy combining algorithm.
+     * See https://wso2.org/jira/browse/IDENTITY-1817
+     */
+    @Test
+    public void runTestOnPolicySetHL7_bugFix() throws ParserConfigurationException, ParsingException, SAXException, IOException {
+        File testsCSVfile = new File("src/test/resources/org/seal/policies/HL7/test_suites/manual/HL7.csv");
+        TestSuite testSuite = TestSuite.loadTestSuite(testsCSVfile);
+        File file = new File("src/test/resources/org/seal/policies/HL7/HL7_CRC0_CRC0_CRC15_CRC11.xml");
+        AbstractPolicy policy = PolicyLoader.loadPolicy(file);
+        testSuite.runTests(policy);// we don't care about the results, only want to know if ClassCastException happens
     }
 }
