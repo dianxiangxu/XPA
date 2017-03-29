@@ -50,7 +50,11 @@ public class algorithm {
 	public String returnFunction(String function){
 		if (function.contains("equal") && !function.contains("greater")
 				&& !function.contains("less")) {
+			if(function.contains("boolean")){
+				return "";
+			} else{
 			return "=";
+			}
 		} else if (function.contains("greater") && !function.contains("equal")) {
 			return ">";
 		} else if (function.contains("less") && !function.contains("equal")) {

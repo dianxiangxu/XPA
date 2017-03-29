@@ -37,6 +37,7 @@ import java.util.Random;
 
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.Policy;
+import org.wso2.balana.attr.BooleanAttribute;
 import org.wso2.balana.attr.IntegerAttribute;
 import org.wso2.balana.attr.StringAttribute;
 import org.wso2.balana.attr.xacml3.AttributeDesignator;
@@ -44,6 +45,7 @@ import org.wso2.balana.combine.CombinerElement;
 import org.wso2.balana.cond.Apply;
 import org.wso2.balana.cond.Condition;
 import org.wso2.balana.cond.Expression;
+import org.wso2.balana.cond.Function;
 import org.wso2.balana.xacml3.AllOfSelection;
 import org.wso2.balana.xacml3.AnyOfSelection;
 import org.wso2.balana.xacml3.Target;
@@ -82,7 +84,7 @@ public class RuleCoverageTestGenerator {
         initDependencies(policy,testPanel);
        
         ArrayList<MyAttr> rootCollector = new ArrayList<MyAttr>();
-        StringBuffer preExpression = new StringBuffer();
+        StringBuilder preExpression = new StringBuilder();
         long startTime = System.currentTimeMillis();
         List<String> paths = new ArrayList<String>();
         try{
@@ -96,7 +98,7 @@ public class RuleCoverageTestGenerator {
     }
     
        
-    private static void dfs(Element node, List<String> path, StringBuffer preExpression,List<Rule> previousRules,  ArrayList<MyAttr> rootCollector) throws ParsingException {
+    private static void dfs(Element node, List<String> path, StringBuilder preExpression,List<Rule> previousRules,  ArrayList<MyAttr> rootCollector) throws ParsingException {
 	    String name = DOMHelper.getLocalName(node);
 	    Target target = null;
 	    Condition condition = null;
@@ -189,9 +191,10 @@ public class RuleCoverageTestGenerator {
                 }
                 for (int i = 0; i < children.getLength(); i++) {
                     Node child = children.item(i);
-                    
-                    if (child instanceof Element) {
-                    	dfs((Element) child, path, preExpression,previousRules,rootCollector);
+                    StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
+                         
+                    if (child instanceof Element && isTraversableElement(child)) {
+                    	dfs((Element) child, path, preExpressionCurrent,previousRules,rootCollector);
                     }
                 }
                 if(path.size()>0){
@@ -200,6 +203,13 @@ public class RuleCoverageTestGenerator {
             }
         }
 
+    	private static boolean isTraversableElement(Node e){
+    		if(rulePattern.matcher(e.getLocalName()).matches()||policysetPattern.matcher(e.getLocalName()).matches() || policyPattern.matcher(e.getLocalName()).matches()){
+    			return true;
+    		} else{
+    			return false;
+    		}
+    	}
         private static void initDependencies(AbstractPolicy policy,TestPanelDemo testPanel){
         	 RuleCoverageTestGenerator.testPanel = testPanel;
              RuleCoverageTestGenerator.generator = new ArrayList<PolicySpreadSheetTestRecord>();
@@ -363,11 +373,19 @@ public class RuleCoverageTestGenerator {
 							// attribute.getId().toString());
 							String attr = attribute.toString();
 							String temp = getName(attribute.getId().toString());
-							allBuilder.append(" ("
-									+ al.returnFunction(match
-											.getMatchFunction().encode()) + " "
-									+ getName(attribute.getId().toString())
-									+ " ");
+							if(attribute.getType().toString().contains("boolean") ){
+								allBuilder.append(getName(attribute.getId().toString()));
+								
+							}else{
+								allBuilder.append(" ("
+										+ al.returnFunction(match
+												.getMatchFunction().encode()) + " "
+										+ getName(attribute.getId().toString())
+										+ " ");
+								
+							}
+							
+							
 							if (attribute.getType().toString()
 									.contains("string")) {
 								String value = match.getAttrValue().encode();
@@ -393,13 +411,16 @@ public class RuleCoverageTestGenerator {
 							}
 						}
 					}
-					allBuilder.insert(0, " (and");
+					allBuilder.insert(0, " (and ");
 					allBuilder.append(")");
 					orBuilder.append(allBuilder);
 				}
 				orBuilder.insert(0, " (or ");
 				orBuilder.append(")");
 				sb.append(orBuilder);
+			}
+			if(sb.toString().trim().equals("")){
+				return "";
 			}
 			sb.insert(0, "(and ");
 			sb.append(")");
@@ -520,28 +541,83 @@ public class RuleCoverageTestGenerator {
 			sb = buildAttrDesignator(sb, apply, value, functionName, collector);
 			return sb;
 		} else {
+			int consecutiveAttrDs = 0;
+			boolean first = true;
+			String postPart="";
+			String boolExpresion = "";
 			for (Object element : apply.getList()) {
 				String value = null;
-				if (element instanceof IntegerAttribute) {
+				
+				if(element instanceof Function){
+					function = ((Function)element).encode();
+				}
+				else if (element instanceof IntegerAttribute) {
 					IntegerAttribute intValue = (IntegerAttribute) element;
 					value = intValue.getValue() + "";
+					if(first){
+						postPart =  value + ")";
+						first = false;
+					} else{
+						sb.append(value + ")");
+					}
 					sb.append(value + ")");
-
+					consecutiveAttrDs--;
 				}
-				if (element instanceof StringAttribute) {
+				else if (element instanceof StringAttribute) {
 					StringAttribute stringValue = (StringAttribute) element;
 					value = stringValue.getValue() + "";
-					sb.append("\"" + value + "\")");
+					if(first){
+						
+						postPart =  "\"" + value + "\")";
+						first = false;
+					} else{
+						sb.append("\"" + value + "\")");
+					}
+					
+					consecutiveAttrDs--;
 				}
-				if (element instanceof Apply) {
+				else if (element instanceof BooleanAttribute) {
+					BooleanAttribute booleanValue = (BooleanAttribute) element;
+					value = booleanValue.getValue() + "";
+					if(first){
+						if(value.equals("false")){
+							sb.append("not ");
+						}
+						first = false;
+					} else{
+						sb = new StringBuffer("not " + sb);
+					}
+					consecutiveAttrDs--;
+				}
+				else if (element instanceof Apply) {
 					Apply childApply = (Apply) element;
 					ApplyStatements(childApply, apply.getFunction().encode(),
 							sb, collector);
+					consecutiveAttrDs--;
 				}
-				if (element instanceof AttributeDesignator) {
+				else if (element instanceof AttributeDesignator) {
+					consecutiveAttrDs++;
 					AttributeDesignator attributes = (AttributeDesignator) element;
-					sb.append(" (" + al.returnFunction(function) + " "
-							+ getName(attributes.getId().toString()) + " ");
+					
+					if(consecutiveAttrDs == 2){
+						consecutiveAttrDs = 0;
+						
+							sb.append(" " + getName(attributes.getId().toString()) + ") ");
+						
+					} else{
+						if(function.contains("boolean")){
+							sb.append(" " + getName(attributes.getId().toString()));
+							
+						} else {
+							sb.append(" (" + al.returnFunction(function) + " "
+									+ getName(attributes.getId().toString()) + " ");
+							if(!first){
+								sb.append(postPart);
+								first = true;
+							}
+						}
+						
+					}
 					getType(getName(attributes.getId().toString()), attributes
 							.getType().toString());
 					MyAttr myattr = new MyAttr(attributes.getId().toString(),
@@ -550,9 +626,10 @@ public class RuleCoverageTestGenerator {
 					if (isExist(collector, myattr) == false) {
 						collector.add(myattr);
 					}
-
 				}
 			}
+			
+			
 		}
 		return sb;
 	}
@@ -592,7 +669,7 @@ public class RuleCoverageTestGenerator {
 				typeMap.put(name, "Int");
 			}
 			if(type.contains("boolean")){
-				typeMap.put(name, "Boolean");
+				typeMap.put(name, "bool");
 			}
 			return typeMap.get(name).toString();
 		}

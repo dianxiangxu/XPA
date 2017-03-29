@@ -534,6 +534,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 
 	public String getWorkingPolicyFilePath() {
 		return editorPanel.getWorkingPolicyFile().getAbsolutePath();
+		
 	}
 
 	public PolicySpreadSheetTestSuite getWorkingTestSuite() {
