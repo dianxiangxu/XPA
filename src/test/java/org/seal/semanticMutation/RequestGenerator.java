@@ -200,7 +200,7 @@ public class RequestGenerator {
     }
 
     @Test
-    public void createRuleConditionTrueMutants() throws IOException, SAXException, ParserConfigurationException, ParsingException, XPathExpressionException, JSONException {
+    public void createRuleConditionTrueMutantsTest() throws IOException, SAXException, ParserConfigurationException, ParsingException, XPathExpressionException, JSONException {
         File file = new File("src/test/resources/org/seal/policies/HL7/HL7.xml");
         AbstractPolicy policy = PolicyLoader.loadPolicy(file);
         Mutator mutator = new Mutator(new Mutant(policy, ""));
@@ -230,4 +230,61 @@ public class RequestGenerator {
         }
     }
 
+    @Test
+    public void createRuleEffectFlippingMutantsTest() throws IOException, SAXException, ParserConfigurationException, ParsingException, XPathExpressionException, JSONException {
+        File file = new File("src/test/resources/org/seal/policies/HL7/HL7.xml");
+        AbstractPolicy policy = PolicyLoader.loadPolicy(file);
+        Mutator mutator = new Mutator(new Mutant(policy, ""));
+        String ruleXpathString = "//*[local-name()='Rule' and @RuleId='http://axiomatics.com/alfa/identifier/com.axiomatics.hl7.global.clinicalObjectAccess.clinicalObjectAccess']";
+        List<Mutant> mutants = mutator.createRuleEffectFlippingMutants(ruleXpathString);
+        Assert.assertEquals(1, mutants.size());
+        Mutant mutant = mutants.get(0);
+        String[] environment = null;
+        String[] resource = new String[2];
+        resource[0] = "com.axiomatics.hl7.object.objectType";
+        resource[1] = "Clinical Object";
+        String[] actionString = new String[1];
+        actionString[0] = "read";
+        String[] subjectString = new String[2];
+        subjectString[0] = "com.axiomatics.hl7.user.role";
+        subjectString[1] = "physician";
+        JSONObject obj = createRequestObject(environment, resource, actionString, subjectString);
+        String request = generateRequest(obj);
+        TestSuite testSuite = new TestSuite(Collections.singletonList(""), Collections.singletonList(request), Collections.singletonList("Deny"));
+        List<Boolean> results = testSuite.runTests(mutant);
+        for (Boolean res : results) {
+            Assert.assertTrue(res);
+        }
+    }
+
+    @Test
+    public void createRuleTargetFalseMutantsTest() throws IOException, SAXException, ParserConfigurationException, ParsingException, XPathExpressionException, JSONException {
+        File file = new File("src/test/resources/org/seal/policies/HL7/HL7.xml");
+        AbstractPolicy policy = PolicyLoader.loadPolicy(file);
+        Mutator mutator = new Mutator(new Mutant(policy, ""));
+        String ruleXpathString = "//*[local-name()='Rule' and @RuleId='http://axiomatics.com/alfa/identifier/com.axiomatics.hl7.global.progressNotes.createNote']";
+        List<Mutant> mutants = mutator.createRuleTargetFalseMutants(ruleXpathString);
+        Assert.assertEquals(1, mutants.size());
+        Mutant mutant = mutants.get(0);
+        String[] environment = null;
+        String[] resource = new String[4];
+        resource[0] = "com.axiomatics.hl7.patient.primaryPhysician";
+        resource[1] = "123";
+        resource[2] = "com.axiomatics.hl7.object.objectType";
+        resource[3] = "progress note";
+        String[] actionString = new String[1];
+        actionString[0] = "create";
+        String[] subjectString = new String[4];
+        subjectString[0] = "com.axiomatics.hl7.user.role";
+        subjectString[1] = "physician";
+        subjectString[2] = "com.axiomatics.hl7.user.requestorId";
+        subjectString[3] = "123";
+        JSONObject obj = createRequestObject(environment, resource, actionString, subjectString);
+        String request = generateRequest(obj);
+        TestSuite testSuite = new TestSuite(Collections.singletonList(""), Collections.singletonList(request), Collections.singletonList("Deny"));
+        List<Boolean> results = testSuite.runTests(mutant);
+        for (Boolean res : results) {
+            Assert.assertTrue(res);
+        }
+    }
 }
