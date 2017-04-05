@@ -3,9 +3,9 @@ package org.seal.semanticFaultLocalization;
 import com.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.*;
 import org.seal.semanticMutation.Mutant;
-import org.seal.policyUtils.PolicyLoader;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.xml.sax.SAXException;
@@ -34,6 +34,7 @@ public class FaultLocalizationExperiment {
         } catch (SAXException e) {
             e.printStackTrace();
         }
+        //TODO use files in src/test/resources
 //        String mutantsCSVfileName = "experiments/conference3/mutants/mutants.csv";
         String mutantsCSVfileName = "experiments/HL7/mutants/manual/mutants.csv";
         File mutantsCSVfile = new File(mutantsCSVfileName);
@@ -56,7 +57,8 @@ public class FaultLocalizationExperiment {
                 if (booleanListAnd(results))
                     continue;
                 List<List<Coverage>> coverageMatrix = PolicyCoverageFactory.getCoverageMatrix();
-                SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(coverageMatrix);
+                SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(coverageMatrix,
+                        PolicyCoverageFactory.getResults());
                 List<String> aveNumElemToInspcetList = new ArrayList<>();
                 for (String faultLocalizeMethod: faultLocalizeMethods) {
                     SpectrumBasedDiagnosisResults diagnosisResults = new SpectrumBasedDiagnosisResults(
@@ -141,8 +143,8 @@ public class FaultLocalizationExperiment {
                 }
             }
         }
-
-        SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(PolicyCoverageFactory.getCoverageMatrix());
+        SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(
+                PolicyCoverageFactory.getCoverageMatrix(), PolicyCoverageFactory.getResults());
 
     }
 }

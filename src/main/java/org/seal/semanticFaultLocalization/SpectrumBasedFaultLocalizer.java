@@ -1,7 +1,6 @@
 package org.seal.semanticFaultLocalization;
 
 import org.seal.semanticCoverage.Coverage;
-import org.seal.semanticCoverage.PolicyCoverageFactory;
 import org.seal.semanticCoverage.RuleCoverage;
 import org.seal.semanticCoverage.TargetCoverage;
 
@@ -17,7 +16,7 @@ public class SpectrumBasedFaultLocalizer {
     private int[][] matrix;
     private int[] verdicts;
 
-    public SpectrumBasedFaultLocalizer(List<List<Coverage>> coverageMatrix) {
+    public SpectrumBasedFaultLocalizer(List<List<Coverage>> coverageMatrix, List<Boolean> results) {
         int numTests = coverageMatrix.size();
         int numElems = 0;
         for (List<Coverage> row : coverageMatrix)
@@ -37,7 +36,6 @@ public class SpectrumBasedFaultLocalizer {
             }
         }
 //        printMatrix(matrix);
-        List<Boolean> results = PolicyCoverageFactory.getResults();
         verdicts = new int[numTests];
         for (int i = 0; i < results.size(); i++)
             verdicts[i] = results.get(i) ? 0 : 1;
