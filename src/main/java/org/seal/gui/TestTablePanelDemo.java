@@ -1,4 +1,4 @@
-package org.seal.testGeneration;
+package org.seal.gui;
 
 import java.awt.BorderLayout;
 import java.util.Vector;

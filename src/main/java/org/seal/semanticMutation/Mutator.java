@@ -200,6 +200,7 @@ public class Mutator {
         Node node = nodes.item(0);
         if (node != null) {
             //change doc
+        	if(node.getAttributes()!=null && node.getAttributes().getNamedItem("Effect")!=null){
             if (node.getAttributes().getNamedItem("Effect").getTextContent().equals("Deny")) {
                 node.getAttributes().getNamedItem("Effect").setTextContent("Permit");
             } else {
@@ -214,6 +215,7 @@ public class Mutator {
             }
             int faultLocation = xpathMapping.get(ruleXpathString);
             list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), "CRE" + faultLocation));
+        	}
         }
         return list;
     }

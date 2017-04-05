@@ -4,7 +4,8 @@ import org.seal.coverage.PolicySpreadSheetTestSuite;
 import org.seal.gui.AbstractPolicyEditor;
 import org.seal.gui.DebugPanel;
 import org.seal.gui.MutationPanel;
-import org.seal.gui.TestPanel;
+import org.seal.gui.MutationPanelDemo;
+import org.seal.gui.TestPanelDemo;
 import org.umu.editor.VentanaMensajes;
 import org.umu.editorXacml3.PolicyEditorPanel;
 
@@ -33,7 +34,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	protected AbstractPolicyEditor editorPanel;
 
 	protected TestPanelDemo testPanel;
-	protected MutationPanel mutationPanel;
+	protected MutationPanelDemo mutationPanel;
 	protected DebugPanel debugPanel;	
 	
 	public Demo() {
@@ -459,7 +460,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 //		editorPanel = new EditorPanel(this);
 
 		testPanel = new TestPanelDemo(this);
-//		mutationPanel = new MutationPanel(this);
+		mutationPanel = new MutationPanelDemo(this);
 //		debugPanel = new DebugPanel(this);
 		
 		mainTabbedPane = new JTabbedPane();

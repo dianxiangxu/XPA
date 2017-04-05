@@ -1,4 +1,4 @@
-package org.seal.testGeneration;
+package org.seal.gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -21,8 +21,9 @@ import org.seal.combiningalgorithms.loadPolicyDemo;
 import org.seal.coverage.PolicyRunner;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
-import org.seal.gui.ResultConverter;
 import org.seal.mcdc.MCDC_converter2;
+import org.seal.testGeneration.Demo;
+import org.seal.testGeneration.RuleCoverageTestGenerator;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.Policy;

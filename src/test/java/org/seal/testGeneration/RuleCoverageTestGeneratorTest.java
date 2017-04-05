@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.junit.Test;
+import org.seal.gui.TestPanelDemo;
 import org.umu.editorXacml3.PolicyEditorPanelDemo;
 
 public class RuleCoverageTestGeneratorTest {

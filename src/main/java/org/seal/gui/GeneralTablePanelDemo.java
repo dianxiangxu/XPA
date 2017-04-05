@@ -1,7 +1,7 @@
 /* 	
 	Author Dianxiang Xu
  */
-package org.seal.testGeneration;
+package org.seal.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -27,10 +27,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
-
-import org.seal.gui.JTableMac;
-import org.seal.gui.TextAreaCellEditor;
-import org.seal.gui.TextAreaCellRenderer;
 
 public class GeneralTablePanelDemo extends JPanel implements ActionListener,
 		ListSelectionListener {

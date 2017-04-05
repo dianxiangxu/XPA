@@ -9,6 +9,7 @@ import org.seal.combiningalgorithms.algorithm;
 import org.seal.combiningalgorithms.function;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
+import org.seal.gui.TestPanelDemo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -22,7 +23,6 @@ import org.wso2.balana.TargetMatch;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.policyUtils.XpathSolver;
 import org.seal.semanticMutation.Mutator;
-import org.seal.testGeneration.TestPanelDemo;
 
 import java.io.BufferedWriter;
 import java.io.File;

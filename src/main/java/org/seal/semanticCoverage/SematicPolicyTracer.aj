@@ -206,6 +206,7 @@ public privileged aspect SematicPolicyTracer {
             result = matchResult.getResult();
         }
         String xpath = XpathSolver.buildTargetXpath(policy);
+        PolicyCoverageFactory.init(policy);
         PolicyCoverageFactory.addCoverage(new TargetCoverage(result), xpath);
 	}
 

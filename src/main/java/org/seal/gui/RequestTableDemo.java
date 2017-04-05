@@ -1,4 +1,4 @@
-package org.seal.testGeneration;
+package org.seal.gui;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
