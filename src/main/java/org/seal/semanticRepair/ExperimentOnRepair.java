@@ -71,6 +71,12 @@ public class ExperimentOnRepair {
         writer.flushQuietly();
     }
 
+    /**
+     * a utility method to format time
+     *
+     * @param totalSeconds
+     * @return
+     */
     static private long[] timeUtile(long totalSeconds) {
         long hours = totalSeconds / 60 / 60;
         long minutes = totalSeconds / 60 - 60 * hours;
