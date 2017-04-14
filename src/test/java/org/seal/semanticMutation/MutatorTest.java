@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by shuaipeng on 12/1/16.
@@ -542,6 +544,56 @@ public class MutatorTest {
 //                System.out.println("===========");
             }
         }
+    }
 
+    @Test
+    public void createCombiningAlgorithmMutantsTestMutantNameCount() throws XPathExpressionException, ParserConfigurationException, ParsingException, SAXException, IOException {
+        Pattern p = Pattern.compile("CRC\\d+_(\\d+)");
+        for (String xpathString : xpathList) {
+            if (Mutator.isTargetXpathString(xpathString)) {
+                String policyXpathString = xpathString.replace("/*[local-name()='Target' and 1]", "");
+                Node node = ((NodeList) xPath.evaluate(policyXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
+                List<Mutant> mutants = mutator.createCombiningAlgorithmMutants(xpathString);
+                if (!Mutator.isEmptyNode(node)) {
+                    int count = 0;
+                    for (Mutant mutant : mutants) {
+//                        System.out.println(mutant.getName());
+                        Matcher m = p.matcher(mutant.getName());
+                        Assert.assertTrue(m.matches());
+                        Assert.assertEquals(count, (int) Integer.valueOf(m.group(1)));
+                        count++;
+                    }
+                } else {
+                    Assert.assertEquals(0, mutants.size());
+                }
+//                System.out.println("===========");
+            }
+        }
+    }
+
+    @Test
+    public void createRuleChangeComparisonFunctionMutantsTestMutantNameCount() throws XPathExpressionException, ParserConfigurationException, SAXException, IOException, ParsingException {
+        Pattern p = Pattern.compile("CCF\\d+_(\\d+)");
+        for (String xpathString : xpathList) {
+            if (Mutator.isRuleXpathString(xpathString)) {
+                NodeList nodes = (NodeList) xPath.evaluate(xpathString, doc.getDocumentElement(), XPathConstants.NODESET);
+                Assert.assertEquals(1, nodes.getLength());
+                Node node = nodes.item(0);
+                List<Mutant> mutants = mutator.createRuleChangeComparisonFunctionMutants(xpathString);
+                if (!Mutator.isEmptyNode(node)) {
+                    int count = 0;
+                    for (Mutant mutant : mutants) {
+//                        System.out.println(mutant.getName());
+                        Matcher m = p.matcher(mutant.getName());
+                        Assert.assertTrue(m.matches());
+                        Assert.assertEquals(count, (int) Integer.valueOf(m.group(1)));
+                        count++;
+                    }
+                } else {
+                    Assert.assertEquals(0, mutants.size());
+                }
+//                System.out.println("===========");
+            }
+        }
     }
 }
