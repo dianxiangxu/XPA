@@ -28,6 +28,15 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 /**
+ * If a mutation operator only creates one mutant for a bug position, the name of resulted mutant will
+ * be {base mutant name}_{mutation operator abbreviation}{bug position} if base mutant name is not an empty string, or
+ * {mutation operator abbreviation}{bug position} if base mutant name is an empty string. For example CRE1_CRE0, the base
+ * mutant is CRE1, the mutation operator is CRE, the bug position is 0.
+ * </p>
+ * If a mutation operator creates multiple mutants for a bug position, e.g. CRC, the name of resulted mutant will be
+ * {base mutant name}_{mutation operator abbreviation}{bug position}_{count} if base mutant name is not an empty string,
+ * or {mutation operator abbreviation}{bug position}_{count} if base mutant name is an empty string. For example
+ * CRE1_CRC2_0, the base mutant is CRE1, the bug position is 2, the count is 0.
  * Created by shuaipeng on 9/8/16.
  */
 public class Mutator {
@@ -514,7 +523,7 @@ public class Mutator {
     public List<Mutant> createPolicyTargetChangeComparisonFunctionMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
         int faultLocation = xpathMapping.get(targetXpathString);
         String mutantName = "CCF";
-        return createTargetChangeComparisonFunctionMutants(targetXpathString, faultLocation, mutantName);
+        return createTargetChangeComparisonFunctionMutants(targetXpathString, faultLocation, mutantName, 0);
     }
 
     /**
@@ -527,8 +536,9 @@ public class Mutator {
         String mutantName = "CCF";
         List<Mutant> mutants = new ArrayList<>();
         String ruleTargetXpathString = ruleXpathString + "/*[local-name()='Target' and 1]";
-        mutants.addAll(createTargetChangeComparisonFunctionMutants(ruleTargetXpathString, faultLocation, mutantName));
-        mutants.addAll(createRuleConditionChangeComparisonFunctionMutants(ruleXpathString, faultLocation, mutantName));
+        List<Mutant> tmp = createTargetChangeComparisonFunctionMutants(ruleTargetXpathString, faultLocation, mutantName, 0);
+        mutants.addAll(tmp);
+        mutants.addAll(createRuleConditionChangeComparisonFunctionMutants(ruleXpathString, faultLocation, mutantName, tmp.size()));
         return mutants;
     }
 
@@ -536,7 +546,7 @@ public class Mutator {
      * Change the first comparision function in the condition of a rule.
      * @param ruleXpathString xpath string to a rule element
      */
-    private List<Mutant> createRuleConditionChangeComparisonFunctionMutants(String ruleXpathString, int faultLocation, String mutantName) throws XPathExpressionException, ParsingException {
+    private List<Mutant> createRuleConditionChangeComparisonFunctionMutants(String ruleXpathString, int faultLocation, String mutantName, int startCount) throws XPathExpressionException, ParsingException {
         String conditionXpathString = ruleXpathString + "/*[local-name()='Condition' and 1]";
         List<Mutant> list = new ArrayList<>();
         Node conditionNode = ((NodeList) xPath.evaluate(conditionXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
@@ -548,12 +558,14 @@ public class Mutator {
                 Node functionNode = findNodeByLocalNameRecursively(applyNode, "Function");
                 if (functionNode != null) {
                     String originalComparisonFunction = functionNode.getAttributes().getNamedItem("FunctionId").getNodeValue();
+                    int count = startCount;
                     for (String comparisonFunction : comparisonFunctionMap.get(dataType)) {
                         if (!comparisonFunction.equals(originalComparisonFunction)) {
                             //change doc
                             functionNode.getAttributes().getNamedItem("FunctionId").setNodeValue(comparisonFunction);
                             AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
+                            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation + "_" + count));
+                            count++;
                         }
                     }
                     //restore doc
@@ -569,7 +581,7 @@ public class Mutator {
      * Change the first comparision function in a policy target or rule target.
      * @param targetXpathString the xpath string to a target element
      */
-    private List<Mutant> createTargetChangeComparisonFunctionMutants(String targetXpathString, int faultLocation, String mutantName) throws XPathExpressionException, ParsingException {
+    private List<Mutant> createTargetChangeComparisonFunctionMutants(String targetXpathString, int faultLocation, String mutantName, int startCount) throws XPathExpressionException, ParsingException {
         String matchXpathString = targetXpathString + "/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
         Node matchNode = ((NodeList) xPath.evaluate(matchXpathString, doc.getDocumentElement(), XPathConstants.NODESET)).item(0);
         List<Mutant> mutants = new ArrayList<>();
@@ -580,12 +592,14 @@ public class Mutator {
                 String dataType = attributeDesignator.getAttributes().getNamedItem("DataType").getNodeValue();
                 String orignalComparisonFunction = matchNode.getAttributes().getNamedItem("MatchId").getNodeValue();
                 //change doc
+                int count = startCount;
                 for (String comparisonFunction : comparisonFunctionMap.get(dataType)) {
                     if (!comparisonFunction.equals(orignalComparisonFunction)) {
                         matchNode.getAttributes().getNamedItem("MatchId").setNodeValue(comparisonFunction);
 //                        System.out.println(XpathSolver.nodeToString(matchNode, false, true));
                         AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
+                        mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation + "_" + count));
+                        count++;
                     }
                 }
                 //restore doc
@@ -697,12 +711,14 @@ public class Mutator {
         }
         if (combiningAlgList != null) {
             //change doc
+            int count = 0;
             String originalCombiningAlgId = policyNode.getAttributes().getNamedItem(combiningAlgAttribute).getNodeValue();
             for (String combiningAlgoId : combiningAlgList) {
                 if (!combiningAlgoId.equals(originalCombiningAlgId)) {
                     policyNode.getAttributes().getNamedItem(combiningAlgAttribute).setNodeValue(combiningAlgoId);
                     AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-                    mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
+                    mutants.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation + "_" + count));
+                    count++;
                 }
             }
             //restore doc
