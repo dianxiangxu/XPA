@@ -550,6 +550,9 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		return testPanel.hasTests();
 	}
 	
+	public TestPanelDemo getTestPanel(){
+		return testPanel;
+	}
 	public boolean hasTestFailure(){
 		return testPanel.hasTestFailure();
 	}

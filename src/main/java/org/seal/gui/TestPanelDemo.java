@@ -99,7 +99,8 @@ public class TestPanelDemo extends JPanel {
 	public void openTests() {
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setMultiSelectionEnabled(false);
-		if (demo.getWorkingPolicyFile() != null)
+		File workingPolicy = demo.getWorkingPolicyFile();
+		if ( workingPolicy!= null)
 			fileChooser.setCurrentDirectory(demo.getWorkingPolicyFile()
 					.getParentFile());
 		fileChooser.setFileFilter(new XMLFileFilter("xls"));
@@ -113,9 +114,16 @@ public class TestPanelDemo extends JPanel {
 			} else {
 				try {
 					workingTestSuiteFileName = testSuiteFile.getAbsolutePath();
+					if(workingPolicy!=null){
 					testSuite = new PolicySpreadSheetTestSuite(
 							workingTestSuiteFileName,
-							demo.getWorkingPolicyFilePath());
+							workingPolicy.toString());
+					}else{
+						testSuite = new PolicySpreadSheetTestSuite(
+								workingTestSuiteFileName,
+								"");
+							
+					}
 					setUpTestPanel();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -357,6 +365,7 @@ public class TestPanelDemo extends JPanel {
 			System.out.println(workingTestSuiteFileName + " saved.");
 			requestTablePanel.validate();
 			requestTablePanel.updateUI();
+			this.testSuite = testSuite;
 		} else {
 			JOptionPane.showMessageDialog(demo, "Oracle values already exist!");
 			return;
@@ -391,7 +400,9 @@ public class TestPanelDemo extends JPanel {
 	public boolean hasTests() {
 		return data != null && data.size() > 0;
 	}
-	
+	public PolicySpreadSheetTestSuite getTestSuite(){
+		return testSuite;
+	}
 	public boolean hasTestFailure(){
 		return hasFailure;
 	}

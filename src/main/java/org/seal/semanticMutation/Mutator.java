@@ -5,6 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.policyUtils.XpathSolver;
+import org.seal.xpa.util.FileIOUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -18,6 +19,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -272,6 +274,7 @@ public class Mutator {
         }
         return mutants;
     }
+    
     /**
      * flip rule effect
      */

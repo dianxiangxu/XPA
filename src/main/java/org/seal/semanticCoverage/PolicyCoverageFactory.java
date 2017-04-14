@@ -21,6 +21,9 @@ public class PolicyCoverageFactory {
         int index = mapping.get(xPath);
         if (index == -1)
             throw new RuntimeException("cannot find xpath: " + xPath);
+        
+        // should be this coverageMatrix.get(coverageMatrix.size() - 1).add(coverage);
+        // coverageMatrix Error to be fixed
         if(coverageMatrix.size()>0){
         coverageMatrix.get(coverageMatrix.size() - 1).add(coverage);
         } else{
