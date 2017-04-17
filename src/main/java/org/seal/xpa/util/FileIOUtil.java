@@ -8,6 +8,7 @@ import java.util.List;
 import org.seal.semanticMutation.Mutant;
 
 public class FileIOUtil {
+	
 	public static void writeWithNumberSuffix(List<String> contents,String path,String suffix,String extension){
 		String fileName;
 		for(int i = 0; i< contents.size();i++){
@@ -30,7 +31,7 @@ public class FileIOUtil {
 	public static void saveMutant(Mutant mutant, String mutantsFolder){
 		String fileName;
 		try{
-			fileName = mutantsFolder + File.separator + mutant.getName()+".xml";
+			fileName = mutantsFolder + File.separator + mutant.getName()+ "." + PropertiesLoader.getProperties("config").getProperty("mutantFileExtension") ;
 			FileWriter fw = new FileWriter(fileName);
 			BufferedWriter bw = new BufferedWriter(fw);
 			bw.write(mutant.encode());

@@ -4,10 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,13 +19,10 @@ import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
-import org.seal.mutation.PolicyMutator;
-import org.seal.mutation.PolicySpreadSheetMutantSuite;
 import org.seal.mutation.PolicySpreadSheetMutantSuiteDemo;
 import org.seal.policyUtils.PolicyLoader;
-import org.seal.policyUtils.XpathSolver;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticMutation.Mutator;
@@ -172,13 +166,13 @@ public class MutationPanelDemo extends JPanel {
 		boxSelectEight.setSelected(selected);
 	}
 	
-	public void setUpMutantPanel(List<Mutant> mutants,String policyName, String extension){
+	public void setUpMutantPanel(List<Mutant> mutants){
 		removeAll();
 		setLayout(new BorderLayout());
 		String[] columnNames = { "No", "Mutant Name", "Mutant File", "Bug Position", "Test Result" };
 		try {
 			//data = mutantSuite.getMutantData();
-			data = MutantUtil.getVectorsForMutants(mutants,policyName,extension);
+			data = MutantUtil.getVectorsForMutants(mutants);
 			
 			if (data.size() == 0) {
 				JOptionPane.showMessageDialog(xpa, "There is no mutant!");
@@ -238,7 +232,7 @@ public class MutationPanelDemo extends JPanel {
 					//mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantSuiteFile.getAbsolutePath(), xpa.getWorkingPolicyFilePath());
 					mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantSuiteFile.getAbsolutePath(), MutantUtil.getPolicyName(mutantSuiteFile.toString()));
 					
-					setUpMutantPanel(mutantSuite.getMutantList(),MutantUtil.getPolicyName(mutantSuiteFile.toString()),".xml");
+					setUpMutantPanel(mutantSuite.getMutantList());
 				}
 				catch(Exception e){
 					e.printStackTrace();
@@ -262,13 +256,13 @@ public class MutationPanelDemo extends JPanel {
 		        List<Mutant> mutants = mutator.generateSelectedMutants(getMutationOperatorList());
 				
 		        String mutantsFolder = MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString();
-		        
+		        FileUtils.cleanDirectory(new File(mutantsFolder));
 		    	for(Mutant mutant: mutants){
 					FileIOUtil.saveMutant(mutant,mutantsFolder);
 				}
 				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder,mutants,PolicyUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants,PolicyUtil.getPolicyName(policyFile) + "_mutants.xls");
-				setUpMutantPanel(mutants,PolicyUtil.getPolicyName(policyFile),".xml");
+				setUpMutantPanel(mutants);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

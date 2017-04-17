@@ -9,14 +9,14 @@ import org.seal.semanticMutation.Mutant;
 import java.util.List;
 
 public class MutantUtil {
-	public static Vector<Vector<Object>> getVectorsForMutants(List<Mutant> mutants,String policyName,String extension){
+	public static Vector<Vector<Object>> getVectorsForMutants(List<Mutant> mutants){
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		int i = 1;
 		for(Mutant mutant:mutants){
 			Vector<Object> vector = new Vector<Object>();
 			vector.add(i++);		// sequence number
-			vector.add(policyName + "_" +mutant.getName());	// mutant name
-			vector.add(policyName + "_" +mutant.getName() + extension);
+			vector.add(mutant.getName());	// mutant name
+			vector.add(mutant.getName() + "." + PropertiesLoader.getProperties("config").getProperty("mutantFileExtension"));
 			vector.add(Arrays.toString(mutant.getFaultLocations().toArray()));
 			vector.add("");	
 			data.add(vector);
@@ -35,7 +35,7 @@ public class MutantUtil {
 	}
 	
 	public static String getMutantFileName(Mutant mutant){
-		return mutant.getName() + ".xml";
+		return mutant.getName() + "." + PropertiesLoader.getProperties("config").getProperty("mutantFileExtension");
 	}
 	
 	public static String getPolicyName(String mutantsSpreadSheetFile){
@@ -44,7 +44,7 @@ public class MutantUtil {
 	}
 	
 	public static File getMutantsFolderForPolicyFile(File policyFile){
-		return new File(policyFile.getParent()+File.separator+"mutants");
+		return new File(policyFile.getParent()+File.separator+PropertiesLoader.getProperties("config").getProperty("mutantsFolderName"));
 		
 	}
 

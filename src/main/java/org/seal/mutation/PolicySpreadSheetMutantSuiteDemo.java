@@ -80,8 +80,7 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		String name = mutantFileName.split("\\.")[0].split("_")[1];
-		mutantSuite.add(new Mutant( policy, bugPositions,name));
+		mutantSuite.add(new Mutant( policy, bugPositions,mutantFileName));
 	}
 	
 	public static List<Integer> fromString(String str) {
