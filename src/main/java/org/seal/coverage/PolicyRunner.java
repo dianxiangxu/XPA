@@ -1,10 +1,11 @@
 
 package org.seal.coverage;
 
+import org.seal.combiningalgorithms.LoadPolicyDemo;
 import org.seal.combiningalgorithms.ReadPolicy;
 import org.seal.combiningalgorithms.loadPolicy;
 import org.wso2.balana.ParsingException;
-import org.wso2.balana.Policy;
+import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ctx.AbstractRequestCtx;
 import org.wso2.balana.ctx.AbstractResult;
 import org.wso2.balana.ctx.RequestCtxFactory;
@@ -30,11 +31,11 @@ public class PolicyRunner {
 	
 	//private PDP pdp;			// created from the policy under test
 	
-	private Policy policy;
+	private AbstractPolicy policy;
 	private String orginalPolicyFolder;
 	
 	public PolicyRunner(String policyFilePath) throws Exception{
-		loadPolicy loadpolicy = new loadPolicy();
+		LoadPolicyDemo loadpolicy = new LoadPolicyDemo();
 		// Test	
 			//System.out.println(policyFilePath);
 		this.policy = loadpolicy.getPolicy(policyFilePath);
@@ -196,7 +197,7 @@ public class PolicyRunner {
 		out.close();
 	}
 	
-	public int PolicyEvaluate(Policy policy, String request) {
+	public int PolicyEvaluate(AbstractPolicy policy, String request) {
 		RequestCtxFactory rc = new RequestCtxFactory();
 		AbstractRequestCtx ar = null;
 		try {

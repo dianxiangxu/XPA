@@ -106,7 +106,7 @@ public class PolicyMutator {
 //		}
 		removeDirectoryMutantFileName();
 		System.out.println(getMutantsSpreadSheetFileName());
-		PolicySpreadSheetMutantSuite.writePolicyMutantsSpreadSheet(mutantList, getMutantsSpreadSheetFileName());
+		//PolicySpreadSheetMutantSuite.writePolicyMutantsSpreadSheet(mutantList, getMutantsSpreadSheetFileName());
 		System.out.println(mutantList.size() + " total mutants");
 		System.out.println(policyFilePath);
 		System.out.println(mutantSpreadSheetFolderName);

@@ -19,7 +19,7 @@ import org.wso2.balana.ctx.RequestCtxFactory;
 import org.wso2.balana.ctx.xacml3.RequestCtx;
 import org.wso2.balana.ctx.xacml3.XACML3EvaluationCtx;
 
-public class loadPolicyDemo {
+public class LoadPolicyDemo {
 	public AbstractPolicy getPolicy(String policyFile) {
 
 		AbstractPolicy policy = null;

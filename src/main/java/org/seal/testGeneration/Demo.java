@@ -461,7 +461,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 
 		testPanel = new TestPanelDemo(this);
 		mutationPanel = new MutationPanelDemo(this);
-//		debugPanel = new DebugPanel(this);
+		debugPanel = new DebugPanel(this);
 		
 		mainTabbedPane = new JTabbedPane();
 		mainTabbedPane.setBorder(BorderFactory.createEtchedBorder(0));
@@ -487,6 +487,10 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 
 	public void setToMutantPane(){
 		mainTabbedPane.setSelectedComponent(mutationPanel);		
+	}
+	
+	public void setToDebugPane(){
+		mainTabbedPane.setSelectedComponent(debugPanel);		
 	}
 
 	private void init() throws Exception {

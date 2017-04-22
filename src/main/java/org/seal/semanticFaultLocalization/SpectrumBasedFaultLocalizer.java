@@ -36,7 +36,7 @@ public class SpectrumBasedFaultLocalizer {
             }
         }
 //        printMatrix(matrix);
-        verdicts = new int[numTests];
+        verdicts = new int[results.size()];
         for (int i = 0; i < results.size(); i++)
             verdicts[i] = results.get(i) ? 0 : 1;
     }

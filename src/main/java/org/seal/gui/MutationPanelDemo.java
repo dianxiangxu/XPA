@@ -255,12 +255,16 @@ public class MutationPanelDemo extends JPanel {
 		        Mutator mutator = new Mutator(new Mutant(policy, PolicyUtil.getPolicyName(policyFile)));
 		        List<Mutant> mutants = mutator.generateSelectedMutants(getMutationOperatorList());
 				
-		        String mutantsFolder = MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString();
-		        FileUtils.cleanDirectory(new File(mutantsFolder));
-		    	for(Mutant mutant: mutants){
-					FileIOUtil.saveMutant(mutant,mutantsFolder);
+		        File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
+		        if(mutantsFolder.exists()){
+		        	FileUtils.cleanDirectory(mutantsFolder);
+		        } else{
+		        	mutantsFolder.mkdir();
+		        }
+		        for(Mutant mutant: mutants){
+					FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
 				}
-				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder,mutants,PolicyUtil.getPolicyName(policyFile)); // write to spreadsheet		
+				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants,PolicyUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants,PolicyUtil.getPolicyName(policyFile) + "_mutants.xls");
 				setUpMutantPanel(mutants);
 			} catch (Exception e) {
@@ -336,9 +340,6 @@ public class MutationPanelDemo extends JPanel {
 			// Time this.
 			final long startTime = System.currentTimeMillis();
 			
-			// TO BE DONE
-			mutantSuite.runAndWriteDetectionInfoToExcelFile(outputFileName, xpa.getWorkingTestSuite());
-			
 			List<String> requests = new ArrayList<String>();
 			List<String> oracles = new ArrayList<String>();
 			for(PolicySpreadSheetTestRecord record: xpa.getTestPanel().getTestSuite().getTestRecord()){
@@ -346,9 +347,13 @@ public class MutationPanelDemo extends JPanel {
 				oracles.add(record.getOracle());
 			}
 			TestSuite testSuite = new TestSuite(null,requests, oracles);
+			
+						
 			final long endTime = System.currentTimeMillis();
 			System.out.println("Mutants testing time: " + (endTime - startTime)/1000.00 );
 			mutantSuite.updateMutantTestResult(data,testSuite);
+			mutantSuite.writeDetectionInfoToExcelFile(outputFileName, testSuite);
+			
 			xpa.setToMutantPane();
 			xpa.updateMainTabbedPane();
 			JOptionPane.showMessageDialog(xpa, "Mutation testing results are saved into file: \n" + outputFileName);

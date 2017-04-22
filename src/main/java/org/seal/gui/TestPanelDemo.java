@@ -16,8 +16,8 @@ import javax.swing.JSplitPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.seal.combiningalgorithms.LoadPolicyDemo;
 import org.seal.combiningalgorithms.PolicyXDemo;
-import org.seal.combiningalgorithms.loadPolicyDemo;
 import org.seal.coverage.PolicyRunner;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
@@ -190,7 +190,7 @@ public class TestPanelDemo extends JPanel {
 				JOptionPane.OK_CANCEL_OPTION);
 		
 		if (result == JOptionPane.OK_OPTION) {
-			loadPolicyDemo lp = new loadPolicyDemo();
+			LoadPolicyDemo lp = new LoadPolicyDemo();
 			AbstractPolicy policy = lp.getPolicy(demo.getWorkingPolicyFilePath());
 			PolicyXDemo policyx = new PolicyXDemo(policy);
 			policyx.initBalana(this.demo);

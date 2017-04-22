@@ -9,8 +9,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import org.seal.combiningalgorithms.PolicyX;
+import org.seal.combiningalgorithms.PolicyXDemo;
 import org.seal.combiningalgorithms.loadPolicy;
-import org.wso2.balana.Policy;
+import org.wso2.balana.AbstractPolicy;
 
 public class AnalysisPanel extends JPanel{
 	private XPA xpa;
@@ -32,7 +33,7 @@ public class AnalysisPanel extends JPanel{
 		try {
 			
 			loadPolicy lp = new loadPolicy();
-			Policy policy = lp.getPolicy(xpa.getWorkingPolicyFilePath());
+			AbstractPolicy policy = lp.getPolicy(xpa.getWorkingPolicyFilePath());
 			System.out.println(xpa.getWorkingPolicyFilePath());
 			String currentAlg = policy.getCombiningAlg().toString();
 			System.out.println(currentAlg);
@@ -47,7 +48,7 @@ public class AnalysisPanel extends JPanel{
 			}else{
 				currentAlg = "permit-unless-deny";
 			}
-			PolicyX policyx = new PolicyX(policy);
+			PolicyXDemo policyx = new PolicyXDemo(policy);
 			Vector<Vector<Object>> temp = new Vector<Vector<Object>>();
 
 			temp = policyx.generateRequestForDifferenceRCAs();

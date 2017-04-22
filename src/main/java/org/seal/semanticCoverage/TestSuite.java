@@ -115,5 +115,9 @@ public class TestSuite {
     public List<Boolean> runTests(Mutant mutant) {
         return runTests(mutant.getPolicy());
     }
+    
+    public int getSize(){
+    	return requests.size();
+    }
 
 }

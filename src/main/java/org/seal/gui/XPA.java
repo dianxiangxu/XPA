@@ -455,7 +455,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 
 		testPanel = new TestPanel(this);
 		mutationPanel = new MutationPanel(this);
-		debugPanel = new DebugPanel(this);
+	//	debugPanel = new DebugPanel(this);
 		
 		mainTabbedPane = new JTabbedPane();
 		mainTabbedPane.setBorder(BorderFactory.createEtchedBorder(0));

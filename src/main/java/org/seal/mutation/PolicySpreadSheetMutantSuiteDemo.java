@@ -80,7 +80,7 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		mutantSuite.add(new Mutant( policy, bugPositions,mutantFileName));
+		mutantSuite.add(new Mutant( policy, bugPositions,mutantFileName.split("\\.")[0]));
 	}
 	
 	public static List<Integer> fromString(String str) {
@@ -147,18 +147,18 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		PolicySpreadSheetTestSuite tests = null;
 		try {
 			tests =	new PolicySpreadSheetTestSuite(testSuiteSpreadSheet, policy);
-			runAndWriteDetectionInfoToExcelFile(fileName, tests);
+			//writeDetectionInfoToExcelFile(fileName, tests);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void runAndWriteDetectionInfoToExcelFile(String fileName, PolicySpreadSheetTestSuite tests) throws Exception {
+	public void writeDetectionInfoToExcelFile(String fileName, TestSuite suite) throws Exception {
 		//System.gc();
 		HSSFWorkbook workBook = new HSSFWorkbook();
 		workBook.createSheet("fault-detection-info");
 		Sheet sheet = workBook.getSheetAt(0);
-		int numTests = tests.getNumberOfTests();
+		int numTests = suite.getSize();
 		// An integer array to store counts of how many mutants that a test can detect,
 		// plus the last cell is the count of detection for the whole test suite. 
 		int[] detectionCount = new int[numTests+1];
@@ -171,8 +171,10 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		if (numTests+3 > 255) {
 			writeSimpleDetectionTitleRow(sheet, 0, numTests);
 			int rowIndex = 1;
-			for (Mutant mutant : policyMutantSuite) {
-				writeSimpleDetectionInfoRow(sheet, rowIndex++, mutant, tests, detectionCount);
+			for(int i = 0; i< policyMutantSuite.size();i++){
+				
+			//for (Mutant mutant : policyMutantSuite) {
+				writeSimpleDetectionInfoRow(sheet, rowIndex++, policyMutantSuite.get(i), suite, detectionCount);
 			}
 			writeSimpleDetectionCountRow(sheet, rowIndex++, detectionCount);
 			writeSimpleDetectionRateRow(sheet, rowIndex++, detectionCount, policyMutantSuite.size());
@@ -183,10 +185,9 @@ public class PolicySpreadSheetMutantSuiteDemo {
 				writeDetectionTitleRow(sheet, 0, numTests);
 			
 			int rowIndex = 1;
-		
-			for (Mutant mutant : policyMutantSuite) {
-			// TO BE DONE
-				//writeDetectionInfoRow(sheet, rowIndex++, mutant, tests, detectionCount);
+			for(int i = 0; i< policyMutantSuite.size();i++){
+			//for (Mutant mutant : policyMutantSuite) {
+				writeDetectionInfoRow(sheet, rowIndex++, policyMutantSuite.get(i), suite, detectionCount,i+1);
 			}
 			
 			// 10/26/14: Add statistics: a row of fault detection count/rate for each single test.
@@ -221,7 +222,7 @@ public class PolicySpreadSheetMutantSuiteDemo {
 	}
 	// 01/27/15 simple result for large sheet. - detect info
 	private void writeSimpleDetectionInfoRow(Sheet sheet, int rowIndex, 
-			Mutant mutant, PolicySpreadSheetTestSuite tests, int[] detectionCount) throws Exception {
+			Mutant mutant, TestSuite suite, int[] detectionCount) throws Exception {
 		Row mutantRow = sheet.createRow(rowIndex);
 		Cell[] mutantCells = new Cell[3];
 		boolean killed = false; // fault detected?
@@ -231,13 +232,14 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		}
 		//mutantCells[0].setCellValue(mutant.getNumber());
 		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
-		/*PolicySpreadSheetTestSuite mutantTestSuite = 
-				new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
+		//PolicySpreadSheetTestSuite mutantTestSuite = 
+		//		new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
 		//boolean[] testResult = mutantTestSuite.runAllTestsOnMutant();
-		TestCellResult[] rowResult;	
-		rowResult = mutantTestSuite.runAllTestsOnMutant();
-		for (int j = 0; j < rowResult.length; j++) {
-			if(rowResult[j].getVerdict()) {
+		//TestCellResult[] rowResult;	
+		//rowResult = mutantTestSuite.runAllTestsOnMutant();
+		List<Boolean> results = suite.runTests(mutant);
+		for (int j = 0; j < results.size(); j++) {
+			if(results.get(j)) {
 				// idle
 			} else {
 				// just count
@@ -248,10 +250,9 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		}
 		mutantCells[2].setCellValue(killed ? "Yes" : "No");
 		//mutant.setTestResult(killed ? "Yes" : "No");
-			*/	
 		
 		if (killed)
-			detectionCount[tests.getNumberOfTests()]++;
+			detectionCount[suite.getSize()]++;
 	}
 	
 	// 01/27/15 simple result for large sheet. - detect count
@@ -314,43 +315,49 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		}
 	}
 	
-	/*private void writeDetectionInfoRow(Sheet sheet, int rowIndex,
-			Mutant mutant, PolicySpreadSheetTestSuite tests, int[] detectionCount) throws Exception {
+	private void writeDetectionInfoRow(Sheet sheet, int rowIndex,
+			Mutant mutant, TestSuite suite, int[] detectionCount, int number) throws Exception {
 
 		// initialize
 		Row mutantRow = sheet.createRow(rowIndex);
-		Cell[] mutantCells = new Cell[tests.getNumberOfTests()+3];
+		Cell[] mutantCells = new Cell[suite.getSize()+3];
 		boolean killed = false; // fault detected?
 		// create cells.
-		for (int i = 0; i < tests.getNumberOfTests()+3; i++) {
+		for (int i = 0; i < suite.getSize()+3; i++) {
 			mutantCells[i] = mutantRow.createCell(i);
 		}
 		// set values.
-		mutantCells[0].setCellValue(mutant.getNumber());
-		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocation()));
-		PolicySpreadSheetTestSuite mutantTestSuite = 
-				new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
+		mutantCells[0].setCellValue(number);
+		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
+		//PolicySpreadSheetTestSuite mutantTestSuite = 
+		//		new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
 		
 		// 11/1/15 fix test result return
 		//boolean[] testResult = mutantTestSuite.runAllTestsOnMutant();
-		TestCellResult[] rowResult;	
-		rowResult = mutantTestSuite.runAllTestsOnMutant();
-		
-		for (int j = 0; j < rowResult.length; j++) {
-			if(rowResult[j].getVerdict()) {
-				mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
-			} else {
+		//TestCellResult[] rowResult;	
+		//rowResult = mutantTestSuite.runAllTestsOnMutant();
+		List<Boolean> results = suite.runTests(mutant);
+		for (int j = 0; j<results.size();j++) {
+			//if(rowResult[j].getVerdict()) {
+			Boolean b = results.get(j);
+			if(b) {
+				
+			//mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
+				mutantCells[j+2].setCellValue(b);
+				
+		} else {
 				// just count
-				mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
+				//mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
+			mutantCells[j+2].setCellValue(b);
 				detectionCount[j]++;
 				killed = true;
 			}
 		}
-		mutantCells[tests.getNumberOfTests()+2].setCellValue(killed ? "Yes" : "No");
-		mutant.setTestResult(killed ? "Yes" : "No");
+		//mutantCells[tests.getNumberOfTests()+2].setCellValue(killed ? "Yes" : "No");
+		//mutant.setTestResult(killed ? "Yes" : "No");
 		if (killed)
-			detectionCount[tests.getNumberOfTests()]++;
-	}*/
+			detectionCount[suite.getSize()]++;
+	}
 	
 	private void writeDetectionCountRow(Sheet sheet, int rowIndex, int[] detectionCount) {
 		Row mutantRow = sheet.createRow(rowIndex);
