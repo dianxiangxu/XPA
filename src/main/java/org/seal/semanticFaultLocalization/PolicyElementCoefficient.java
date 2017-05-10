@@ -4,7 +4,7 @@ package org.seal.semanticFaultLocalization;
  * Created by shuaipeng on 10/14/16.
  */
 class PolicyElementCoefficient implements Comparable<PolicyElementCoefficient> {
-    private double coefficient;
+    private double coefficient;//suspicious score
     private int index;
     private int rank;
 

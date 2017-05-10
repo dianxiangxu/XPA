@@ -2,6 +2,8 @@ package org.seal.gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -9,12 +11,14 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.IOUtils;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
@@ -25,7 +29,11 @@ import org.seal.semanticCoverage.PolicyCoverageFactory;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticFaultLocalization.SpectrumBasedDiagnosisResults;
 import org.seal.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
+import org.seal.semanticMutation.Mutant;
+import org.seal.semanticRepair.Repairer;
 import org.seal.testGeneration.Demo;
+import org.seal.xpa.util.FileIOUtil;
+import org.seal.xpa.util.MutantDiff;
 import org.seal.xpa.util.PropertiesLoader;
 
 
@@ -37,13 +45,14 @@ public class DebugPanel extends JPanel {
 	private List<JRadioButton> faultLocalizationMethodRadioButtons;
 	private GeneralTablePanel tablePanel;
 	
+	
 	public DebugPanel(Demo xpa) {
-		this.xpa = xpa;	
+		this.xpa = xpa;
 	}
 
 	public void localizeFault(){
 		if(checkInputs()){
-			if (hasFault()) {
+			if (hasFault(getTestSuite())) {
 				int result = JOptionPane.showConfirmDialog(xpa, createPanel(),"Please Select Fault Localization Method",JOptionPane.OK_CANCEL_OPTION);
 				if(result == 0){
 					for(JRadioButton button:faultLocalizationMethodRadioButtons){
@@ -72,20 +81,50 @@ public class DebugPanel extends JPanel {
 	}
 
 	public void fixFault(){
-		if (hasFault()) {
-
+		if(checkInputs()){
+			TestSuite testSuite = getTestSuite();
+			if (hasFault(testSuite)) {
+				int result = JOptionPane.showConfirmDialog(xpa, createPanel(),"Please Select Fault Localization Method",JOptionPane.OK_CANCEL_OPTION);
+				if(result == 0){
+					for(JRadioButton button:faultLocalizationMethodRadioButtons){
+						if(button.isSelected()){
+							String method = button.getText();
+							
+							Repairer repairer = new Repairer();
+							try{
+								Mutant faultyPolicy =  new Mutant(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()),"");
+								Mutant mutant = repairer.repairMutant(faultyPolicy, testSuite, method, 2);
+								if(mutant == null){
+									JOptionPane.showMessageDialog(null, "The policy can not be repaired");
+								} else{
+										String fileName = xpa.getWorkingPolicyFile().toString().split("\\.")[0] + "-repaired.xml";
+										 File fileToSave = new File(fileName);
+					                	 if(!fileToSave.toString().endsWith(".xml")){
+					                		 fileToSave = new File(fileToSave.toString() + ".xml");
+					                	 }
+					                	 FileIOUtil.writeFile(fileToSave, mutant.encode());
+					                	 JOptionPane.showMessageDialog(null, "The repaired policy is saved at " + fileName);
+					                	 String originalFile = xpa.getWorkingPolicyFilePath();
+					                	 String repairedFile = fileName;
+					                	 MutantDiff.show(originalFile, repairedFile);
+					                
+								}
+							}catch(Exception e){
+								e.printStackTrace();
+							}
+			                
+				        }
+					}
+					
+				}
+			} else{
+				JOptionPane.showMessageDialog(xpa, "There is no fault in this policy");
+			}
 		}
 		
 	}
 
-	private boolean hasFault() {
-		List<String> requests = new ArrayList<String>();
-		List<String> oracles = new ArrayList<String>();
-		for(PolicySpreadSheetTestRecord record: xpa.getTestPanel().getTestSuite().getTestRecord()){
-			requests.add(record.getRequest());
-			oracles.add(record.getOracle());
-		}
-		TestSuite testSuite = new TestSuite(null,requests, oracles);
+	private boolean hasFault(TestSuite testSuite) {
 		try{
 			List<Boolean> results = testSuite.runTests(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()));
 			for(Boolean b:results){
@@ -97,6 +136,17 @@ public class DebugPanel extends JPanel {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	private TestSuite getTestSuite(){
+		List<String> requests = new ArrayList<String>();
+		List<String> oracles = new ArrayList<String>();
+		for(PolicySpreadSheetTestRecord record: xpa.getTestPanel().getTestSuite().getTestRecord()){
+			requests.add(record.getRequest());
+			oracles.add(record.getOracle());
+		}
+		return new TestSuite(null,requests, oracles);
+		
 	}
 	
 	private boolean checkInputs(){
@@ -140,7 +190,7 @@ public class DebugPanel extends JPanel {
 	public void setUpFaultLocalizationPanel(List<String> xpaths, List<Integer> suspicions){
 		removeAll();
 		setLayout(new BorderLayout());
-		String[] columnNames = { "No","Element Number", "XPath"};
+		String[] columnNames = { "No.","Element Index", "XPath"};
 		try {
 			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		
@@ -153,7 +203,7 @@ public class DebugPanel extends JPanel {
 			}
 			
 			tablePanel = new GeneralTablePanel(data, columnNames, columnNames.length);
-			tablePanel.setMinRows(30);
+			tablePanel.setMinRows(data.size());
 			JScrollPane scrollpane = new JScrollPane(tablePanel);
 			add(scrollpane, BorderLayout.CENTER);
 			xpa.setToDebugPane();

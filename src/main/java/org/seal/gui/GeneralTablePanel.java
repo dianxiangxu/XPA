@@ -7,6 +7,11 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -27,6 +32,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 public class GeneralTablePanel extends JPanel implements ActionListener,
 		ListSelectionListener {
@@ -70,6 +76,53 @@ public class GeneralTablePanel extends JPanel implements ActionListener,
 		table.setColumnSelectionAllowed(false);
 		table.setDefaultRenderer(String.class, new TextAreaCellRenderer());
 		table.setFillsViewportHeight(true);
+		//table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+		
+		
+		
+		table.setAutoResizeMode( JTable.AUTO_RESIZE_OFF );
+		int charWidth = table.getFontMetrics( table.getFont() ).stringWidth("a");
+		int columnWidth=0 ;
+		int totalWidth = 0;
+		Rectangle bounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+		int padding;
+		if(bounds.width > 1500){
+		padding = 100;
+		} else{
+			padding = 50;
+		}
+		for (int column = 0; column < table.getColumnCount(); column++)
+		{
+			TableColumn tableColumn = table.getColumnModel().getColumn(column);
+
+			if(column < table.getColumnCount()-1){
+		    
+		    for (int row = 0; row < table.getRowCount(); row++)
+		    {
+		        String cellValue =table.getModel().getValueAt(row,column).toString();
+		        int preferredWidth = cellValue.length()*charWidth+padding;
+		        TableCellRenderer cellRenderer = table.getCellRenderer(row, column);
+		        Component c = table.prepareRenderer(cellRenderer, row, column);
+		        int width = c.getPreferredSize().width + table.getIntercellSpacing().width;		        
+		       if (preferredWidth >= columnWidth)
+		        {
+		    	   columnWidth = preferredWidth;
+		            
+		        }
+		       if(width > columnWidth){
+		    	   columnWidth = width;
+		       }
+		        
+		    }
+		    totalWidth += columnWidth;
+		    tableColumn.setPreferredWidth( columnWidth);
+			}else{
+			    tableColumn.setPreferredWidth(bounds.getBounds().width-totalWidth );
+			}
+		}
+		
+		
+		
 		table.addKeyListener(new java.awt.event.KeyAdapter() {
 			public void keyPressed(KeyEvent evt) {
 				if (evt.getKeyCode() == KeyEvent.VK_DOWN) {
@@ -108,9 +161,10 @@ public class GeneralTablePanel extends JPanel implements ActionListener,
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
 		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
 		table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-
+		
 		setLayout(new BorderLayout());
 		add(new JScrollPane(table), BorderLayout.CENTER);
+
 		//setPreferredColumnWidths();
 	}
 

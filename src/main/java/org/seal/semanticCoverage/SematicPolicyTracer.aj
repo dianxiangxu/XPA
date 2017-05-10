@@ -19,6 +19,12 @@ import org.wso2.balana.ctx.ResultFactory;
 import org.wso2.balana.ctx.xacml2.Result;
 import org.wso2.balana.PolicySet;
 
+/**
+ * Always use org.seal.semanticCoverage.TestSuite to run tests. Otherwise the coverage matrix will not be initialized,
+ * causing a NullPointerException.
+ * @author shuai peng
+ *
+ */
 public privileged aspect SematicPolicyTracer {
 	private static Log logger = LogFactory.getLog(SematicPolicyTracer.class);
 

@@ -31,7 +31,7 @@ public class Repairer {
         return result;
     }
 
-    String repair(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException, ParsingException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+   public String repair(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException, ParsingException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Queue<MutantNode> queue = new PriorityQueue<>();
         queue.add(new MutantNode(null, policyToRepair, testSuite, scoringMethod, 0, 0));
         MutantNode node = null;
@@ -65,5 +65,39 @@ public class Repairer {
             return res;
         return null;
     }
-
+   	
+   public Mutant repairMutant(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException, ParsingException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+       Queue<MutantNode> queue = new PriorityQueue<>();
+       queue.add(new MutantNode(null, policyToRepair, testSuite, scoringMethod, 0, 0));
+       MutantNode node = null;
+       boolean foundRepair = false;
+       while (!queue.isEmpty()) {
+           node = queue.poll();
+           List<Boolean> testResults = node.getTestResult();
+           if (booleanListAnd(testResults)) {
+               foundRepair = true;
+               break;//found a repair
+           }
+           if (!node.isPromising()) {
+               continue;
+           }
+           if (node.getLayer() + 1 > maxSearchLayer)
+               continue;
+           List<Integer> suspicionRank = node.getSuspicionRank();
+           Mutator mutator = new Mutator(node.getMutant());
+           int rank = 1;
+           for (int bugPosition : suspicionRank) {
+               List<Mutant> mutantList = mutator.generateAllMutants(bugPosition);
+               for (Mutant mutant : mutantList) {
+                   queue.add(new MutantNode(node, mutant, testSuite, scoringMethod, rank, node.getLayer() + 1));
+               }
+               rank++;
+           }
+       }
+       assert node != null;
+       String res = node.getMutant().getName();
+       if (foundRepair)
+           return node.getMutant();
+       return null;
+   }
 }

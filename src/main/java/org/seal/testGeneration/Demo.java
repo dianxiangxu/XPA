@@ -119,8 +119,8 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 				createNavigationIcon(""), "LocalizeFault", new Integer(
 						KeyEvent.VK_L));
 
-		fixFaultAction = new FixFaultAction("Fix Fault",
-				createNavigationIcon(""), "FixFault", new Integer(
+		fixFaultAction = new FixFaultAction("Repair",
+				createNavigationIcon(""), "Repair", new Integer(
 						KeyEvent.VK_F));
 
 	}

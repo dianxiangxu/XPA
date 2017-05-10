@@ -40,4 +40,15 @@ public class FileIOUtil {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void writeFile(File file,String content){
+		try{
+			FileWriter fw = new FileWriter(file);
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write(content);
+			bw.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 }

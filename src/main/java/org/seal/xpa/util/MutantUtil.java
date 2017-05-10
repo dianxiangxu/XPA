@@ -1,12 +1,23 @@
 package org.seal.xpa.util;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
-import org.seal.semanticMutation.Mutant;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
-import java.util.List;
+import org.seal.semanticMutation.Mutant;
 
 public class MutantUtil {
 	public static Vector<Vector<Object>> getVectorsForMutants(List<Mutant> mutants){
@@ -46,6 +57,60 @@ public class MutantUtil {
 	public static File getMutantsFolderForPolicyFile(File policyFile){
 		return new File(policyFile.getParent()+File.separator+PropertiesLoader.getProperties("config").getProperty("mutantsFolderName"));
 		
+	}
+	
+	public static void main(String args[]){
+	   String file1 = "/home/roshanshrestha/Project/XPA/Experiments/conference3/mutants/conference3_CRE11-repaired.xml"; 
+       String file2 = "/home/roshanshrestha/Project/XPA/Experiments/conference3/mutants/conference3_CRE11.xml"; 
+
+       final JTextArea edit = new JTextArea(30, 60);
+       edit.setText("one\ntwo\nthree");
+       edit.append("\nfour\nfive");
+
+       JButton read = new JButton("Read TextAreaLoad.txt");
+       read.addActionListener( new ActionListener()
+       {
+           public void actionPerformed(ActionEvent e)
+           {
+               try
+               {
+                   FileReader reader = new FileReader( "TextAreaLoad.txt" );
+                   BufferedReader br = new BufferedReader(reader);
+                   edit.read( br, null );
+                   br.close();
+                   edit.requestFocus();
+               }
+               catch(Exception e2) { System.out.println(e2); }
+           }
+       });
+
+       JButton write = new JButton("Write TextAreaLoad.txt");
+       write.addActionListener( new ActionListener()
+       {
+           public void actionPerformed(ActionEvent e)
+           {
+               try
+               {
+                   FileWriter writer = new FileWriter( "TextAreaLoad.txt" );
+                   BufferedWriter bw = new BufferedWriter( writer );
+                   edit.write( bw );
+                   bw.close();
+                   edit.setText("");
+                   edit.requestFocus();
+               }
+               catch(Exception e2) {}
+           }
+       });
+
+       JFrame frame = new JFrame("TextArea Load");
+       frame.getContentPane().add( new JScrollPane(edit), BorderLayout.NORTH );
+       frame.getContentPane().add(read, BorderLayout.WEST);
+       frame.getContentPane().add(write, BorderLayout.EAST);
+       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       frame.pack();
+       frame.setLocationRelativeTo( null );
+       frame.setVisible(true);
+       
 	}
 
 }
