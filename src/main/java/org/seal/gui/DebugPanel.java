@@ -3,7 +3,6 @@ package org.seal.gui;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -11,14 +10,14 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.IOUtils;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
@@ -43,6 +42,7 @@ public class DebugPanel extends JPanel {
 	
 	private Demo xpa;
 	private List<JRadioButton> faultLocalizationMethodRadioButtons;
+	private JTextField depthField;
 	private GeneralTablePanel tablePanel;
 	
 	
@@ -53,7 +53,7 @@ public class DebugPanel extends JPanel {
 	public void localizeFault(){
 		if(checkInputs()){
 			if (hasFault(getTestSuite())) {
-				int result = JOptionPane.showConfirmDialog(xpa, createPanel(),"Please Select Fault Localization Method",JOptionPane.OK_CANCEL_OPTION);
+				int result = JOptionPane.showConfirmDialog(xpa, createPanel(false),"Please Select Fault Localization Method",JOptionPane.OK_CANCEL_OPTION);
 				if(result == 0){
 					for(JRadioButton button:faultLocalizationMethodRadioButtons){
 						if(button.isSelected()){
@@ -64,15 +64,15 @@ public class DebugPanel extends JPanel {
 				            try{
 					            SpectrumBasedDiagnosisResults diagnosisResults = new SpectrumBasedDiagnosisResults(faultLocalizer.applyFaultLocalizeMethod(method));
 					            List<Integer> suspicionList = diagnosisResults.getIndexRankedBySuspicion();
+					            List<Double> suspiciousScore = diagnosisResults.getSuspiciousScore();
 					            InputStream stream = IOUtils.toInputStream(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()).encode(), Charset.defaultCharset());
 					            List<String> entryList = XpathSolver.getEntryListRelativeXPath(PolicyLoader.getDocument(stream));
-					            setUpFaultLocalizationPanel(entryList,suspicionList);
+					            setUpFaultLocalizationPanel(entryList,suspicionList,suspiciousScore);
 				            }catch(Exception e){
 				            	e.printStackTrace();
 				            }
 				        }
 					}
-					
 				}
 			} else{
 				JOptionPane.showMessageDialog(xpa, "There is no fault in this policy");
@@ -84,16 +84,24 @@ public class DebugPanel extends JPanel {
 		if(checkInputs()){
 			TestSuite testSuite = getTestSuite();
 			if (hasFault(testSuite)) {
-				int result = JOptionPane.showConfirmDialog(xpa, createPanel(),"Please Select Fault Localization Method",JOptionPane.OK_CANCEL_OPTION);
+				int result = JOptionPane.showConfirmDialog(xpa, createPanel(true),"Please provide following details",JOptionPane.OK_CANCEL_OPTION);
 				if(result == 0){
+					
 					for(JRadioButton button:faultLocalizationMethodRadioButtons){
 						if(button.isSelected()){
 							String method = button.getText();
 							
+							int depth;
+							try{
+								depth = Integer.parseInt(depthField.getText());
+							}catch(Exception e){
+								JOptionPane.showMessageDialog(null, "Invalid depth! Default depth value of 2 is used");
+								depth = 2;
+							}
 							Repairer repairer = new Repairer();
 							try{
 								Mutant faultyPolicy =  new Mutant(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()),"");
-								Mutant mutant = repairer.repairMutant(faultyPolicy, testSuite, method, 2);
+								Mutant mutant = repairer.repairMutant(faultyPolicy, testSuite, method, depth);
 								if(mutant == null){
 									JOptionPane.showMessageDialog(null, "The policy can not be repaired");
 								} else{
@@ -167,11 +175,29 @@ public class DebugPanel extends JPanel {
 		return true;
 	}
 	
-	private JPanel createPanel() {
+	private JPanel createPanel(boolean depth) {
+		
 		String[] methods = PropertiesLoader.getProperties("config").getProperty("faultLocalizationMethods").split(",");
 		JRadioButton button;
 		ButtonGroup group = new ButtonGroup();
 		JPanel radioPanel = new JPanel();
+		JLabel blankLbl = new JLabel("");
+		
+		if(depth){
+			JLabel label = new JLabel("Depth for Repair:");
+			depthField = new JTextField("2", 5);
+			radioPanel.add(label);
+			radioPanel.add(depthField);
+			JLabel blankLbl2 = new JLabel("");
+			JLabel blankLbl3= new JLabel("");
+			radioPanel.add(blankLbl2);
+			radioPanel.add(blankLbl3);
+				
+		}
+		JLabel methodsLbl = new JLabel("Select Fault Localization method:");
+		radioPanel.add(methodsLbl);
+		radioPanel.add(blankLbl);
+	
 		faultLocalizationMethodRadioButtons = new ArrayList<JRadioButton>();
 		
 		for(String method: methods){
@@ -181,27 +207,26 @@ public class DebugPanel extends JPanel {
 			radioPanel.add(button);
 		}
 		faultLocalizationMethodRadioButtons.get(0).setSelected(true);
-		radioPanel.setLayout(new GridLayout(methods.length/2+1, 2));
+		radioPanel.setLayout(new GridLayout(methods.length/2+3, 2));
 		radioPanel.setBorder(new TitledBorder(new EtchedBorder(), ""));
 		return radioPanel;
 	}
 	
 	
-	public void setUpFaultLocalizationPanel(List<String> xpaths, List<Integer> suspicions){
+	public void setUpFaultLocalizationPanel(List<String> xpaths, List<Integer> suspicions, List<Double> suspiciousScores){
 		removeAll();
 		setLayout(new BorderLayout());
-		String[] columnNames = { "No.","Element Index", "XPath"};
+		String[] columnNames = { "No.","Element Index","Suspicious Score", "XPath"};
 		try {
 			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-		
 			for(int i = 0; i<suspicions.size();i++){
 				Vector<Object> vector = new Vector<Object>();
 				vector.add((i+1));
 				vector.add(suspicions.get(i));
+				vector.add(suspiciousScores.get(i));
 				vector.add(xpaths.get(suspicions.get(i)));
 				data.add(vector);
 			}
-			
 			tablePanel = new GeneralTablePanel(data, columnNames, columnNames.length);
 			tablePanel.setMinRows(data.size());
 			JScrollPane scrollpane = new JScrollPane(tablePanel);

@@ -4,12 +4,12 @@ package org.seal.semanticFaultLocalization;
  * Created by shuaipeng on 10/14/16.
  */
 class PolicyElementCoefficient implements Comparable<PolicyElementCoefficient> {
-    private double coefficient;//suspicious score
+    private double suspiciousScore;
     private int index;
     private int rank;
 
-    PolicyElementCoefficient(double coefficient, int index) {
-        this.coefficient = coefficient;
+    PolicyElementCoefficient(double suspiciousScore, int index) {
+        this.suspiciousScore = suspiciousScore;
         this.index = index;
     }
 
@@ -19,11 +19,11 @@ class PolicyElementCoefficient implements Comparable<PolicyElementCoefficient> {
 
     @Override
     public int compareTo(PolicyElementCoefficient other) {
-        return Double.compare(other.coefficient, this.coefficient);
+        return Double.compare(other.suspiciousScore, this.suspiciousScore);
     }
 
     boolean approximateEqual(PolicyElementCoefficient other) {
-        return approximateEqual(coefficient, other.coefficient);
+        return approximateEqual(suspiciousScore, other.suspiciousScore);
     }
 
     int getIndex() {
@@ -36,5 +36,9 @@ class PolicyElementCoefficient implements Comparable<PolicyElementCoefficient> {
 
     void setRank(int rank) {
         this.rank = rank;
+    }
+    
+    public double getSuspiciousScore(){
+    	return suspiciousScore;
     }
 }

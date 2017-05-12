@@ -69,4 +69,12 @@ public class SpectrumBasedDiagnosisResults {
         average /= scores.size();
         return average;
     }
+    
+    public List<Double> getSuspiciousScore(){
+    	List<Double> suspiciousScore = new ArrayList<Double>();
+    	for(PolicyElementCoefficient element:coefficientList){
+    		suspiciousScore.add(element.getSuspiciousScore());
+    	}
+    	return suspiciousScore;
+    }
 }
