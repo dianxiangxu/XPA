@@ -61,6 +61,11 @@ public class TestSuite {
 //        System.out.println(oracleString + ", " + decisionToString(response));
         return response == oracle;
     }
+    
+    public static int runTestWithoutOracle(AbstractPolicy policy, String request) {
+        int response = PolicyRunner.evaluate(policy, request);
+        return response;
+    }
 
     private static int balanaFinalDecision(String decisionString) {
         if (decisionString.equalsIgnoreCase("Permit"))

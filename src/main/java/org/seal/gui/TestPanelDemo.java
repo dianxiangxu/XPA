@@ -22,6 +22,8 @@ import org.seal.coverage.PolicyRunner;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
 import org.seal.mcdc.MCDC_converter2;
+import org.seal.policyUtils.PolicyLoader;
+import org.seal.semanticCoverage.TestSuite;
 import org.seal.testGeneration.Demo;
 import org.seal.testGeneration.RuleCoverageTestGenerator;
 import org.umu.editor.XMLFileFilter;
@@ -307,11 +309,11 @@ public class TestPanelDemo extends JPanel {
 		}
 
 		try {
-			PolicyRunner runner = new PolicyRunner(
-					demo.getWorkingPolicyFilePath());
+			/*PolicyRunner runner = new PolicyRunner(
+					demo.getWorkingPolicyFilePath());*/
+			AbstractPolicy policy = PolicyLoader.loadPolicy(demo.getWorkingPolicyFile());
 			for (Vector<Object> child : data) {
-				int result = runner.runTestWithoutOracle(child.get(1)
-						.toString(), child.get(6).toString());
+				int result = TestSuite.runTestWithoutOracle(policy, child.get(6).toString());
 				// System.out.println(result);
 				String actualResponse = ResultConverter.ConvertResult(result);
 				child.set(4, actualResponse);

@@ -231,6 +231,18 @@ public privileged aspect SematicPolicyTracer {
 		PolicyCoverageFactory.newRow();
 	}
 
+	pointcut runNewTestWithoutOracle(AbstractPolicy policy, String request):
+        call(int TestSuite.runTestWithoutOracle(AbstractPolicy, String))
+            && args(policy, request);
+
+	before(AbstractPolicy policy, String request) :
+        runNewTestWithoutOracle(policy, request) {
+	logger.debug("start running a test on " + policy.getId());
+	PolicyCoverageFactory.init(policy);
+	PolicyCoverageFactory.newRow();
+	}
+
+	
 	pointcut runNewTestSuite(TestSuite testSuite, AbstractPolicy policy):
 	        call(List<Boolean> TestSuite.runTests(AbstractPolicy))
 	            && target(testSuite) && args(policy);
