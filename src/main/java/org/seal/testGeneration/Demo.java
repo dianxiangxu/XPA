@@ -52,7 +52,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		java.net.URL imageURL = this.getClass().getClassLoader()
 				.getResource(imgLocation);
 		if (imageURL == null) {
-			System.err.println("Resource not found: " + imgLocation);
+			//System.err.println("Resource not found: " + imgLocation);
 			return null;
 		} else {
 			return new ImageIcon(imageURL);
@@ -70,7 +70,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	}
 
 	private void createActions() {
-		newAction = new NewAction("New", createNavigationIcon("new"), "New",
+		newAction = new NewAction("New", null, "New",
 				new Integer(KeyEvent.VK_N));
 		openAction = new OpenAction("Open...", createNavigationIcon("open"),
 				"Open", new Integer(KeyEvent.VK_O));
@@ -466,7 +466,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		mainTabbedPane = new JTabbedPane();
 		mainTabbedPane.setBorder(BorderFactory.createEtchedBorder(0));
 		mainTabbedPane.addTab("Policy",
-				createNavigationIcon("images/policy.gif"), editorPanel);
+				null, editorPanel);
 		mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
 				testPanel);
 		mainTabbedPane.addTab("Mutants",
