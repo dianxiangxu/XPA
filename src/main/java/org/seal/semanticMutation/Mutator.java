@@ -258,8 +258,8 @@ public class Mutator {
             mutants.addAll(createRemoveRuleMutants(xpath));
             mutants.addAll(createAddNewRuleMutants(xpath));
         } else if (isTargetXpathString(xpath)) {
-            mutants.addAll(createPolicyTargetTrueMutants(xpath));
-            mutants.addAll(createPolicyTargetFalseMutants(xpath));
+            mutants.addAll(createPolicyTargetTrueMutants(xpath)); 
+            mutants.addAll(createPolicyTargetFalseMutants(xpath)); 
             mutants.addAll(createPolicyTargetChangeComparisonFunctionMutants(xpath));
             mutants.addAll(createCombiningAlgorithmMutants(xpath));
             mutants.addAll(createFirstDenyRuleMutants(xpath));
@@ -280,6 +280,21 @@ public class Mutator {
                     mutants.addAll((ArrayList) method.invoke(this, xpath));
                 }
             }
+        }
+        return mutants;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<Mutant> generateSelectedMutants(List<String> mutationMethods,int bugPosition) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        Class<?> cls = this.getClass();
+        List<Mutant> mutants = new ArrayList<>();
+        String xpath = xpathList.get(bugPosition);
+        
+        for (String mutationMethod : mutationMethods) {
+        	if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) || isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
+                    	Method method = cls.getDeclaredMethod(mutationMethod, String.class);
+                    	mutants.addAll((ArrayList) method.invoke(this, xpath));
+             }
         }
         return mutants;
     }

@@ -20,62 +20,44 @@ import javax.swing.text.StyleContext;
 public class MutationDiffFrame extends JFrame
 {
     
-    private JTextPane tPane;
-
-    public MutationDiffFrame(List<DiffItem> originalContent, List<DiffItem> repairedContent)
-    
-    {
-    	
-    	this.setSize(new Dimension(980,100));
-    	this.setMinimumSize( this.getSize() );
-
-        this.setLocationRelativeTo(null);
-
-        this.pack();
-        this.setVisible(true);
+        public MutationDiffFrame(List<DiffItem> originalContent, List<DiffItem> repairedContent){
         JPanel container = new JPanel();
-   	 
-        JPanel panelOne = new JPanel(new FlowLayout());
-        JPanel panelTwo = new JPanel(new FlowLayout());
+   	    JPanel panelOne = new JPanel();
         
-        panelOne.add(new JLabel("original"));
-        panelTwo.add(new JLabel("repaired"));
-        panelOne.repaint();
+   	    JTextPane tPaneOne = new JTextPane();     
+        panelOne.add(tPaneOne);
+        tPaneOne.insertComponent(new JLabel("Original"));
         
-        panelOne = new JPanel();        
-
-       
-       
-        tPane = new JTextPane();     
-       
-        panelOne.add(tPane);
+        appendToPane(tPaneOne, "\n\n", Color.white);
+        
         for(DiffItem item:originalContent){
-        	appendToPane(tPane, item.line+"\n", item.color);
+        	appendToPane(tPaneOne, item.line+"\n", item.color);
             	
         }
         JScrollPane panelOneScroll = new JScrollPane(panelOne);
-        
-        panelOneScroll.setViewportView(tPane);
+        panelOneScroll.setViewportView(tPaneOne);
                 
-        panelTwo = new JPanel();        
-        tPane = new JTextPane(); 
+        JPanel panelTwo = new JPanel();
+        JTextPane tPaneTwo = new JTextPane(); 
        
-        panelTwo.add(tPane);
-        for(DiffItem item:repairedContent){
-        	appendToPane(tPane, item.line+"\n", item.color);
-        }
-        JLabel jLabel = new JLabel("repaired");
-        JScrollPane panelTwoScroll = new JScrollPane(panelTwo);
-        panelTwoScroll.add(jLabel);
+        panelTwo.add(tPaneTwo);
+        tPaneTwo.insertComponent(new JLabel("Repaired"));
+        appendToPane(tPaneTwo, "\n\n", Color.white);
         
-        panelTwoScroll.setViewportView(tPane);
+        for(DiffItem item:repairedContent){
+        	appendToPane(tPaneTwo, item.line+"\n", item.color);
+        }
+        JScrollPane panelTwoScroll = new JScrollPane(panelTwo);
+        panelTwoScroll.setViewportView(tPaneTwo);
         container.setLayout(new GridLayout(1,2));
         container.add(panelOneScroll);
         container.add(panelTwoScroll);
 
         this.add(container);
-
-        
+        this.setTitle("Difference between original policy and repaired policy");
+        this.pack();
+        this.setLocationRelativeTo(null);
+        this.setVisible(true);
     }
 
     private void appendToPane(JTextPane tp, String msg, Color c)

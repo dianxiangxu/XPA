@@ -2,6 +2,8 @@ package org.seal.gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -10,11 +12,13 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -33,6 +37,7 @@ import org.seal.semanticRepair.Repairer;
 import org.seal.testGeneration.Demo;
 import org.seal.xpa.util.FileIOUtil;
 import org.seal.xpa.util.MutantDiff;
+import org.seal.xpa.util.PopupFrame;
 import org.seal.xpa.util.PropertiesLoader;
 
 
@@ -44,7 +49,24 @@ public class DebugPanel extends JPanel {
 	private List<JRadioButton> faultLocalizationMethodRadioButtons;
 	private JTextField depthField;
 	private GeneralTablePanel tablePanel;
-	
+	private JCheckBox boxPTT = new JCheckBox("Policy Target True (PTT)");
+	private JCheckBox boxPTF = new JCheckBox("Policy Target False (PTF)");
+	private JCheckBox boxCRC = new JCheckBox("Change Rule CombiningAlgorithm (CRC)");
+	private JCheckBox boxCRE = new JCheckBox("Flip Rule Effect (CRE)");
+	private JCheckBox boxRER = new JCheckBox("Remove One Rule (RER)");
+	private JCheckBox boxANR = new JCheckBox("Add a New Rule (ANR)");
+	private JCheckBox boxRTT = new JCheckBox("Rule Target True (RTT)");
+	private JCheckBox boxRTF = new JCheckBox("Rule Target False (RTF)");
+	private JCheckBox boxRCT = new JCheckBox("Rule Condition True (RCT)");
+	private JCheckBox boxRCF = new JCheckBox("Rule Condition False (RCF)");
+	private JCheckBox boxRCCF = new JCheckBox("Rule Change Comparition Function(RCCF)");
+	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
+	private JCheckBox boxFPR = new JCheckBox("First Permit Rules (FPR)");
+	private JCheckBox boxFDR = new JCheckBox("First Deny Rules (FDR)");
+	private JCheckBox boxANF = new JCheckBox("Add Not Function (ANF)");
+	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
+	private JCheckBox boxSelectAll = new JCheckBox("Select All"); // All 13 types of mutation.
+	private JTable table;
 	
 	public DebugPanel(Demo xpa) {
 		this.xpa = xpa;
@@ -73,6 +95,26 @@ public class DebugPanel extends JPanel {
 				            }
 				        }
 					}
+					table = tablePanel.getTable();
+					int xpathCol = table.getColumn("XPath").getModelIndex();
+					for(int i = 0; i< table.getRowCount();i++){
+						
+					}
+					table.addMouseListener(new java.awt.event.MouseAdapter() {
+					    @Override
+					    public void mouseClicked(java.awt.event.MouseEvent evt) {
+					        int row = table.rowAtPoint(evt.getPoint());
+					        int targetCol = table.getColumn("XPath").getModelIndex();
+
+					        int col = table.columnAtPoint(evt.getPoint());
+					        if (row >= 0 && col ==targetCol) {
+					            String xPathString = table.getValueAt( row, col).toString();
+					            String content = FileIOUtil.getElementByXPath(xPathString, xpa.getWorkingPolicyFile());
+					            PopupFrame.showContent("Element at "+xPathString, content);
+					        }
+					    }
+					});
+
 				}
 			} else{
 				JOptionPane.showMessageDialog(xpa, "There is no fault in this policy");
@@ -101,7 +143,8 @@ public class DebugPanel extends JPanel {
 							Repairer repairer = new Repairer();
 							try{
 								Mutant faultyPolicy =  new Mutant(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()),"");
-								Mutant mutant = repairer.repairMutant(faultyPolicy, testSuite, method, depth);
+								List<String> mutationMethods =getMutationOperatorList();
+								Mutant mutant = repairer.repairWithSelectedMutantMethods(faultyPolicy, testSuite, method, mutationMethods, depth);
 								if(mutant == null){
 									JOptionPane.showMessageDialog(null, "The policy can not be repaired");
 								} else{
@@ -182,7 +225,6 @@ public class DebugPanel extends JPanel {
 		ButtonGroup group = new ButtonGroup();
 		JPanel radioPanel = new JPanel();
 		JLabel blankLbl = new JLabel("");
-		
 		if(depth){
 			JLabel label = new JLabel("Depth for Repair:");
 			depthField = new JTextField("2", 5);
@@ -192,12 +234,17 @@ public class DebugPanel extends JPanel {
 			JLabel blankLbl3= new JLabel("");
 			radioPanel.add(blankLbl2);
 			radioPanel.add(blankLbl3);
-				
+			radioPanel.setLayout(new GridLayout(methods.length/2+15, 2));
+					
+		}else{
+			radioPanel.setLayout(new GridLayout(methods.length/2+3, 2));
+			
 		}
 		JLabel methodsLbl = new JLabel("Select Fault Localization method:");
+		
 		radioPanel.add(methodsLbl);
 		radioPanel.add(blankLbl);
-	
+		
 		faultLocalizationMethodRadioButtons = new ArrayList<JRadioButton>();
 		
 		for(String method: methods){
@@ -207,8 +254,52 @@ public class DebugPanel extends JPanel {
 			radioPanel.add(button);
 		}
 		faultLocalizationMethodRadioButtons.get(0).setSelected(true);
-		radioPanel.setLayout(new GridLayout(methods.length/2+3, 2));
+		
 		radioPanel.setBorder(new TitledBorder(new EtchedBorder(), ""));
+		
+		if(depth){
+			JLabel blankLbl4 = new JLabel("");
+			JLabel blankLbl5= new JLabel("");
+			
+			JLabel mutMethodsLbl = new JLabel("Select mutation methods:");
+			radioPanel.add(blankLbl4);
+			radioPanel.add(blankLbl5);
+			
+			radioPanel.add(mutMethodsLbl);
+			JLabel blankLbl6= new JLabel("");
+			
+			radioPanel.add(blankLbl6);
+			
+			radioPanel.add(boxPTT);
+			radioPanel.add(boxPTF);
+			radioPanel.add(boxCRC);
+			radioPanel.add(boxCRE);
+			radioPanel.add(boxRER);
+			radioPanel.add(boxANR);
+			radioPanel.add(boxRTT);
+			radioPanel.add(boxRTF);
+			radioPanel.add(boxRCT);
+			radioPanel.add(boxRCF);
+			radioPanel.add(boxRCCF);
+			radioPanel.add(boxPCCF);
+			radioPanel.add(boxFPR);
+			radioPanel.add(boxFDR);
+			radioPanel.add(boxANF);
+			radioPanel.add(boxRNF);
+			radioPanel.add(boxSelectAll);
+			setAllIndividualBoxes(true);
+		}
+		
+		boxSelectAll.addActionListener(new ActionListener() {		 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (boxSelectAll.isSelected())
+		        	setAllIndividualBoxes(true);
+		        else
+		        	setAllIndividualBoxes(false);			
+			}
+        });
+		
 		return radioPanel;
 	}
 	
@@ -229,6 +320,7 @@ public class DebugPanel extends JPanel {
 			}
 			tablePanel = new GeneralTablePanel(data, columnNames, columnNames.length);
 			tablePanel.setMinRows(data.size());
+			
 			JScrollPane scrollpane = new JScrollPane(tablePanel);
 			add(scrollpane, BorderLayout.CENTER);
 			xpa.setToDebugPane();
@@ -237,5 +329,79 @@ public class DebugPanel extends JPanel {
 			e.printStackTrace();
 		}
 	}
+	
+	private void setAllIndividualBoxes(boolean selected) {
+		boxPTT.setSelected(selected);
+		boxPTF.setSelected(selected);
+		boxCRC.setSelected(selected);
+		boxCRE.setSelected(selected);
+		boxRER.setSelected(selected);
+		boxRTT.setSelected(selected);
+		boxRTF.setSelected(selected);
+		boxRCT.setSelected(selected);
+		boxRCF.setSelected(selected);
+		boxRCCF.setSelected(selected);
+		boxPCCF.setSelected(selected);
+		boxFPR.setSelected(selected);
+		boxFDR.setSelected(selected);
+		boxANF.setSelected(selected);
+		boxANR.setSelected(selected);
+		boxRNF.setSelected(selected);
+		boxSelectAll.setSelected(selected);
+	}
+	
+	private List<String> getMutationOperatorList(){
+		List<String> lst = new ArrayList<String>();
+		if (boxPTT.isSelected()) {
+			lst.add("createPolicyTargetTrueMutants");
+		}
+		if (boxPTF.isSelected()) {
+			lst.add("createPolicyTargetFalseMutants");
+		}
+		if (boxCRC.isSelected()) {
+			lst.add("createCombiningAlgorithmMutants");
+		}
+		if (boxCRE.isSelected()) {
+			lst.add("createRuleEffectFlippingMutants");
+		}
+		if (boxRER.isSelected()) {
+			lst.add("createRemoveRuleMutants");
+		}
+		if (boxANR.isSelected()) {
+			lst.add("createAddNewRuleMutants");
+		}
+		if (boxRTT.isSelected()) {
+			lst.add("createRuleTargetTrueMutants");
+		}
+		if (boxRTF.isSelected()) {
+			lst.add("createRuleTargetFalseMutants");
+		}
+		if (boxRCT.isSelected()) {
+			lst.add("createRuleConditionTrueMutants");
+		}
+		if (boxRCF.isSelected()) {
+			lst.add("createRuleConditionFalseMutants");
+		}
+		if (boxRCCF.isSelected()) {
+			lst.add("createRuleChangeComparisonFunctionMutants");
+		}
+		if (boxPCCF.isSelected()) {
+			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
+		}
+		if (boxFPR.isSelected()) {
+			lst.add("createFirstPermitRuleMutants");
+		}
+		if (boxFDR.isSelected()) {
+			lst.add("createFirstDenyRuleMutants");
+		}
+		if (boxANF.isSelected()) {
+			lst.add("createAddNotFunctionMutants");
+		}
+		if (boxRNF.isSelected()) {
+			lst.add("createRemoveNotFunctionMutants");
+		}
+		return lst;
+	}
+	
 
 }

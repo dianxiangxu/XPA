@@ -46,11 +46,11 @@ public class MutantDiff {
     	String oldLine = StringEscapeUtils.unescapeHtml4(diffRow.getOldLine()).replaceAll("<br>", "");
       if (diffRow.getTag().equals(DiffRow.Tag.INSERT)) 
       {
-        repairedContents.add(new MutationDiffFrame.DiffItem(Color.GREEN,"+" + newLine));
+        repairedContents.add(new MutationDiffFrame.DiffItem(Color.GREEN,"+ " + newLine));
       }
       else if (diffRow.getTag().equals(DiffRow.Tag.DELETE))
       {
-    	originalContents.add(new MutationDiffFrame.DiffItem(Color.RED,"-" + oldLine));
+    	originalContents.add(new MutationDiffFrame.DiffItem(Color.RED,"- " + oldLine));
           
       }
       else if (diffRow.getTag().equals(DiffRow.Tag.CHANGE))
@@ -71,8 +71,8 @@ public class MutantDiff {
      }
   
   public static void main(String args[]){
-	  String file1 = "conference3_CRE12.xml";
-	  String file2 = "conference3_CRE12-repaired.xml";
+	  String file1 = "conference3_CRE14.xml";
+	  String file2 = "conference3_CRE14-repaired.xml";
 	  String base = "/home/roshanshrestha/Project/XPA/Experiments/conference3/mutants/";
 	  MutantDiff.show(base+file1, base+file2);
 	  

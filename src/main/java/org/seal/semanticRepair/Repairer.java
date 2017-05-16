@@ -8,6 +8,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -66,7 +67,7 @@ public class Repairer {
         return null;
     }
    	
-   public Mutant repairMutant(Mutant policyToRepair, TestSuite testSuite, String scoringMethod, int maxSearchLayer) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException, ParsingException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+   public Mutant repairWithSelectedMutantMethods(Mutant policyToRepair, TestSuite testSuite, String scoringMethod,List<String> mutationMethods ,int maxSearchLayer) throws IOException, SAXException, ParserConfigurationException, XPathExpressionException, ParsingException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
        Queue<MutantNode> queue = new PriorityQueue<>();
        queue.add(new MutantNode(null, policyToRepair, testSuite, scoringMethod, 0, 0));
        MutantNode node = null;
@@ -87,7 +88,7 @@ public class Repairer {
            Mutator mutator = new Mutator(node.getMutant());
            int rank = 1;
            for (int bugPosition : suspicionRank) {
-               List<Mutant> mutantList = mutator.generateAllMutants(bugPosition);
+               List<Mutant> mutantList = mutator.generateSelectedMutants(mutationMethods, bugPosition);
                for (Mutant mutant : mutantList) {
                    queue.add(new MutantNode(node, mutant, testSuite, scoringMethod, rank, node.getLayer() + 1));
                }

@@ -57,17 +57,21 @@ public class MutationPanelDemo extends JPanel {
 	private JCheckBox boxRTF = new JCheckBox("Rule Target False (RTF)");
 	private JCheckBox boxRCT = new JCheckBox("Rule Condition True (RCT)");
 	private JCheckBox boxRCF = new JCheckBox("Rule Condition False (RCF)");
+	private JCheckBox boxRCCF = new JCheckBox("Rule Change Comparition Function(RCCF)");
+	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
+	 
+	 
 	private JCheckBox boxFPR = new JCheckBox("First Permit Rules (FPR)");
 	private JCheckBox boxFDR = new JCheckBox("First Deny Rules (FDR)");
-	private JCheckBox boxRTR = new JCheckBox("Rule Type Replaced (RTR) - Not implemented");
-	private JCheckBox boxFCF = new JCheckBox("Flip Comparison Function (FCF)");
+	//private JCheckBox boxRTR = new JCheckBox("Rule Type Replaced (RTR) - Not implemented");
+	//private JCheckBox boxFCF = new JCheckBox("Flip Comparison Function (FCF)");
 	
 	//private JCheckBox boxRUF = new JCheckBox("Remove Uniqueness Function (RUF) - Not Implemented"); Turner Lehmbecker
 	
 	private JCheckBox boxANF = new JCheckBox("Add Not Function (ANF)");
 	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
-	private JCheckBox boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
-	private JCheckBox boxRPCE = new JCheckBox("Remove Parallel Condition Element (RPCE) - Not implemented");
+	//private JCheckBox boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
+	//private JCheckBox boxRPCE = new JCheckBox("Remove Parallel Condition Element (RPCE) - Not implemented");
 	
 	private JCheckBox boxSelectAll = new JCheckBox("Select All"); // All 13 types of mutation.
 	private JCheckBox boxSelectEight = new JCheckBox("Select 8"); // 8 type (PTT, PTF, CRC, CRE, RTT, RTF, RCT, RCF)
@@ -108,14 +112,16 @@ public class MutationPanelDemo extends JPanel {
 		myPanel.add(boxRTF);
 		myPanel.add(boxRCT);
 		myPanel.add(boxRCF);
+		myPanel.add(boxRCCF);
+		myPanel.add(boxPCCF);
 		myPanel.add(boxFPR);
 		myPanel.add(boxFDR);
-		myPanel.add(boxRTR);
-		myPanel.add(boxFCF);
+		//myPanel.add(boxRTR);
+		//myPanel.add(boxFCF);
 		myPanel.add(boxANF);
 		myPanel.add(boxRNF);
-		myPanel.add(boxRPTE);
-		myPanel.add(boxRPCE);
+		//myPanel.add(boxRPTE);
+		//myPanel.add(boxRPCE);
 		//myPanel.add(boxRUF);
 		myPanel.add(boxSelectAll);
 		myPanel.add(boxSelectEight);
@@ -137,13 +143,16 @@ public class MutationPanelDemo extends JPanel {
 		boxRTF.setSelected(selected);
 		boxRCT.setSelected(selected);
 		boxRCF.setSelected(selected);
+		boxRCCF.setSelected(selected);
+		boxPCCF.setSelected(selected);
 		boxFPR.setSelected(selected);
 		boxFDR.setSelected(selected);
 		//boxRTR.setSelected(selected); // Not implemented
 		//boxFCF.setSelected(selected); // not applicable in our examples.
 		boxANF.setSelected(selected);
+		boxANR.setSelected(selected);
 		boxRNF.setSelected(selected);
-		boxRPTE.setSelected(selected);
+		//boxRPTE.setSelected(selected);
 		//boxRPCE.setSelected(selected); // Not implemented
 		boxSelectAll.setSelected(selected);
 		boxSelectEight.setSelected(false);
@@ -305,6 +314,12 @@ public class MutationPanelDemo extends JPanel {
 		}
 		if (boxRCF.isSelected()) {
 			lst.add("createRuleConditionFalseMutants");
+		}
+		if (boxRCCF.isSelected()) {
+			lst.add("createRuleChangeComparisonFunctionMutants");
+		}
+		if (boxPCCF.isSelected()) {
+			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
 		}
 		if (boxFPR.isSelected()) {
 			lst.add("createFirstPermitRuleMutants");
