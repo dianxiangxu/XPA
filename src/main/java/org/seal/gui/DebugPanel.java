@@ -1,6 +1,9 @@
 package org.seal.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,6 +25,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.apache.commons.io.IOUtils;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
@@ -67,6 +71,7 @@ public class DebugPanel extends JPanel {
 	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
 	private JCheckBox boxSelectAll = new JCheckBox("Select All"); // All 13 types of mutation.
 	private JTable table;
+	private static int xPathCol;
 	
 	public DebugPanel(Demo xpa) {
 		this.xpa = xpa;
@@ -96,10 +101,8 @@ public class DebugPanel extends JPanel {
 				        }
 					}
 					table = tablePanel.getTable();
-					int xpathCol = table.getColumn("XPath").getModelIndex();
-					for(int i = 0; i< table.getRowCount();i++){
-						
-					}
+					xPathCol = table.getColumn("XPath").getModelIndex();
+					table.getColumnModel().getColumn(xPathCol).setCellRenderer(new XPAthColumnCellRenderer());
 					table.addMouseListener(new java.awt.event.MouseAdapter() {
 					    @Override
 					    public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -114,6 +117,22 @@ public class DebugPanel extends JPanel {
 					        }
 					    }
 					});
+					
+					table.addMouseMotionListener(new java.awt.event.MouseAdapter() {
+					    @Override
+					    public void mouseMoved(java.awt.event.MouseEvent evt) {
+					    	if(table.rowAtPoint(evt.getPoint())<table.getRowCount() && table.columnAtPoint(evt.getPoint())==xPathCol)
+					    	{
+					    	    setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+					    	}
+					    	else
+					    	{
+					    	    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+					    	}
+					    }
+					});
+
+							
 
 				}
 			} else{
@@ -403,5 +422,15 @@ public class DebugPanel extends JPanel {
 		return lst;
 	}
 	
+	static class XPAthColumnCellRenderer extends DefaultTableCellRenderer {
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
+			Component c = super.getTableCellRendererComponent(table, value,isSelected, hasFocus, row, column);
+			if (column == xPathCol) {
+			
+				c.setForeground(Color.blue);
+			}
+			return c;
+		}
+	}
 
 }

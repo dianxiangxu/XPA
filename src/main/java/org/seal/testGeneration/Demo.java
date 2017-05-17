@@ -575,6 +575,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	
 	public static void main(String[] args) {
 		//
+		try{
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -594,6 +595,9 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 				
 			}
 		});
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 }
