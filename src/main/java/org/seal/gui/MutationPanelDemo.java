@@ -244,7 +244,7 @@ public class MutationPanelDemo extends JPanel {
 					setUpMutantPanel(mutantSuite.getMutantList());
 				}
 				catch(Exception e){
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(xpa, "Invalid mutant suite.");
 				}
 			}
 		}

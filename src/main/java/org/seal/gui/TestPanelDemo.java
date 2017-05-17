@@ -128,7 +128,7 @@ public class TestPanelDemo extends JPanel {
 					}
 					setUpTestPanel();
 				} catch (Exception e) {
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(demo, "Invalid test suite file");
 				}
 			}
 		}
