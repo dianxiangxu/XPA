@@ -24,6 +24,7 @@ import org.seal.coverage.PolicySpreadSheetTestSuite;
 import org.seal.mcdc.MCDC_converter2;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
+import org.seal.testGeneration.DecisionCoverageTestGenerator;
 import org.seal.testGeneration.Demo;
 import org.seal.testGeneration.RuleCoverageTestGenerator;
 import org.umu.editor.XMLFileFilter;
@@ -199,20 +200,16 @@ public class TestPanelDemo extends JPanel {
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				
 				PolicySpreadSheetTestSuite OnetrueOtherFalse=null;
-				
-				/*OnetrueOtherFalse = new PolicySpreadSheetTestSuite(
-						RuleCoverageTestGenerator.generateTests(this,policy),
-						demo.getWorkingPolicyFilePath());*/
 				OnetrueOtherFalse = new PolicySpreadSheetTestSuite(
 						RuleCoverageTestGenerator.generateTests(this,demo.getWorkingPolicyFilePath()),
-						demo.getWorkingPolicyFilePath());
+						demo.getWorkingPolicyFilePath()
+						);
 				
 				workingTestSuiteFileName = getTestsuiteXLSfileName("_Exclusive");
 				OnetrueOtherFalse.writeToExcelFile(workingTestSuiteFileName);
 			} else if (DecisionCoverageRadio.isSelected()) {
 				PolicySpreadSheetTestSuite decisionCoverage = new PolicySpreadSheetTestSuite(
-						policyx.generate_DecisionCoverage(this,
-								policyx.buildDecisionCoverage(policy), "_DecisionCoverage"),
+						DecisionCoverageTestGenerator.generateTests(this, "_DecisionCoverage",demo.getWorkingPolicyFilePath(),PolicyXDemo.balana),
 						demo.getWorkingPolicyFilePath());
 				workingTestSuiteFileName = getTestsuiteXLSfileName("_DecisionCoverage");
 				decisionCoverage.writeToExcelFile(workingTestSuiteFileName);

@@ -54,7 +54,7 @@ import org.wso2.balana.xacml3.Target;
 
 public class PolicyXDemo {
 
-	private static Balana balana;
+	public static Balana balana;
 	String policyName;
 	algorithm al = new algorithm();
 	Call_Z3str z3 = new Call_Z3str();
@@ -10478,4 +10478,6 @@ public class PolicyXDemo {
 		}
 		return attributes;
 	}
+	
+	
 }
