@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
@@ -26,7 +27,8 @@ import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.testGeneration.DecisionCoverageTestGenerator;
 import org.seal.testGeneration.Demo;
-import org.seal.testGeneration.RuleCoverageTestGenerator;
+import org.seal.xacml.TestSuiteDemo;
+import org.seal.xacml.coverage.RuleCoverage;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.Policy;
@@ -197,16 +199,13 @@ public class TestPanelDemo extends JPanel {
 			AbstractPolicy policy = lp.getPolicy(demo.getWorkingPolicyFilePath());
 			PolicyXDemo policyx = new PolicyXDemo(policy);
 			policyx.initBalana(this.demo);
+			String policyFilePath = demo.getWorkingPolicyFilePath();
 			if (exclusiveRuleCoverageRadio.isSelected()) {
-				
-				PolicySpreadSheetTestSuite OnetrueOtherFalse=null;
-				OnetrueOtherFalse = new PolicySpreadSheetTestSuite(
-						RuleCoverageTestGenerator.generateTests(this,demo.getWorkingPolicyFilePath()),
-						demo.getWorkingPolicyFilePath()
-						);
-				
-				workingTestSuiteFileName = getTestsuiteXLSfileName("_Exclusive");
-				OnetrueOtherFalse.writeToExcelFile(workingTestSuiteFileName);
+				//PolicySpreadSheetTestSuite OnetrueOtherFalse=null;
+				//List<String> requests = RuleCoverage.generateRequests(policyFilePath);
+				//TestSuiteDemo suite = new TestSuiteDemo(requests,policyFilePath);
+				//workingTestSuiteFileName = getTestsuiteXLSfileName("_Exclusive");
+				//OnetrueOtherFalse.writeToExcelFile(workingTestSuiteFileName);
 			} else if (DecisionCoverageRadio.isSelected()) {
 				PolicySpreadSheetTestSuite decisionCoverage = new PolicySpreadSheetTestSuite(
 						DecisionCoverageTestGenerator.generateTests(this, "_DecisionCoverage",demo.getWorkingPolicyFilePath(),PolicyXDemo.balana),

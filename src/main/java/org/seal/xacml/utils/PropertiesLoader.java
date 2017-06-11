@@ -1,4 +1,4 @@
-package org.seal.xpa.util;
+package org.seal.xacml.utils;
 
 import java.io.InputStream;
 import java.util.HashMap;

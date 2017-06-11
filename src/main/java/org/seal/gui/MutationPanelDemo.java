@@ -27,9 +27,9 @@ import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticMutation.Mutator;
 import org.seal.testGeneration.Demo;
-import org.seal.xpa.util.FileIOUtil;
-import org.seal.xpa.util.MutantUtil;
-import org.seal.xpa.util.PolicyUtil;
+import org.seal.xacml.utils.FileIOUtil;
+import org.seal.xacml.utils.MutantUtil;
+import org.seal.xacml.utils.PolicyUtil;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
 

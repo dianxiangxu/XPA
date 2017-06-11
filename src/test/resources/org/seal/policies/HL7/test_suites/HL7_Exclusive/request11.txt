@@ -7,11 +7,6 @@
 <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#boolean">true</AttributeValue>
 </Attribute>
 </Attributes>
-<Attributes Category="urn:oasis:names:tc:xacml:1.0:subject-category:access-subject">
-<Attribute AttributeId="com.axiomatics.hl7.user.role" IncludeInResult = "false">
-<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">admissionsClerk</AttributeValue>
-</Attribute>
-</Attributes>
 <Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:action">
 <Attribute AttributeId="com.axiomatics.hl7.action.id" IncludeInResult = "false">
 <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">read</AttributeValue>

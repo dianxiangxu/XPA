@@ -1,7 +1,15 @@
-package org.seal.xpa.util;
+package org.seal.xacml.utils;
+
+import static org.seal.policyUtils.XpathSolver.policyPattern;
+import static org.seal.policyUtils.XpathSolver.policysetPattern;
+import static org.seal.policyUtils.XpathSolver.rulePattern;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -14,9 +22,13 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.io.IOUtils;
+import org.seal.policyUtils.PolicyLoader;
+import org.seal.semanticMutation.Mutator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.wso2.balana.AbstractPolicy;
 import org.xml.sax.InputSource;
 
 public class XMLUtil {
@@ -57,5 +69,61 @@ public class XMLUtil {
 	        throw new RuntimeException(e);
 	    }
 	}
+	
+	public static String getElementByXPath(String xPathString, File file){
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		String elementString = "";
+		try{
+			AbstractPolicy policy = PolicyLoader.loadPolicy(file);
+			Document doc = PolicyLoader.getDocument(IOUtils.toInputStream(policy.encode(), Charset.defaultCharset()));
+			NodeList nodes = (NodeList) xPath.evaluate(xPathString, doc.getDocumentElement(), XPathConstants.NODESET);
+	        for(int i = 0; i< nodes.getLength();i++){
+	        	elementString += XMLUtil.toPrettyString(XMLUtil.nodeToString(nodes.item(i)),4);
+	        }
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+        return elementString;
+	}
+	
+	public static boolean isTraversableElement(Node e){
+		if(rulePattern.matcher(e.getLocalName()).matches()||policysetPattern.matcher(e.getLocalName()).matches() || policyPattern.matcher(e.getLocalName()).matches()){
+			return true;
+		} else{
+			return false;
+		}
+	}
+    
+	public static Node findInChildNodes(Node parent, String localName) {
+	    List<Node> childNodes = Mutator.getChildNodeList(parent);
+	    for (Node child : childNodes) {
+	        if (localName.equals(child.getLocalName())) {
+	            return child;
+	        }
+	    }
+	    return null;
+	}
+	
+	public static boolean isEmptyNode(Node node) {
+        if (node == null) {
+            return true;
+        }
+        List<Node> childNodes = getChildNodeList(node);
+        for (Node child : childNodes) {
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                return false;
+            }
+        }
+        return true;
+    }
+	
+	public static List<Node> getChildNodeList(Node parent) {
+        List<Node> childNodes = new ArrayList<>();
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            childNodes.add(children.item(i));
+        }
+        return childNodes;
+    }
 
 }

@@ -1,14 +1,4 @@
 <Request xmlns="urn:oasis:names:tc:xacml:3.0:core:schema:wd-17" CombinedDecision="false" ReturnPolicyIdList="false">
-<Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:resource">
-<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:resource:resource-id" IncludeInResult = "false">
-<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">POLICY</AttributeValue>
-</Attribute>
-</Attributes>
-<Attributes Category="urn:oasis:names:tc:xacml:1.0:subject-category:access-subject">
-<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:subject:subject-id" IncludeInResult = "false">
-<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">aaaaaaaaaj</AttributeValue>
-</Attribute>
-</Attributes>
 <Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:action">
 <Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id" IncludeInResult = "false">
 <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">B</AttributeValue>
@@ -17,6 +7,16 @@
 <Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:environment">
 <Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:environment:environment-id" IncludeInResult = "false">
 <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">ao</AttributeValue>
+</Attribute>
+</Attributes>
+<Attributes Category="urn:oasis:names:tc:xacml:3.0:attribute-category:resource">
+<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:resource:resource-id" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">POLICY</AttributeValue>
+</Attribute>
+</Attributes>
+<Attributes Category="urn:oasis:names:tc:xacml:1.0:subject-category:access-subject">
+<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:subject:subject-id" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">aaaaaaaaaj</AttributeValue>
 </Attribute>
 </Attributes>
 </Request>

@@ -1,0 +1,105 @@
+package org.seal.xacml.utils;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.seal.xacml.helpers.Z3StrExpressionHelper;
+
+public class Z3StrUtil {
+
+	public static void buildZ3Input(String input, Map<String,String> nameMap, Map<String,String> typeMap)  throws IOException{
+		StringBuffer z3input = new StringBuffer();
+		String[] lines = input.split("\n");
+		for (String s : lines) {
+			if (!s.trim().equals("")) {
+				StringBuffer sb = new StringBuffer();
+				sb.append(s);
+				sb.insert(0, "(assert ");
+				sb.append(")" + "\n");
+				z3input.append(sb);
+			}
+		}
+		Iterator<Map.Entry<String, String>> iter = nameMap.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String,String> entry = (Map.Entry<String,String>) iter.next();
+			String name = entry.getValue().toString();
+			String type = typeMap.get(entry.getValue().toString()).toString();
+			z3input.insert(0, "(declare-variable " + name + " " + type + ")\n");
+		}
+		z3input.append("(check-sat)" + "\n");
+		z3input.append("(get-model)" + "\n");
+		FileIOUtil.writeFile(new File("./Z3_input"),z3input.toString());
+	}
+	
+	public static void buildZ3Input(String input, Z3StrExpressionHelper helper) throws IOException{
+		StringBuffer z3input = new StringBuffer();
+		String[] lines = input.split(System.lineSeparator());
+		for (String s : lines) {
+			if (!s.trim().equals("")) {
+				StringBuffer sb = new StringBuffer();
+				sb.append(s);
+				sb.insert(0, "(assert ");
+				sb.append(")" + System.lineSeparator());
+				z3input.append(sb);
+			}
+		}
+		Iterator<Map.Entry<String,String>> iter = helper.getNameMap().entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String,String> entry = (Map.Entry<String,String>) iter.next();
+			String name = entry.getValue().toString();
+			String type = helper.getTypeMap().get(entry.getValue().toString()).toString();
+			z3input.insert(0, "(declare-variable " + name + " " + type + ")" + System.lineSeparator());
+		}
+		z3input.append("(check-sat)" + System.lineSeparator());
+		z3input.append("(get-model)" + System.lineSeparator());
+		FileIOUtil.writeFile(new File("./Z3_input"),z3input.toString());
+	}
+	
+	public static boolean processExpression(String input, Z3StrExpressionHelper helper) throws IOException {
+		Z3StrUtil.buildZ3Input(input, helper);
+		Z3StrUtil.buildZ3Output();
+		if (Z3StrUtil.checkConflict() == true) {
+			helper.updateColletor();
+			return true;
+		} else {
+			return false;
+		}
+	}
+    
+	public static void buildZ3Output() throws IOException{
+		Runtime run = Runtime.getRuntime();
+		Process p = run.exec("Z3-str/Z3-str.py -f ./Z3_input");
+		BufferedInputStream in = new BufferedInputStream(p.getInputStream());
+		BufferedReader inBr = new BufferedReader(new InputStreamReader(in));
+		StringBuffer tmpTrack = new StringBuffer();
+		String lineStr;
+		FileWriter fw = new FileWriter("./Z3_output");
+		while ((lineStr = inBr.readLine()) != null) {
+			fw.write(lineStr + "\n");
+			tmpTrack.append(lineStr + "\n");
+		}
+		fw.close();
+	
+	}
+
+	public static boolean checkConflict() throws IOException {
+		FileReader fr = new FileReader("./Z3_output");
+		BufferedReader br = new BufferedReader(fr);
+		String s;
+		if ((s = br.readLine()) != null) {
+			if (s.equals("* v-ok")) {
+				fr.close();
+				return true;
+			}
+		}
+		fr.close();
+		return false;
+	}
+}

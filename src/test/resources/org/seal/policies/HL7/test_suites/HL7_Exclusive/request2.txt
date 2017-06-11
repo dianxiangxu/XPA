@@ -3,11 +3,11 @@
 <Attribute AttributeId="com.axiomatics.hl7.object.objectType" IncludeInResult = "false">
 <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">progress note</AttributeValue>
 </Attribute>
-<Attribute AttributeId="com.axiomatics.hl7.object.author" IncludeInResult = "false">
-<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">C</AttributeValue>
-</Attribute>
 <Attribute AttributeId="com.axiomatics.hl7.patient.primaryPhysician" IncludeInResult = "false">
 <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">s</AttributeValue>
+</Attribute>
+<Attribute AttributeId="com.axiomatics.hl7.object.author" IncludeInResult = "false">
+<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">C</AttributeValue>
 </Attribute>
 </Attributes>
 <Attributes Category="urn:oasis:names:tc:xacml:1.0:subject-category:access-subject">

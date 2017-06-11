@@ -21,7 +21,7 @@ import org.seal.faultlocalization.TestCellResult;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
-import org.seal.xpa.util.MutantUtil;
+import org.seal.xacml.utils.MutantUtil;
 import org.wso2.balana.AbstractPolicy;
 
 public class PolicySpreadSheetMutantSuiteDemo {

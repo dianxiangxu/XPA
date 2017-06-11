@@ -39,10 +39,11 @@ import org.seal.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticRepair.Repairer;
 import org.seal.testGeneration.Demo;
-import org.seal.xpa.util.FileIOUtil;
-import org.seal.xpa.util.MutantDiff;
-import org.seal.xpa.util.PopupFrame;
-import org.seal.xpa.util.PropertiesLoader;
+import org.seal.xacml.utils.FileIOUtil;
+import org.seal.xacml.utils.MutantDiff;
+import org.seal.xacml.utils.PopupFrame;
+import org.seal.xacml.utils.PropertiesLoader;
+import org.seal.xacml.utils.XMLUtil;
 
 
 public class DebugPanel extends JPanel {
@@ -112,7 +113,7 @@ public class DebugPanel extends JPanel {
 					        int col = table.columnAtPoint(evt.getPoint());
 					        if (row >= 0 && col ==targetCol) {
 					            String xPathString = table.getValueAt( row, col).toString();
-					            String content = FileIOUtil.getElementByXPath(xPathString, xpa.getWorkingPolicyFile());
+					            String content = XMLUtil.getElementByXPath(xPathString, xpa.getWorkingPolicyFile());
 					            PopupFrame.showContent("Element at "+xPathString, content);
 					        }
 					    }
