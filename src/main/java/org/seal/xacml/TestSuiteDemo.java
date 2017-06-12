@@ -2,16 +2,20 @@ package org.seal.xacml;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.seal.xacml.utils.FileIOUtil;
-import org.seal.xacml.utils.FileUtil;
+import org.seal.xacml.utils.PolicyUtil;
 import org.seal.xacml.utils.PropertiesLoader;
+import org.seal.xacml.xpa.utils.TestUtil;
 
 public class TestSuiteDemo {
 
@@ -20,15 +24,23 @@ public class TestSuiteDemo {
 	private List<TestRecord> testRecords;
 	private String policyFilePath;
 
-	public TestSuiteDemo(List<TestRecord> requestRecords, String policyFile) {
+	public TestSuiteDemo(List<TestRecord> requestRecords, String policyFilePath) {
 		this.testRecords = requestRecords;
-		this.policyFilePath = policyFile;
+		this.policyFilePath = policyFilePath;
+	}
+	
+	public TestSuiteDemo(String policyFilePath,List<String> requests) {
+		this.testRecords = new ArrayList<TestRecord>();
+		for(int i = 0; i < requests.size();i++){
+			testRecords.add(new TestRecord(requests.get(i),"",TestUtil.getName(i)));
+		}
+		this.policyFilePath = policyFilePath;
 	}
 
-	public List<TestRecord> getTestRecords() {
-		return testRecords;
+	public TestSuiteDemo(String testSuiteMetaFilePath, String policyFilePath) throws Exception {
+		this(readTestSuite(testSuiteMetaFilePath), policyFilePath);
 	}
-
+	
 	public static List<TestRecord> readTestSuite(String testSuiteMetaFilePath) throws Exception {
 		List<TestRecord> records = new ArrayList<TestRecord>();
 		FileInputStream inputStream = new FileInputStream(testSuiteMetaFilePath);
@@ -39,13 +51,23 @@ public class TestSuiteDemo {
 		}
 		return records;
 	}
+	
+	public List<TestRecord> getTestRecords() {
+		return testRecords;
+	}
+	
+
+	public int getNumberOfTests() {
+		return testRecords.size();
+	}
+
 
 	private static void loadTestRow(List<TestRecord> records, File testSuiteFolder, Row row) throws IOException {
 		if (row.getCell(0) == null || row.getCell(1) == null){
 			return;
 		}
 		String keyword = row.getCell(0).toString().trim();
-		if (keyword.equals("") || keyword.startsWith("//") || !keyword.substring(0, TEST_KEYWORD.length()).equalsIgnoreCase(TEST_KEYWORD)){
+		if (Pattern.matches("[a-zA-Z]+",keyword)){
 			return;
 		}
 		String name = row.getCell(1) != null ? row.getCell(1).toString() : "";
@@ -59,13 +81,13 @@ public class TestSuiteDemo {
 		records.add(new TestRecord(requestString, oracle, name));
 	}
 
-	/*public void writeMetaFile(String fileName) {
+	public void writeMetaFile(String fileName) {
 		HSSFWorkbook workBook = new HSSFWorkbook();
 		workBook.createSheet("test suite");
 		Sheet sheet = workBook.getSheetAt(0);
 		writeTitleRow(sheet, 0);
 		int rowIndex = 1;
-		for (RequestRecord test : testRecords) {
+		for (TestRecord test : testRecords) {
 			writeTestRow(sheet, rowIndex++, test);
 		}
 		try {
@@ -82,57 +104,45 @@ public class TestSuiteDemo {
 		Cell[] titleCells = new Cell[3];
 		for (int i = 0; i < titleCells.length; i++)
 			titleCells[i] = titleRow.createCell(i);
-		titleCells[0].setCellValue("");
-		titleCells[1].setCellValue("Request file");
+		titleCells[0].setCellValue("SNo");
+		titleCells[1].setCellValue("Request Name");
 		titleCells[2].setCellValue("Expected response");
 	}
 
 	private static void writeTestRow(Sheet sheet, int rowIndex,
-			RequestRecord test) {
+			TestRecord test) {
 		Row testRow = sheet.createRow(rowIndex);
 		Cell[] testCells = new Cell[3];
 		for (int i = 0; i < testCells.length; i++)
 			testCells[i] = testRow.createCell(i);
-		testCells[0].setCellValue(test.getNumber());
-		testCells[1].setCellValue(test.getRequestFile());
+		testCells[0].setCellValue(rowIndex);
+		testCells[1].setCellValue(TestUtil.getName(rowIndex-1));
 		testCells[2].setCellValue(test.getOracle());
 	}
 
-	public RequestRecord findPolicyTest(String decision) {
-		for (RequestRecord test : testRecords) {
+	public TestRecord findPolicyTest(String decision) {
+		for (TestRecord test : testRecords) {
 			if (test.getOracle().equalsIgnoreCase(decision))
 				return test;
 		}
 		return null;
 	}
 
-	public Vector<Vector<Object>> getTestData() {
-		int index = 1;
-		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-		for (RequestRecord test : testRecords) {
-			Vector<Object> vector = test.getTestVector();
-			vector.set(0, index + "");
-			data.add(vector);
-			index++;
-		}
-		return data;
-	}
-
-	public int getNumberOfTests() {
-		return testRecords.size();
-	}
-	*/
+	
+	
+	
 	public void save() throws IOException{
-		FileUtil.setUpDefaultTestSuiteDirectory(policyFilePath,NameDirectory.RULE_COVERAGE);
-		String testSuiteDirectory = FileUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, NameDirectory.RULE_COVERAGE);	
+		TestUtil.setUpDefaultTestSuiteDirectory(policyFilePath,NameDirectory.RULE_COVERAGE);
+		String testSuiteDirectory = TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, NameDirectory.RULE_COVERAGE);	
+		String metaFilePath = testSuiteDirectory + File.separator + TestUtil.getTestSuiteMetaFileName(PolicyUtil.getPolicyName(policyFilePath), NameDirectory.RULE_COVERAGE);
 		
-		for(int i = 1; i <= testRecords.size();i++){
+		for(int i = 0; i < testRecords.size();i++){
 			String fileNamePrefix = PropertiesLoader.getProperties("config").getProperty("requestFileNamePrefix");
-			String index = String.valueOf(i);
+			String index = String.valueOf(i+1);
 			String extension = PropertiesLoader.getProperties("config").getProperty("testRequestFileExtension");
 			String filePath =  testSuiteDirectory + File.separator + fileNamePrefix + index + "." + extension;
 			FileIOUtil.writeFile(filePath, testRecords.get(i).getRequest());
 		}
+		writeMetaFile(metaFilePath);
 	}
-
 }

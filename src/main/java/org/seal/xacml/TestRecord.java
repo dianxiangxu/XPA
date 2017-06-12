@@ -11,6 +11,10 @@ public class TestRecord {
 		this.name = name;
 	}
 	
+	public TestRecord(String request){
+		this.request = request;
+	}
+	
 	public String getRequest(){
 		return request;
 	}

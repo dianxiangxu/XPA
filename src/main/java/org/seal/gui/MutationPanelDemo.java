@@ -20,13 +20,13 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.apache.commons.io.FileUtils;
-import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.mutation.PolicySpreadSheetMutantSuiteDemo;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticMutation.Mutator;
 import org.seal.testGeneration.Demo;
+import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.MutantUtil;
 import org.seal.xacml.utils.PolicyUtil;
@@ -357,7 +357,7 @@ public class MutationPanelDemo extends JPanel {
 			
 			List<String> requests = new ArrayList<String>();
 			List<String> oracles = new ArrayList<String>();
-			for(PolicySpreadSheetTestRecord record: xpa.getTestPanel().getTestSuite().getTestRecord()){
+			for(TestRecord record: xpa.getTestPanel().getTestSuite().getTestRecords()){
 				requests.add(record.getRequest());
 				oracles.add(record.getOracle());
 			}

@@ -39,6 +39,7 @@ import org.seal.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticRepair.Repairer;
 import org.seal.testGeneration.Demo;
+import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.MutantDiff;
 import org.seal.xacml.utils.PopupFrame;
@@ -212,7 +213,7 @@ public class DebugPanel extends JPanel {
 	private TestSuite getTestSuite(){
 		List<String> requests = new ArrayList<String>();
 		List<String> oracles = new ArrayList<String>();
-		for(PolicySpreadSheetTestRecord record: xpa.getTestPanel().getTestSuite().getTestRecord()){
+		for(TestRecord record: xpa.getTestPanel().getTestSuite().getTestRecords()){
 			requests.add(record.getRequest());
 			oracles.add(record.getOracle());
 		}
@@ -229,7 +230,7 @@ public class DebugPanel extends JPanel {
 			JOptionPane.showMessageDialog(xpa, "There are no tests.");
 			return false;
 		}
-		for(PolicySpreadSheetTestRecord record: xpa.getTestPanel().getTestSuite().getTestRecord()){
+		for(TestRecord record: xpa.getTestPanel().getTestSuite().getTestRecords()){
 			if(record.getOracle().equals("")){
 				JOptionPane.showMessageDialog(xpa, "There are no oracles in Test Suite");
 				return false;

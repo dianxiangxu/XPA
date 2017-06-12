@@ -12,7 +12,8 @@ import org.seal.semanticMutation.Mutant;
 
 public class FileIOUtil {
 	static private String encoding;
-	{
+	
+	static {
 		encoding = PropertiesLoader.getProperties("config").getProperty("encoding");
 	}
 

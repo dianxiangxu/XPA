@@ -1,19 +1,40 @@
 package org.seal.testGeneration;
 
-import org.seal.coverage.PolicySpreadSheetTestSuite;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+
 import org.seal.gui.AbstractPolicyEditor;
 import org.seal.gui.DebugPanel;
-import org.seal.gui.MutationPanel;
 import org.seal.gui.MutationPanelDemo;
 import org.seal.gui.TestPanelDemo;
+import org.seal.xacml.TestSuiteDemo;
 import org.umu.editor.VentanaMensajes;
 import org.umu.editorXacml3.PolicyEditorPanel;
-
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
 
 public class Demo extends JFrame implements ItemListener, ActionListener {
 	
@@ -542,7 +563,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		
 	}
 
-	public PolicySpreadSheetTestSuite getWorkingTestSuite() {
+	public TestSuiteDemo getWorkingTestSuite() {
 		return testPanel.getPolicySpreadSheetTestSuite();
 	}
 

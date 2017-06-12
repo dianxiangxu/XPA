@@ -19,25 +19,27 @@ import javax.swing.border.TitledBorder;
 
 import org.seal.combiningalgorithms.LoadPolicyDemo;
 import org.seal.combiningalgorithms.PolicyXDemo;
-import org.seal.coverage.PolicyRunner;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
-import org.seal.coverage.PolicySpreadSheetTestSuite;
 import org.seal.mcdc.MCDC_converter2;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.testGeneration.DecisionCoverageTestGenerator;
 import org.seal.testGeneration.Demo;
+import org.seal.xacml.NameDirectory;
+import org.seal.xacml.TestRecord;
 import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.coverage.RuleCoverage;
+import org.seal.xacml.utils.ExceptionUtil;
+import org.seal.xacml.utils.PolicyUtil;
+import org.seal.xacml.xpa.utils.TestUtil;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
-import org.wso2.balana.Policy;
 
 public class TestPanelDemo extends JPanel {
 	private Demo demo;
 
 	private String workingTestSuiteFileName;
-	private PolicySpreadSheetTestSuite testSuite;
+	private TestSuiteDemo testSuite;
 
 	private Vector<Vector<Object>> data;
 	private TestTablePanelDemo requestTablePanel;
@@ -54,11 +56,11 @@ public class TestPanelDemo extends JPanel {
 	}
 	
 
-	public PolicySpreadSheetTestSuite getPolicySpreadSheetTestSuite() {
+	public TestSuiteDemo getPolicySpreadSheetTestSuite() {
 		return testSuite;
 	}
 	
-	public void setTestSuite(PolicySpreadSheetTestSuite p)
+	public void setTestSuite(TestSuiteDemo p)
 	{
 		this.testSuite = p;
 	}
@@ -71,9 +73,9 @@ public class TestPanelDemo extends JPanel {
 	public void setUpTestPanel() {
 		removeAll();
 		setLayout(new BorderLayout());
-		String[] columnNames = { "No", "Test Name", "Request File",
-				"Expected Response", "Actual Response", "Verdict" };
-		data = testSuite.getTestData();
+		String[] columnNames = { "No", "Name", "Request File","Expected Response", "Actual Response", "Verdict" };
+		data = TestUtil.getTestRecordsVector(testSuite.getTestRecords());
+		
 		if (data.size() == 0) {
 			JOptionPane.showMessageDialog(demo, "There is no test!");
 			return;
@@ -120,14 +122,9 @@ public class TestPanelDemo extends JPanel {
 				try {
 					workingTestSuiteFileName = testSuiteFile.getAbsolutePath();
 					if(workingPolicy!=null){
-					testSuite = new PolicySpreadSheetTestSuite(
-							workingTestSuiteFileName,
-							workingPolicy.toString());
+						testSuite = new TestSuiteDemo(workingTestSuiteFileName, workingPolicy.toString());
 					}else{
-						testSuite = new PolicySpreadSheetTestSuite(
-								workingTestSuiteFileName,
-								"");
-							
+						testSuite = new TestSuiteDemo(workingTestSuiteFileName,	"");
 					}
 					setUpTestPanel();
 				} catch (Exception e) {
@@ -190,9 +187,7 @@ public class TestPanelDemo extends JPanel {
 			JOptionPane.showMessageDialog(demo, "There is no policy!");
 			return;
 		}
-		int result = JOptionPane.showConfirmDialog(demo, createPanel(),
-				"Please Select Test Generation Strategy",
-				JOptionPane.OK_CANCEL_OPTION);
+		int result = JOptionPane.showConfirmDialog(demo, createPanel(), "Please Select Test Generation Strategy", JOptionPane.OK_CANCEL_OPTION);
 		
 		if (result == JOptionPane.OK_OPTION) {
 			LoadPolicyDemo lp = new LoadPolicyDemo();
@@ -202,30 +197,36 @@ public class TestPanelDemo extends JPanel {
 			String policyFilePath = demo.getWorkingPolicyFilePath();
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				//PolicySpreadSheetTestSuite OnetrueOtherFalse=null;
-				//List<String> requests = RuleCoverage.generateRequests(policyFilePath);
-				//TestSuiteDemo suite = new TestSuiteDemo(requests,policyFilePath);
-				//workingTestSuiteFileName = getTestsuiteXLSfileName("_Exclusive");
+				try{
+					List<String> requests = RuleCoverage.generateRequests(policyFilePath);
+					testSuite = new TestSuiteDemo(policyFilePath,requests);
+					testSuite.save();
+					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_COVERAGE);
+				}catch(Exception e){
+					ExceptionUtil.handleInDefaultLevel(e);
+				}
+				
 				//OnetrueOtherFalse.writeToExcelFile(workingTestSuiteFileName);
-			} else if (DecisionCoverageRadio.isSelected()) {
-				PolicySpreadSheetTestSuite decisionCoverage = new PolicySpreadSheetTestSuite(
+			}/* else if (DecisionCoverageRadio.isSelected()) {
+				TestSuiteDemo decisionCoverage = new TestSuiteDemo(
 						DecisionCoverageTestGenerator.generateTests(this, "_DecisionCoverage",demo.getWorkingPolicyFilePath(),PolicyXDemo.balana),
 						demo.getWorkingPolicyFilePath());
 				workingTestSuiteFileName = getTestsuiteXLSfileName("_DecisionCoverage");
 				decisionCoverage.writeToExcelFile(workingTestSuiteFileName);
 			} else if (permitDenyPairCoverageRadio.isSelected()) {
-				PolicySpreadSheetTestSuite PermitDenyCombine = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo PermitDenyCombine = new TestSuiteDemo(
 						policyx.generate_ByDenyPermit(this),
 						demo.getWorkingPolicyFilePath());
 				workingTestSuiteFileName = getTestsuiteXLSfileName("_PDpair");
 				PermitDenyCombine.writeToExcelFile(workingTestSuiteFileName);
 			} else if (rulePairCoverageRadio.isSelected()) {
-				PolicySpreadSheetTestSuite ByTwo = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo ByTwo = new TestSuiteDemo(
 						policyx.generate_ByTwo(this),
 						demo.getWorkingPolicyFilePath());
 				workingTestSuiteFileName = getTestsuiteXLSfileName("_Pair");
 				ByTwo.writeToExcelFile(workingTestSuiteFileName);
 			} else if (DecisionCoverageRadio_NoError.isSelected()) {
-				PolicySpreadSheetTestSuite decisionCoverage = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo decisionCoverage = new TestSuiteDemo(
 						policyx.generate_DecisionCoverage(this,
 								policyx.buildDecisionCoverage_NoId(policy), "_DecisionCoverage_NoError"),
 						demo.getWorkingPolicyFilePath());
@@ -233,7 +234,7 @@ public class TestPanelDemo extends JPanel {
 				decisionCoverage.writeToExcelFile(workingTestSuiteFileName);
 			} else if (MCDCRadio.isSelected()) {
 				MCDC_converter2 converter = new MCDC_converter2();
-				PolicySpreadSheetTestSuite mcdcTestSuite = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo mcdcTestSuite = new TestSuiteDemo(
 						policyx.generate_MCDCCoverage(this,
 								policyx.buildMCDC_Table(policy, converter, false),
 								"_MCDCCoverage", converter),
@@ -242,7 +243,7 @@ public class TestPanelDemo extends JPanel {
 				mcdcTestSuite.writeToExcelFile(workingTestSuiteFileName);
 			} else if (MCDCRadio_NoError.isSelected()) {
 				MCDC_converter2 converter = new MCDC_converter2();
-				PolicySpreadSheetTestSuite mcdcTestSuite = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo mcdcTestSuite = new TestSuiteDemo(
 						policyx.generate_MCDCCoverage(this,
 								policyx.buildMCDC_Table_NoId(policy, converter, false),
 								"_MCDCCoverage_NoError", converter),
@@ -251,7 +252,7 @@ public class TestPanelDemo extends JPanel {
 				mcdcTestSuite.writeToExcelFile(workingTestSuiteFileName);
 			} else if (Unique_MCDC.isSelected()) {
 				MCDC_converter2 converter = new MCDC_converter2();
-				PolicySpreadSheetTestSuite mcdcTestSuite = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo mcdcTestSuite = new TestSuiteDemo(
 						policyx.generate_MCDCCoverage(this,
 								policyx.buildMCDC_Table(policy, converter, true),
 								"Unique_Case_MCDCCoverage", converter),
@@ -260,22 +261,19 @@ public class TestPanelDemo extends JPanel {
 				mcdcTestSuite.writeToExcelFile(workingTestSuiteFileName);
 			} else if (Unique_MCDC_NoError.isSelected()) {
 				MCDC_converter2 converter = new MCDC_converter2();
-				PolicySpreadSheetTestSuite mcdcTestSuite = new PolicySpreadSheetTestSuite(
+				TestSuiteDemo mcdcTestSuite = new TestSuiteDemo(
 						policyx.generate_MCDCCoverage(this,
 								policyx.buildMCDC_Table_NoId(policy, converter, true),
 								"Unique_Case_MCDCCoverage_NoError", converter),
 						demo.getWorkingPolicyFilePath());
 				workingTestSuiteFileName = getTestsuiteXLSfileName("Unique_Case_MCDCCoverage_NoError");
 				mcdcTestSuite.writeToExcelFile(workingTestSuiteFileName);
-			}
+			}*/
 			
 			String dir = demo.getWorkingPolicyFile().getParent();
 			Runtime run = Runtime.getRuntime();
-
 			try {
-				testSuite = new PolicySpreadSheetTestSuite(
-						workingTestSuiteFileName,
-						demo.getWorkingPolicyFilePath());
+				testSuite = new TestSuiteDemo(workingTestSuiteFileName, demo.getWorkingPolicyFilePath());
 				setUpTestPanel();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -345,21 +343,12 @@ public class TestPanelDemo extends JPanel {
 			}
 		}
 		if (hasOracleValue == false) {
-			int count = 0;
-			ArrayList<PolicySpreadSheetTestRecord> recordList = new ArrayList<PolicySpreadSheetTestRecord>();
+			List<TestRecord> recordList = new ArrayList<TestRecord>();
 			for (Vector<Object> child : data) {
-				count++;
-				child.set(3, child.get(4));
-				
-				PolicySpreadSheetTestRecord record = new PolicySpreadSheetTestRecord(
-						child.get(1).toString(),
-						child.get(2).toString(), child.get(6).toString(),
-						child.get(3).toString());
-				recordList.add(record);
+				recordList.add(TestUtil.getTestRecord(child));
 			}
-			PolicySpreadSheetTestSuite testSuite = new PolicySpreadSheetTestSuite(
-					recordList, "GenTests/");
-			testSuite.writeToExcelFile(workingTestSuiteFileName);
+			TestSuiteDemo testSuite = new TestSuiteDemo(recordList, "GenTests/");
+			testSuite.writeMetaFile(workingTestSuiteFileName);
 			System.out.println(workingTestSuiteFileName + " saved.");
 			requestTablePanel.validate();
 			requestTablePanel.updateUI();
@@ -398,7 +387,7 @@ public class TestPanelDemo extends JPanel {
 	public boolean hasTests() {
 		return data != null && data.size() > 0;
 	}
-	public PolicySpreadSheetTestSuite getTestSuite(){
+	public TestSuiteDemo getTestSuite(){
 		return testSuite;
 	}
 	public boolean hasTestFailure(){
