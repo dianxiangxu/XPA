@@ -10,7 +10,7 @@ import org.seal.xacml.NameDirectory;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.ExceptionUtil;
 
-import org.seal.xacml.utils.PolicyUtil;
+import org.seal.xacml.utils.PolicyElementUtil;
 import org.seal.xacml.utils.PropertiesLoader;
 
 public class TestUtil {
@@ -54,7 +54,7 @@ public class TestUtil {
 	
 	public static String getTestSuiteMetaFilePath(String policyFilePath, String coverageName){
 		String delimeter = config.getProperty("fileNameDelimeter");
-		String testSuiteMetaFileName = PolicyUtil.getPolicyName(policyFilePath) + delimeter + coverageName + delimeter + config.getProperty("testSuiteMetaFileName");
+		String testSuiteMetaFileName = PolicyElementUtil.getPolicyName(policyFilePath) + delimeter + coverageName + delimeter + config.getProperty("testSuiteMetaFileName");
 		String testSuiteMetaFileExtension = config.getProperty("testSuiteMetaFileExtension");
 		String name = testSuiteMetaFileName + "." + testSuiteMetaFileExtension;
 		return TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, NameDirectory.RULE_COVERAGE) + File.separator + name;

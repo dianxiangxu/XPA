@@ -1,4 +1,4 @@
-package org.seal.xacml.utils;
+package org.seal.gui;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;

@@ -271,17 +271,34 @@ public class Mutator {
     @SuppressWarnings("unchecked")
     public List<Mutant> generateSelectedMutants(List<String> mutationMethods) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Class<?> cls = this.getClass();
-        List<Mutant> mutants = new ArrayList<>();
+        List<Mutant> mutants = new ArrayList<Mutant>();
         for (String xpath : xpathList) {
             for (String mutationMethod : mutationMethods) {
                 if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) ||
                         isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
                     Method method = cls.getDeclaredMethod(mutationMethod, String.class);
-                    mutants.addAll((ArrayList) method.invoke(this, xpath));
+                    mutants.addAll((ArrayList<Mutant>) method.invoke(this, xpath));
                 }
             }
         }
         return mutants;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Map<String,List<Mutant>> generateMutantsCategorizedByMethods(List<String> mutationMethods) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        Class<?> cls = this.getClass();
+        Map<String,List<Mutant>> mutantsMap = new HashMap<String,List<Mutant>>();
+        for (String xpath : xpathList) {
+        	List<Mutant> mutants = new ArrayList<Mutant>();
+            for (String mutationMethod : mutationMethods) {
+                if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) || isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
+                    Method method = cls.getDeclaredMethod(mutationMethod, String.class);
+                    mutants.addAll((ArrayList<Mutant>) method.invoke(this, xpath));
+                    mutantsMap.put(mutationMethod,mutants);
+                }
+            }
+        }
+        return mutantsMap;
     }
     
     @SuppressWarnings("unchecked")
@@ -292,9 +309,9 @@ public class Mutator {
         
         for (String mutationMethod : mutationMethods) {
         	if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) || isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
-                    	Method method = cls.getDeclaredMethod(mutationMethod, String.class);
-                    	mutants.addAll((ArrayList) method.invoke(this, xpath));
-             }
+        		Method method = cls.getDeclaredMethod(mutationMethod, String.class);
+        		mutants.addAll((ArrayList<Mutant>) method.invoke(this, xpath));
+            }
         }
         return mutants;
     }

@@ -42,7 +42,6 @@ import org.seal.testGeneration.Demo;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.MutantDiff;
-import org.seal.xacml.utils.PopupFrame;
 import org.seal.xacml.utils.PropertiesLoader;
 import org.seal.xacml.utils.XMLUtil;
 

@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.seal.combiningalgorithms.algorithm;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.helpers.Z3StrExpressionHelper;
@@ -35,7 +34,6 @@ public class RuleCoverage {
 	private static PolicyMetaData policyMetaData;
 	private static List<String> requests;
 	private static Z3StrExpressionHelper z3ExpressionHelper;
-	static algorithm al = new algorithm();
 	
 	public static List<String> generateRequests(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
         init(policyFilePath);

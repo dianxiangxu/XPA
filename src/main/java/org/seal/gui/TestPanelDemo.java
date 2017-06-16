@@ -19,18 +19,14 @@ import javax.swing.border.TitledBorder;
 
 import org.seal.combiningalgorithms.LoadPolicyDemo;
 import org.seal.combiningalgorithms.PolicyXDemo;
-import org.seal.coverage.PolicySpreadSheetTestRecord;
-import org.seal.mcdc.MCDC_converter2;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
-import org.seal.testGeneration.DecisionCoverageTestGenerator;
 import org.seal.testGeneration.Demo;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.utils.ExceptionUtil;
-import org.seal.xacml.utils.PolicyUtil;
 import org.seal.xacml.xpa.utils.TestUtil;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
@@ -287,8 +283,8 @@ public class TestPanelDemo extends JPanel {
 			JOptionPane.showMessageDialog(demo, "There is no policy!");
 			return;
 		}
-//		MutationPanel2 mutationPanel2 = new MutationPanel2(demo, this);
-//		mutationPanel2.generateMutants();
+		//MutationPanel2 mutationPanel2 = new MutationPanel2(demo, this);
+		//mutationPanel2.generateMutants();
 	}
 	
 	public void runTests() {

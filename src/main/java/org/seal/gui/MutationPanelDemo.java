@@ -29,7 +29,7 @@ import org.seal.testGeneration.Demo;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.MutantUtil;
-import org.seal.xacml.utils.PolicyUtil;
+import org.seal.xacml.utils.PolicyElementUtil;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
 
@@ -261,7 +261,7 @@ public class MutationPanelDemo extends JPanel {
 			try {
 				File policyFile = xpa.getWorkingPolicyFile();
 				AbstractPolicy policy = PolicyLoader.loadPolicy(policyFile);
-		        Mutator mutator = new Mutator(new Mutant(policy, PolicyUtil.getPolicyName(policyFile)));
+		        Mutator mutator = new Mutator(new Mutant(policy, PolicyElementUtil.getPolicyName(policyFile)));
 		        List<Mutant> mutants = mutator.generateSelectedMutants(getMutationOperatorList());
 				
 		        File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
@@ -273,8 +273,8 @@ public class MutationPanelDemo extends JPanel {
 		        for(Mutant mutant: mutants){
 					FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
 				}
-				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants,PolicyUtil.getPolicyName(policyFile)); // write to spreadsheet		
-				mutantSuite.writePolicyMutantsSpreadSheet(mutants,PolicyUtil.getPolicyName(policyFile) + "_mutants.xls");
+				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants,PolicyElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
+				mutantSuite.writePolicyMutantsSpreadSheet(mutants,PolicyElementUtil.getPolicyName(policyFile) + "_mutants.xls");
 				setUpMutantPanel(mutants);
 			} catch (Exception e) {
 				e.printStackTrace();
