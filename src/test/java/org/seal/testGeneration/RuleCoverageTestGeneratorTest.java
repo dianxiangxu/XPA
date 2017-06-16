@@ -3,9 +3,11 @@ package org.seal.testGeneration;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.junit.Test;
+import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.utils.PropertiesLoader;
 import org.umu.editorXacml3.PolicyEditorPanelDemo;
@@ -21,7 +23,9 @@ public class RuleCoverageTestGeneratorTest {
 			PolicyEditorPanelDemo policyEditor = new PolicyEditorPanelDemo();
 			policyEditor.openFile(policyPath);
 			demo.setEditorPanel(policyEditor);
-			RuleCoverage.generateRequests(policyPath);
+			TestSuiteDemo testSuite = new TestSuiteDemo(policyPath,RuleCoverage.generateRequests(policyPath));
+			testSuite.save();
+			
 			File requestsFolder = new File(System.getProperty("user.dir")+"/src/test/resources/org/seal/policies/"+ policies[l]+"/test_suites/"+ policies[l]+"_Exclusive");
 		
 			File[] requests = requestsFolder.listFiles();

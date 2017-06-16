@@ -107,9 +107,9 @@ public class TestPanelDemo extends JPanel {
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setMultiSelectionEnabled(false);
 		File workingPolicy = demo.getWorkingPolicyFile();
-		if ( workingPolicy!= null)
-			fileChooser.setCurrentDirectory(demo.getWorkingPolicyFile()
-					.getParentFile());
+		if ( workingPolicy!= null){
+			fileChooser.setCurrentDirectory(demo.getWorkingPolicyFile().getParentFile());
+		}
 		fileChooser.setFileFilter(new XMLFileFilter("xls"));
 		fileChooser.setDialogTitle("Open Test Suite");
 		if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -342,7 +342,7 @@ public class TestPanelDemo extends JPanel {
 				hasOracleValue = true;
 			}
 		}
-		if (hasOracleValue == false) {
+		if (!hasOracleValue) {
 			List<TestRecord> recordList = new ArrayList<TestRecord>();
 			for (Vector<Object> child : data) {
 				recordList.add(TestUtil.getTestRecord(child));

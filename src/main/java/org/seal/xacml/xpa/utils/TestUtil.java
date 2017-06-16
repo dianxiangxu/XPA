@@ -66,7 +66,8 @@ public class TestUtil {
 	
 	public static TestRecord getTestRecord(Vector<Object> v){
 		v.set(3, v.get(4));
-		TestRecord record = new TestRecord(v.get(7).toString(), v.get(4).toString(),v.get(2).toString());
+		String rec = String.valueOf(v.get(2));
+		TestRecord record = new TestRecord(v.get(6).toString(), v.get(3).toString(),v.get(1).toString());
 		return record;
 	}
 	
