@@ -3,6 +3,7 @@ package org.seal.gui;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -23,9 +24,12 @@ import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.testGeneration.Demo;
 import org.seal.xacml.NameDirectory;
+import org.seal.xacml.RequestGeneratorBase;
+import org.seal.xacml.TaggedRequest;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.coverage.RuleCoverage;
+import org.seal.xacml.mutation.MutationBasedTestGenerator;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.seal.xacml.xpa.utils.TestUtil;
 import org.umu.editor.XMLFileFilter;
@@ -192,9 +196,9 @@ public class TestPanelDemo extends JPanel {
 			policyx.initBalana(this.demo);
 			String policyFilePath = demo.getWorkingPolicyFilePath();
 			if (exclusiveRuleCoverageRadio.isSelected()) {
-				//PolicySpreadSheetTestSuite OnetrueOtherFalse=null;
 				try{
-					List<String> requests = RuleCoverage.generateRequests(policyFilePath);
+					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
+					List<String> requests = requestGenerator.generateRequests();
 					testSuite = new TestSuiteDemo(policyFilePath,requests);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_COVERAGE);
@@ -285,6 +289,18 @@ public class TestPanelDemo extends JPanel {
 		}
 		//MutationPanel2 mutationPanel2 = new MutationPanel2(demo, this);
 		//mutationPanel2.generateMutants();
+		MutationBasedTestGenerator testGenerator;
+		List<TaggedRequest> taggedRequests;
+		try{
+			testGenerator = new MutationBasedTestGenerator(demo.getWorkingPolicyFilePath());
+			List<String> mutationMethods = new ArrayList<String>();
+			mutationMethods.add("createPolicyTargetTrueMutants");
+			mutationMethods.add("createPolicyTargetFalseMutants");
+			taggedRequests = testGenerator.generateRequests(mutationMethods);
+			String hi = "";
+		}catch(Exception e){
+			ExceptionUtil.handleInDefaultLevel(e);
+		}
 	}
 	
 	public void runTests() {

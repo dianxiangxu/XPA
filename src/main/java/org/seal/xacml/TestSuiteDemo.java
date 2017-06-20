@@ -13,7 +13,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.seal.xacml.utils.FileIOUtil;
-import org.seal.xacml.utils.PolicyElementUtil;
+import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.PropertiesLoader;
 import org.seal.xacml.xpa.utils.TestUtil;
 
@@ -134,7 +134,7 @@ public class TestSuiteDemo {
 	public void save() throws IOException{
 		TestUtil.setUpDefaultTestSuiteDirectory(policyFilePath,NameDirectory.RULE_COVERAGE);
 		String testSuiteDirectory = TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, NameDirectory.RULE_COVERAGE);	
-		String metaFilePath = testSuiteDirectory + File.separator + TestUtil.getTestSuiteMetaFileName(PolicyElementUtil.getPolicyName(policyFilePath), NameDirectory.RULE_COVERAGE);
+		String metaFilePath = testSuiteDirectory + File.separator + TestUtil.getTestSuiteMetaFileName(XACMLElementUtil.getPolicyName(policyFilePath), NameDirectory.RULE_COVERAGE);
 		
 		for(int i = 0; i < testRecords.size();i++){
 			String fileNamePrefix = PropertiesLoader.getProperties("config").getProperty("requestFileNamePrefix");

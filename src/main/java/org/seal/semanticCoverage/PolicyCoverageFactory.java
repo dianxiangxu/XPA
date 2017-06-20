@@ -43,7 +43,7 @@ public class PolicyCoverageFactory {
      * This method will be called by AspectJ to add a new row in the coverage matrix before
      * each test runs.
      */
-    static void newRow() {
+    public static void newRow() {
         // the TargetCoverage here is only a position occupier
         // new TargetCoverage(1) means NO_MATCH, will result a 0 in semanticCoverage matrix in the spectrum fault localizer
         coverageMatrix.add(new ArrayList<Coverage>(Collections.nCopies(mapping.size(), new TargetCoverage(1))));
@@ -54,7 +54,7 @@ public class PolicyCoverageFactory {
      * each test suite runs.
      * @param policy
      */
-    static void init(AbstractPolicy policy) {
+    public static void init(AbstractPolicy policy) {
         coverageMatrix = new ArrayList<>();
         InputStream stream = IOUtils.toInputStream(policy.encode(), Charset.defaultCharset());
         try {

@@ -3,7 +3,6 @@ package org.seal.testGeneration;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.junit.Test;
@@ -18,12 +17,14 @@ public class RuleCoverageTestGeneratorTest {
 	public void testGenerateTests() throws Exception {
 		Demo demo = new Demo();
 		String[] policies = {"conference3","fedora-rule3","itrust3","kmarket-blue-policy","kmarket-gold-policy","kmarket-sliver-policy","obligation3","pluto3","HL7"};
+		RuleCoverage requestGenerator;
 		for(int l = 0; l < policies.length;l++){
 			String policyPath = System.getProperty("user.dir")+"/Experiments/"+ policies[l]+"/"+ policies[l] +".xml";
 			PolicyEditorPanelDemo policyEditor = new PolicyEditorPanelDemo();
 			policyEditor.openFile(policyPath);
 			demo.setEditorPanel(policyEditor);
-			TestSuiteDemo testSuite = new TestSuiteDemo(policyPath,RuleCoverage.generateRequests(policyPath));
+			requestGenerator = new RuleCoverage(policyPath);
+			TestSuiteDemo testSuite = new TestSuiteDemo(policyPath,requestGenerator.generateRequests());
 			testSuite.save();
 			
 			File requestsFolder = new File(System.getProperty("user.dir")+"/src/test/resources/org/seal/policies/"+ policies[l]+"/test_suites/"+ policies[l]+"_Exclusive");

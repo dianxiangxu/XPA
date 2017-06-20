@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class MutationMethodAbbrDirectory {
 	 private static Map<String,String> map;
-	 {
+	 static {
 		 map = new HashMap<String,String>();
 		 map.put("createPolicyTargetTrueMutants", "PTT");
 		 map.put("createPolicyTargetFalseMutants", "PTF");

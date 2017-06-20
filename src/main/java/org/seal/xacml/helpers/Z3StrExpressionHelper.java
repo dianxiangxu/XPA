@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.seal.combiningalgorithms.MyAttr;
 import org.seal.xacml.Attr;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.wso2.balana.Rule;
@@ -100,6 +101,23 @@ public class Z3StrExpressionHelper {
 			}
 		}
 		return expr.append(System.lineSeparator());
+	}
+	
+	public StringBuffer getFalseTargetExpression(Target target){
+		String[] lines = getTrueTargetExpression(target).toString().split("\n");
+		StringBuffer expr = new StringBuffer();
+		for (String s : lines) {
+			if (s.isEmpty()) {
+				continue;
+			} else {
+				StringBuffer subExpr = new StringBuffer();
+				subExpr.append("(not ");
+				subExpr.append(s);
+				subExpr.append(")");
+				expr.append(subExpr);
+			}
+		}
+		return expr;
 	}
     
 	public StringBuffer getTrueConditionExpression(Condition condition) {

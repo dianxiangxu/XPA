@@ -1,25 +1,21 @@
 package org.seal.xacml.coverage;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.seal.policyUtils.PolicyLoader;
 import org.seal.xacml.NameDirectory;
-import org.seal.xacml.helpers.Z3StrExpressionHelper;
-import org.seal.xacml.utils.PolicyElementUtil;
+import org.seal.xacml.RequestGeneratorBase;
+import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XMLUtil;
 import org.seal.xacml.utils.Z3StrUtil;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.wso2.balana.ParsingException;
-import org.wso2.balana.PolicyMetaData;
 import org.wso2.balana.Rule;
 import org.wso2.balana.cond.Condition;
 import org.wso2.balana.xacml3.Target;
@@ -28,41 +24,31 @@ import org.xml.sax.SAXException;
 /**
  * Created by roshanshrestha on 2/10/17.
  */
-public class RuleCoverage {
-	private static String policyFilePath;
-	private static Document doc;
-	private static PolicyMetaData policyMetaData;
-	private static List<String> requests;
-	private static Z3StrExpressionHelper z3ExpressionHelper;
+public class RuleCoverage extends RequestGeneratorBase {
 	
-	public static List<String> generateRequests(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
-        init(policyFilePath);
+	public RuleCoverage(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+		init(policyFilePath);
+	}
+	
+	public List<String> generateRequests() throws ParsingException, IOException, SAXException, ParserConfigurationException{
         StringBuilder preExpression = new StringBuilder();
         List<String> paths = new ArrayList<String>();
         traverse( doc.getDocumentElement(), paths, preExpression,null);
-        return requests;
+        return getRequests();
     }
     
-    private static void init(String path) throws IOException, SAXException, ParserConfigurationException, ParsingException{
-		policyFilePath = path;
-		doc = PolicyLoader.getDocument(new FileInputStream(policyFilePath));
-	    policyMetaData = PolicyLoader.loadPolicy(doc).getMetaData();
-		requests = new ArrayList<String>();
-		z3ExpressionHelper = new Z3StrExpressionHelper();
-    }
-   
-	private static void traverse(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException, IOException {
-	    if (PolicyElementUtil.isRule(node)) {
+   private void traverse(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException, IOException {
+	    if (XACMLElementUtil.isRule(node)) {
 	        String expresion = getRuleCoverageExpression(node,paths,preExpression,previousRules);
 			boolean sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
 			if (sat == true) {
-			    requests.add(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 			}
 		    previousRules.add(Rule.getInstance(node, policyMetaData, null));
 		    return;
 		}
 		
-		if (PolicyElementUtil.isPolicy(node) || PolicyElementUtil.isPolicySet(node)) {
+		if (XACMLElementUtil.isPolicy(node) || XACMLElementUtil.isPolicySet(node)) {
 		    Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
 		    Target target;
 			if (targetNode != null) {
@@ -73,7 +59,7 @@ public class RuleCoverage {
 		    }
 	        NodeList children = node.getChildNodes();
 	        previousRules = null;
-	        if(PolicyElementUtil.isPolicy(node)){
+	        if(XACMLElementUtil.isPolicy(node)){
 	        	previousRules = new ArrayList<Rule>();
 	        }
 	        for (int i = 0; i < children.getLength(); i++) {
@@ -89,7 +75,7 @@ public class RuleCoverage {
 		}	
     }
 
-	public static String getRuleCoverageExpression (Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
+	public String getRuleCoverageExpression (Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
 		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
 		Target target = null;
 	    Condition condition = null;
@@ -119,4 +105,5 @@ public class RuleCoverage {
 		}                
 	    return preExpression.toString()+ruleExpression+falsifyPreviousRules;
 	}
+	
 }
