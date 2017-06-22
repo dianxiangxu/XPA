@@ -10,17 +10,27 @@ import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.seal.combiningalgorithms.MyAttr;
+import org.seal.coverage.PolicySpreadSheetTestRecord;
+import org.seal.gui.TestPanel;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticMutation.Mutator;
 import org.seal.xacml.RequestGeneratorBase;
 import org.seal.xacml.TaggedRequest;
+import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.Z3StrUtil;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
+import org.wso2.balana.Rule;
+import org.wso2.balana.combine.CombiningAlgorithm;
+import org.wso2.balana.combine.xacml3.DenyOverridesRuleAlg;
+import org.wso2.balana.combine.xacml3.DenyUnlessPermitRuleAlg;
+import org.wso2.balana.combine.xacml3.PermitOverridesRuleAlg;
+import org.wso2.balana.combine.xacml3.PermitUnlessDenyRuleAlg;
 import org.wso2.balana.xacml3.AnyOfSelection;
 import org.wso2.balana.xacml3.Target;
 import org.xml.sax.SAXException;
@@ -44,15 +54,17 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			String methodName = "generate" + tag + "Requests";
 			Method method = cls.getDeclaredMethod(methodName, noParams);
 			List<String> requests = (List<String>)method.invoke(this, null);
-			for(String request:requests){
-				File r = new File(tag);
-				FileIOUtil.writeFile(r, request);
-				
-				for(Mutant mutant:mutants){
-					File f = new File(mutant.getName());
-					FileIOUtil.writeFile(f, mutant.encode());
-					if(doRequestPropagatesMutationFault(request, policy, mutant)){
-						taggedRequests.add(new TaggedRequest(tag,request));
+			int j = 0;
+			for(Mutant mutant:mutants){
+				for(int i = j; i< requests.size();i++){
+					File f = new File(mutant.getName());//
+					FileIOUtil.writeFile(f, mutant.encode());//
+					if(doRequestPropagatesMutationFault(requests.get(i), policy, mutant)){
+						File r = new File(tag+(i+1));//
+						FileIOUtil.writeFile(r, requests.get(i));//
+						taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
+						j = i+1;
+						break;
 					}
 				}
 			}
@@ -113,5 +125,30 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			}
 		}
 		return getRequests();
+	}
+	
+	public List<String> generateCRERequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
+		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		return coverage.generateRequests();
+	}
+	
+	public List<String> generateRTTRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
+		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		return coverage.generateRequestsForTruthValues(false,true);
+	}
+	
+	public List<String> generateRTFRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
+		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		return coverage.generateRequestsForTruthValues(true,true);
+	}
+	
+	public List<String> generateRCTRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
+		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		return coverage.generateRequestsForTruthValues(true,false);
+	}
+	
+	public List<String> generateRCFRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
+		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		return coverage.generateRequestsForTruthValues(true,true);
 	}
 }

@@ -132,6 +132,23 @@ public class Z3StrExpressionHelper {
 		return expr.append(System.lineSeparator());
 	}
 	
+	public StringBuffer getFalseConditionExpression(Condition condition){
+		String[] lines = getTrueConditionExpression(condition).toString().split("\n");
+		StringBuffer expr = new StringBuffer();
+		for (String s : lines) {
+			if (s.trim().isEmpty()) {
+				continue;
+			} else {
+				StringBuffer subExpr = new StringBuffer();
+				subExpr.append("(not ");
+				subExpr.append(s);
+				subExpr.append(")");
+				expr.append(subExpr);
+			}
+		}
+		return expr;
+	}
+    
 	public StringBuffer getFalseTargetFalseConditionExpression(Rule rule) {
 		StringBuffer targetsb = new StringBuffer();
 		StringBuffer conditionsb = new StringBuffer();

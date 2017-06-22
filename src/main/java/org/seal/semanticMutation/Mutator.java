@@ -288,16 +288,16 @@ public class Mutator {
     public Map<String,List<Mutant>> generateMutantsCategorizedByMethods(List<String> mutationMethods) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Class<?> cls = this.getClass();
         Map<String,List<Mutant>> mutantsMap = new HashMap<String,List<Mutant>>();
-        for (String xpath : xpathList) {
-        	List<Mutant> mutants = new ArrayList<Mutant>();
-            for (String mutationMethod : mutationMethods) {
-                if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) || isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
-                    Method method = cls.getDeclaredMethod(mutationMethod, String.class);
-                    mutants.addAll((ArrayList<Mutant>) method.invoke(this, xpath));
-                    mutantsMap.put(mutationMethod,mutants);
-                }
-            }
-        }
+    	for (String mutationMethod : mutationMethods) {
+    		List<Mutant> mutants = new ArrayList<Mutant>();
+    		for (String xpath : xpathList) {
+    			if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) || isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
+    				Method method = cls.getDeclaredMethod(mutationMethod, String.class);
+    				mutants.addAll((ArrayList<Mutant>) method.invoke(this, xpath));
+    				mutantsMap.put(mutationMethod,mutants);
+    			}
+    		}
+    	}
         return mutantsMap;
     }
     
@@ -422,7 +422,7 @@ public class Mutator {
      */
     public List<Mutant> createRuleTargetFalseMutants(String ruleXpathString) throws XPathExpressionException, ParsingException {
         int faultLocation = xpathMapping.get(ruleXpathString);
-        String mutantName = "RTT";
+        String mutantName = "RTF";
         String matchXpathString = ruleXpathString + "/*[local-name()='Target' and 1]/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
         return createTargetFalseMutants(matchXpathString, faultLocation, mutantName);
     }
@@ -434,7 +434,7 @@ public class Mutator {
      */
     public List<Mutant> createPolicyTargetFalseMutants(String targetXpathString) throws XPathExpressionException, ParsingException {
         int faultLocation = xpathMapping.get(targetXpathString);
-        String mutantName = "PTT";
+        String mutantName = "PTF";
         String matchXpathString = targetXpathString + "/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
         return createTargetFalseMutants(matchXpathString, faultLocation, mutantName);
     }

@@ -296,6 +296,12 @@ public class TestPanelDemo extends JPanel {
 			List<String> mutationMethods = new ArrayList<String>();
 			mutationMethods.add("createPolicyTargetTrueMutants");
 			mutationMethods.add("createPolicyTargetFalseMutants");
+			mutationMethods.add("createRuleEffectFlippingMutants");
+			mutationMethods.add("createRuleTargetTrueMutants");
+			mutationMethods.add("createRuleTargetFalseMutants");
+			mutationMethods.add("createRuleConditionTrueMutants");
+			mutationMethods.add("createRuleConditionFalseMutants");
+			
 			taggedRequests = testGenerator.generateRequests(mutationMethods);
 			String hi = "";
 		}catch(Exception e){
