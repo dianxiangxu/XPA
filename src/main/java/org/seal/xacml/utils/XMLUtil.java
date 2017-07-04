@@ -6,12 +6,15 @@ import static org.seal.policyUtils.XpathSolver.rulePattern;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -30,6 +33,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.wso2.balana.AbstractPolicy;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class XMLUtil {
 	public static String nodeToString(Node node) {
@@ -125,5 +129,12 @@ public class XMLUtil {
         }
         return childNodes;
     }
+	
+	public static Document loadXMLDocumentFromString(String xml) throws ParserConfigurationException, IOException, SAXException{
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    factory.setNamespaceAware(true);
+	    DocumentBuilder builder = factory.newDocumentBuilder();
+	    return builder.parse(new ByteArrayInputStream(xml.getBytes()));
+	}
 
 }

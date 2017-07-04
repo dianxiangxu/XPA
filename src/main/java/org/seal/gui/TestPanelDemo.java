@@ -301,6 +301,7 @@ public class TestPanelDemo extends JPanel {
 			mutationMethods.add("createRuleTargetFalseMutants");
 			mutationMethods.add("createRuleConditionTrueMutants");
 			mutationMethods.add("createRuleConditionFalseMutants");
+			mutationMethods.add("createAddNotFunctionMutants");
 			
 			taggedRequests = testGenerator.generateRequests(mutationMethods);
 			String hi = "";

@@ -1,17 +1,21 @@
 package org.seal.semanticMutation;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.seal.policyUtils.PolicyLoader;
-import org.seal.policyUtils.XpathSolver;
-import org.seal.xacml.utils.FileIOUtil;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.wso2.balana.AbstractPolicy;
-import org.wso2.balana.ParsingException;
-import org.xml.sax.SAXException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,14 +24,23 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.charset.Charset;
-import java.util.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.seal.policyUtils.PolicyLoader;
+import org.seal.policyUtils.XpathSolver;
+import org.seal.xacml.mutation.MutationMethodAbbrDirectory;
+import org.seal.xacml.utils.FileIOUtil;
+import org.seal.xacml.utils.XACMLElementUtil;
+import org.seal.xacml.utils.XMLUtil;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.wso2.balana.AbstractPolicy;
+import org.wso2.balana.ParsingException;
+import org.wso2.balana.PolicyMetaData;
+import org.xml.sax.SAXException;
 
 /**
  * If a mutation operator only creates one mutant for a bug position, the name of resulted mutant will
@@ -52,7 +65,6 @@ public class Mutator {
     private static List<String> policyCombiningAlgorithms;
     private static Set<String> ruleMutationMethods = new HashSet<>();
     private static Set<String> targetMutationMethods = new HashSet<>();
-
     static {
         /*
           see http://docs.oasis-open.org/xacml/3.0/xacml-3.0-core-spec-os-en.html#_Toc325047233 Section 10.2.7 Data-types
@@ -921,4 +933,40 @@ public class Mutator {
         return mutants;
     }
 
+    /**
+     * remove default rules
+     * @throws SAXException 
+     * @throws IOException 
+     * @throws ParserConfigurationException 
+     */
+    public Mutant createRemoveDefaultRulesMutant(AbstractPolicy policy) throws XPathExpressionException, ParsingException, ParserConfigurationException, IOException, SAXException {
+    	doc = XMLUtil.loadXMLDocumentFromString(policy.encode().toString());
+    	PolicyMetaData policyMetaData = policy.getMetaData();
+    	traverse(doc.getDocumentElement(), new ArrayList<String>(), policyMetaData);
+    	Mutant mutant = new Mutant(PolicyLoader.loadPolicy(doc),MutationMethodAbbrDirectory.getAbbr("createRemoveDefaultRulesMutant"));
+        FileIOUtil.saveMutant(mutant, "/home/roshanshrestha");
+    	return mutant;
+    }
+    
+    private static void traverse(Node node, List<String> paths, PolicyMetaData policyMetaData) throws ParsingException, IOException {
+    	if (XACMLElementUtil.isRule(node)) {
+    		if(XACMLElementUtil.isDefaultRule(node, policyMetaData)){
+    			Node parent = node.getParentNode();
+    			parent.removeChild(node);
+    		}
+	    }
+		
+		if (XACMLElementUtil.isPolicy(node) || XACMLElementUtil.isPolicySet(node)) {
+		    NodeList children = node.getChildNodes();
+	        for (int i = 0; i < children.getLength(); i++) {
+	            Node child = children.item(i);
+	            if (child instanceof Element && XMLUtil.isTraversableElement(child)) {
+	            	traverse(child, paths,policyMetaData);
+	            }
+	        }
+	        if(paths.size()>0){
+	        	paths.remove(paths.size() - 1);
+	        }
+		}	
+    }
 }

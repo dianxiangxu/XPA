@@ -36,23 +36,28 @@ public class RuleCoverage extends RequestGeneratorBase {
 		conditionFlag = targetFlag = true;
         StringBuilder preExpression = new StringBuilder();
         List<String> paths = new ArrayList<String>();
-        traverse( doc.getDocumentElement(), paths, preExpression,null);
+        traverse( doc.getDocumentElement(), paths, preExpression,null,false);
         return getRequests();
     }
 	
-	public List<String> generateRequestsForTruthValues(boolean targetFlag, boolean conditionFlag) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+	public List<String> generateRequestsForTruthValues(boolean targetFlag, boolean conditionFlag, boolean falsifyPostRules) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		this.targetFlag = targetFlag;
 		this.conditionFlag = conditionFlag;
         StringBuilder preExpression = new StringBuilder();
         List<String> paths = new ArrayList<String>();
-        traverse( doc.getDocumentElement(), paths, preExpression,null);
+        traverse( doc.getDocumentElement(), paths, preExpression,null, falsifyPostRules);
         return getRequests();
     }
     
-   private void traverse(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException, IOException {
+   private void traverse(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules, boolean falsifyPostRules) throws ParsingException, IOException {
 	    if (XACMLElementUtil.isRule(node)) {
-	        String expresion = getRuleCoverageExpression(node,paths,preExpression,previousRules);
-			boolean sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
+	    	String expression;
+	    	if(falsifyPostRules){
+	    		expression = getRuleExpressionForTruthValuesWithPostRules(node,paths,preExpression,previousRules);
+	    	} else{
+	    		expression = getRuleCoverageExpression(node,paths,preExpression,previousRules);
+	    	}
+			boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
 			if (sat == true) {
 			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 			}
@@ -78,7 +83,7 @@ public class RuleCoverage extends RequestGeneratorBase {
 	            Node child = children.item(i);
 	            StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
 	            if (child instanceof Element && XMLUtil.isTraversableElement(child)) {
-	            	traverse((Element) child, paths, preExpressionCurrent, previousRules);
+	            	traverse((Element) child, paths, preExpressionCurrent, previousRules,falsifyPostRules);
 	            }
 	        }
 	        if(paths.size()>0){
@@ -96,8 +101,8 @@ public class RuleCoverage extends RequestGeneratorBase {
 		Node conditionNode = XMLUtil.findInChildNodes(node, NameDirectory.CONDITION);
 	    Target target = null;
 	    Condition condition = null;
-	    
-		if (!XMLUtil.isEmptyNode(targetNode)) {
+	   
+	    if (!XMLUtil.isEmptyNode(targetNode)) {
 		    target = Target.getInstance(targetNode, policyMetaData);
 		    paths.add(target.encode());
 		}
@@ -132,5 +137,30 @@ public class RuleCoverage extends RequestGeneratorBase {
 			falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 		}                
 	    return preExpression.toString()+ruleExpression+falsifyPreviousRules;
+	}
+	
+	public String getRuleExpressionForTruthValuesWithPostRules(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
+		String expression =  getRuleExpressionForTruthValues(node, paths, preExpression, previousRules);
+		List<Rule> postRules = new ArrayList<Rule>();
+		Node sibling = null;
+		Node n = node;
+		while(true){
+			sibling = n.getNextSibling();
+			if(sibling == null){
+				break;
+			} else{
+				if(sibling.getNodeType() == Node.ELEMENT_NODE){
+					if(XACMLElementUtil.isRule(sibling)){
+						postRules.add(Rule.getInstance(sibling, policyMetaData, null));
+					}
+				} 
+			}
+			n = sibling;
+		}
+		StringBuffer falsifyPostRules = new StringBuffer();
+	    for(Rule rule:postRules){
+	    	falsifyPostRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
+		}
+		return expression + falsifyPostRules;
 	}
 }

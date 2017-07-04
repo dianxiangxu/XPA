@@ -2,7 +2,6 @@ package org.seal.xacml.helpers;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.seal.combiningalgorithms.MyAttr;
 import org.seal.xacml.Attr;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.wso2.balana.Rule;
@@ -154,8 +152,12 @@ public class Z3StrExpressionHelper {
 		StringBuffer conditionsb = new StringBuffer();
 		StringBuffer sb = new StringBuffer();
 		Target target = (Target) rule.getTarget();
+		Condition condition = (Condition) rule.getCondition();
+		if(target == null && condition == null){
+			return sb;
+		}
 		targetsb.append(getTrueTargetExpression(target).toString().trim());
-		conditionsb.append(getTrueConditionExpression(rule.getCondition()).toString().trim());
+		conditionsb.append(getTrueConditionExpression(condition).toString().trim());
 		sb.append("(not (and ");
 		sb.append(targetsb);
 		sb.append(conditionsb);

@@ -5,14 +5,18 @@ import java.util.regex.Pattern;
 
 import org.seal.combiningalgorithms.ReadPolicy;
 import org.seal.semanticCoverage.PolicyCoverageFactory;
+import org.seal.xacml.NameDirectory;
 import org.w3c.dom.Node;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.DOMHelper;
 import org.wso2.balana.ParsingException;
+import org.wso2.balana.PolicyMetaData;
+import org.wso2.balana.cond.Condition;
 import org.wso2.balana.ctx.AbstractRequestCtx;
 import org.wso2.balana.ctx.RequestCtxFactory;
 import org.wso2.balana.ctx.xacml3.RequestCtx;
 import org.wso2.balana.ctx.xacml3.XACML3EvaluationCtx;
+import org.wso2.balana.xacml3.Target;
 
 public class XACMLElementUtil {
 	private static Pattern policyPattern = Pattern.compile("(?:\\w+:)*Policy");
@@ -64,6 +68,24 @@ public class XACMLElementUtil {
 		XACML3EvaluationCtx ec = new XACML3EvaluationCtx(new RequestCtx(ar.getAttributesSet(),ar.getDocumentRoot()), ReadPolicy.getPDPconfig());
 		return policy.evaluate(ec).getDecision();
 	}
-    
-    
+	
+	public static boolean isDefaultRule(Node node, PolicyMetaData policyMetaData) throws ParsingException{
+		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
+		Node conditionNode = XMLUtil.findInChildNodes(node, NameDirectory.CONDITION);
+	    Target target = null;
+	    Condition condition = null;
+	   
+	    if (!XMLUtil.isEmptyNode(targetNode)) {
+		    target = Target.getInstance(targetNode, policyMetaData);
+		}
+		
+		if (!XMLUtil.isEmptyNode(conditionNode)) {
+	        condition = Condition.getInstance(conditionNode, policyMetaData, null);
+	    }
+		if(target==null && condition == null){
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
