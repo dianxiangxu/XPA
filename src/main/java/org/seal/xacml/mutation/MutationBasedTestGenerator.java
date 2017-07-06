@@ -60,15 +60,26 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			int j = 0;
 			for(Mutant mutant:mutants){
 				for(int i = j; i< requests.size();i++){
-					String mutantForPropagation = MutationMethodForPropagationDirectory.getMutationMethod(mutationMethod);
-					if(!mutantForPropagation.equalsIgnoreCase("SELF")){
+					String mutantForPropagationForMutant = MutationMethodForPropagationForMutantDirectory.getMutationMethod(mutationMethod);
+					if(!mutantForPropagationForMutant.equalsIgnoreCase("SELF")){
 						Class klass = Mutator.class;
-						Method m = klass.getDeclaredMethod(mutantForPropagation, params);
+						Method m = klass.getDeclaredMethod(mutantForPropagationForMutant, params);
 						mutant = (Mutant) m.invoke(new Mutator(mutant), mutant.getPolicy());
 					}
 					File f = new File(mutant.getName());//
 					FileIOUtil.writeFile(f, mutant.encode());//
-					if(doRequestPropagatesMutationFault(requests.get(i), policy, mutant)){
+					AbstractPolicy p;
+					String mutantForPropagationForPolicy = MutationMethodForPropagationForPolicyDirectory.getMutationMethod(mutationMethod);
+					
+					if(mutantForPropagationForPolicy.equalsIgnoreCase("SELF")){
+						p = policy;
+					} else{
+						Class klass = Mutator.class;
+						Method m = klass.getDeclaredMethod(mutantForPropagationForPolicy, params);
+						Mutant mut = (Mutant) m.invoke(new Mutator(new Mutant(policy,"")), policy);
+						p = mut.getPolicy();
+					}
+					if(doRequestPropagatesMutationFault(requests.get(i), p, mutant)){
 						File r = new File(tag+(i+1));//
 						FileIOUtil.writeFile(r, requests.get(i));//
 						taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
@@ -143,22 +154,22 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	
 	public List<String> generateRTTRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		RuleCoverage coverage = new RuleCoverage(policyFilePath);
-		return coverage.generateRequestsForTruthValues(false,true,false);
+		return coverage.generateRequestsForTruthValues(false,true,true);
 	}
 	
 	public List<String> generateRTFRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		RuleCoverage coverage = new RuleCoverage(policyFilePath);
-		return coverage.generateRequestsForTruthValues(true,true,false);
+		return coverage.generateRequestsForTruthValues(true,true,true);
 	}
 	
 	public List<String> generateRCTRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		RuleCoverage coverage = new RuleCoverage(policyFilePath);
-		return coverage.generateRequestsForTruthValues(true,false,false);
+		return coverage.generateRequestsForTruthValues(true,false,true);
 	}
 	
 	public List<String> generateRCFRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		RuleCoverage coverage = new RuleCoverage(policyFilePath);
-		return coverage.generateRequestsForTruthValues(true,true,false);
+		return coverage.generateRequestsForTruthValues(true,true,true);
 	}
 	
 	public List<String> generateANFRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {

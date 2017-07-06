@@ -944,8 +944,7 @@ public class Mutator {
     	PolicyMetaData policyMetaData = policy.getMetaData();
     	traverse(doc.getDocumentElement(), new ArrayList<String>(), policyMetaData);
     	Mutant mutant = new Mutant(PolicyLoader.loadPolicy(doc),MutationMethodAbbrDirectory.getAbbr("createRemoveDefaultRulesMutant"));
-        FileIOUtil.saveMutant(mutant, "/home/roshanshrestha");
-    	return mutant;
+        return mutant;
     }
     
     private static void traverse(Node node, List<String> paths, PolicyMetaData policyMetaData) throws ParsingException, IOException {

@@ -3,7 +3,7 @@ package org.seal.xacml.mutation;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MutationMethodForPropagationDirectory {
+public class MutationMethodForPropagationForMutantDirectory {
 	 private static Map<String,String> map;
 	 static {
 		 map = new HashMap<String,String>();
@@ -12,9 +12,9 @@ public class MutationMethodForPropagationDirectory {
 		 map.put("createCombiningAlgorithmMutants", "SELF");
 		 map.put("createRuleEffectFlippingMutants", "SELF");
 		 map.put("createRuleTargetTrueMutants", "SELF");
-		 map.put("createRuleTargetFalseMutants", "SELF");
+		 map.put("createRuleTargetFalseMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createRuleConditionTrueMutants", "SELF");
-		 map.put("createRuleConditionFalseMutants", "SELF");
+		 map.put("createRuleConditionFalseMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createAddNotFunctionMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createRemoveNotFunctionMutants", "SELF");
 		 map.put("createFirstPermitRuleMutants", "SELF");
