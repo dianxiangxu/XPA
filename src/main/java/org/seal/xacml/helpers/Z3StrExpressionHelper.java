@@ -11,6 +11,10 @@ import java.util.Random;
 
 import org.seal.xacml.Attr;
 import org.seal.xacml.utils.ExceptionUtil;
+import org.seal.xacml.utils.XMLUtil;
+import org.w3c.dom.Node;
+import org.wso2.balana.ParsingException;
+import org.wso2.balana.PolicyMetaData;
 import org.wso2.balana.Rule;
 import org.wso2.balana.TargetMatch;
 import org.wso2.balana.attr.BooleanAttribute;
@@ -164,8 +168,25 @@ public class Z3StrExpressionHelper {
 		sb.append("))");
 		return sb;
 	}
-    
-    
+	
+	public StringBuffer getTrueTargetTrueConditionExpression(Rule rule) {
+		StringBuffer targetsb = new StringBuffer();
+		StringBuffer conditionsb = new StringBuffer();
+		StringBuffer sb = new StringBuffer();
+		Target target = (Target) rule.getTarget();
+		Condition condition = (Condition) rule.getCondition();
+		if(target == null && condition == null){
+			return sb;
+		}
+		targetsb.append(getTrueTargetExpression(target).toString().trim());
+		conditionsb.append(getTrueConditionExpression(condition).toString().trim());
+		sb.append("(and ");
+		sb.append(targetsb);
+		sb.append(" " + conditionsb);
+		sb.append(")");
+		return sb;
+	}
+	
 	private String getName(AttributeDesignator attr) {
 		String uri = attr.getId().toString();
 		boolean has = true;

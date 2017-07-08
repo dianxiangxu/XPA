@@ -16,10 +16,10 @@ public class MutationMethodForPropagationForMutantDirectory {
 		 map.put("createRuleConditionTrueMutants", "SELF");
 		 map.put("createRuleConditionFalseMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createAddNotFunctionMutants", "createRemoveDefaultRulesMutant");
-		 map.put("createRemoveNotFunctionMutants", "SELF");
+		 map.put("createRemoveNotFunctionMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createFirstPermitRuleMutants", "SELF");
 		 map.put("createFirstDenyRuleMutants", "SELF");
-		 map.put("createRemoveRuleMutants", "SELF");
+		 map.put("createRemoveRuleMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createRuleChangeComparisonFunctionMutants", "SELF");
 		 map.put("createPolicyTargetChangeComparisonFunctionMutants", "SELF");
 		 map.put("createAddNewRuleMutants", "SELF");

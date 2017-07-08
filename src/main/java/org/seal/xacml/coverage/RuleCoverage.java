@@ -8,6 +8,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
+import org.seal.xacml.helpers.Z3StrExpressionHelper;
 import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XMLUtil;
@@ -35,8 +36,8 @@ public class RuleCoverage extends RequestGeneratorBase {
 	public List<String> generateRequests() throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		conditionFlag = targetFlag = true;
         StringBuilder preExpression = new StringBuilder();
-        List<String> paths = new ArrayList<String>();
-        traverse( doc.getDocumentElement(), paths, preExpression,null,false);
+        
+        traverse( doc.getDocumentElement(), preExpression,null,false);
         return getRequests();
     }
 	
@@ -45,17 +46,17 @@ public class RuleCoverage extends RequestGeneratorBase {
 		this.conditionFlag = conditionFlag;
         StringBuilder preExpression = new StringBuilder();
         List<String> paths = new ArrayList<String>();
-        traverse( doc.getDocumentElement(), paths, preExpression,null, falsifyPostRules);
+        traverse( doc.getDocumentElement(), preExpression,null, falsifyPostRules);
         return getRequests();
     }
     
-   private void traverse(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules, boolean falsifyPostRules) throws ParsingException, IOException {
+   private void traverse(Element node, StringBuilder preExpression, List<Rule> previousRules, boolean falsifyPostRules) throws ParsingException, IOException {
 	    if (XACMLElementUtil.isRule(node)) {
 	    	String expression;
 	    	if(falsifyPostRules){
-	    		expression = getRuleExpressionForTruthValuesWithPostRules(node,paths,preExpression,previousRules);
+	    		expression = getRuleExpressionForTruthValuesWithPostRules(node,preExpression,previousRules);
 	    	} else{
-	    		expression = getRuleCoverageExpression(node,paths,preExpression,previousRules);
+	    		expression = getRuleCoverageExpression(node,preExpression,previousRules);
 	    	}
 			boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
 			if (sat == true) {
@@ -83,40 +84,19 @@ public class RuleCoverage extends RequestGeneratorBase {
 	            Node child = children.item(i);
 	            StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
 	            if (child instanceof Element && XMLUtil.isTraversableElement(child)) {
-	            	traverse((Element) child, paths, preExpressionCurrent, previousRules,falsifyPostRules);
+	            	traverse((Element) child, preExpressionCurrent, previousRules,falsifyPostRules);
 	            }
-	        }
-	        if(paths.size()>0){
-	        	paths.remove(paths.size() - 1);
 	        }
 		}	
     }
 
-	public String getRuleCoverageExpression (Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
-		return getRuleExpressionForTruthValues(node, paths, preExpression, previousRules);
+	public String getRuleCoverageExpression (Element node, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
+		return getRuleExpressionForTruthValues(node, preExpression, previousRules);
 	}
 	
-	public String getRuleExpressionForTruthValues(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
-		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
-		Node conditionNode = XMLUtil.findInChildNodes(node, NameDirectory.CONDITION);
-	    Target target = null;
-	    Condition condition = null;
-	   
-	    if (!XMLUtil.isEmptyNode(targetNode)) {
-		    target = Target.getInstance(targetNode, policyMetaData);
-		    paths.add(target.encode());
-		}
-		
-		if (!XMLUtil.isEmptyNode(conditionNode)) {
-	        condition = Condition.getInstance(conditionNode, policyMetaData, null);
-	        paths.add(condition.encode());
-	    }
-	    if (!XMLUtil.isEmptyNode(targetNode)) {
-	    	paths.remove(paths.size() - 1);
-	    }
-	    if (!XMLUtil.isEmptyNode(conditionNode)) {
-	        paths.remove(paths.size() - 1);
-	    }
+	public String getRuleExpressionForTruthValues(Element node, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
+	    Target target = XMLUtil.getTarget(node, policyMetaData);
+	    Condition condition = XMLUtil.getCondition(node, policyMetaData);
 	    StringBuffer ruleExpression = new StringBuffer();
 	    if(target != null){
 		    if(targetFlag){
@@ -139,8 +119,8 @@ public class RuleCoverage extends RequestGeneratorBase {
 	    return preExpression.toString()+ruleExpression+falsifyPreviousRules;
 	}
 	
-	public String getRuleExpressionForTruthValuesWithPostRules(Element node, List<String> paths, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
-		String expression =  getRuleExpressionForTruthValues(node, paths, preExpression, previousRules);
+	public String getRuleExpressionForTruthValuesWithPostRules(Element node, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{
+		String expression =  getRuleExpressionForTruthValues(node, preExpression, previousRules);
 		List<Rule> postRules = new ArrayList<Rule>();
 		Node sibling = null;
 		Node n = node;
@@ -163,4 +143,6 @@ public class RuleCoverage extends RequestGeneratorBase {
 		}
 		return expression + falsifyPostRules;
 	}
+	
+	
 }

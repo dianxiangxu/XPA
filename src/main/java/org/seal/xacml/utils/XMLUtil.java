@@ -28,10 +28,15 @@ import javax.xml.xpath.XPathFactory;
 import org.apache.commons.io.IOUtils;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticMutation.Mutator;
+import org.seal.xacml.NameDirectory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.wso2.balana.AbstractPolicy;
+import org.wso2.balana.ParsingException;
+import org.wso2.balana.PolicyMetaData;
+import org.wso2.balana.cond.Condition;
+import org.wso2.balana.xacml3.Target;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -135,6 +140,24 @@ public class XMLUtil {
 	    factory.setNamespaceAware(true);
 	    DocumentBuilder builder = factory.newDocumentBuilder();
 	    return builder.parse(new ByteArrayInputStream(xml.getBytes()));
+	}
+	
+	public static Target getTarget(Node node,PolicyMetaData policyMetaData) throws ParsingException{
+		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
+	    Target target = null;
+	    if (!XMLUtil.isEmptyNode(targetNode)) {
+		    target = Target.getInstance(targetNode, policyMetaData);
+		}
+	    return target;
+	}
+	
+	public static Condition getCondition(Node node,PolicyMetaData policyMetaData) throws ParsingException{
+		Node conditionNode = XMLUtil.findInChildNodes(node, NameDirectory.CONDITION);
+	    Condition condition = null;
+	    if (!XMLUtil.isEmptyNode(conditionNode)) {
+		    condition = Condition.getInstance(conditionNode, policyMetaData,null);
+		}
+	    return condition;
 	}
 
 }
