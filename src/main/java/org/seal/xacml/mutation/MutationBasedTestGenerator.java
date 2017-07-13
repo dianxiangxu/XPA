@@ -66,10 +66,10 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			List<String> requests = (List<String>)method.invoke(this, null);
 			int j = 0;
 			for(Mutant mutant:mutants){
+				File f = new File(mutant.getName());//
+				FileIOUtil.writeFile(f, mutant.encode());//
 				for(int i = j; i< requests.size();i++){
 					String mutantForPropagationForMutant = MutationMethodForPropagationForMutantDirectory.getMutationMethod(currentMutationMethod);
-					File f = new File(mutant.getName());//
-					FileIOUtil.writeFile(f, mutant.encode());//
 					
 					if(!mutantForPropagationForMutant.equalsIgnoreCase("SELF")){
 						Class klass = Mutator.class;
@@ -195,6 +195,11 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 		return getRequests();
 	}
 	
+	public List<String> generateFDRRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException, InvalidMutationMethodException {
+		traverseForPermitOrDeny(doc.getDocumentElement(), new StringBuilder(),currentMutationMethod);
+		return getRequests();
+	}
+	
 	public List<String> generateRERRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		RuleCoverage coverage = new RuleCoverage(policyFilePath);
 		return coverage.generateRequestsForTruthValues(true,true,true);
@@ -229,29 +234,54 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	                default:
 	                	throw new InvalidMutationMethodException("Invalid mutation method");
 	            }
-	            StringBuilder expression = new StringBuilder();
 	            int state = 0; //  0:starting 1:effectA found 2:effectB found
-	        	for (int i = 0; i < children.getLength(); i++) {
-	        		Node child = children.item(i);
-	        		if(XACMLElementUtil.isRule(child)){
-	        			Rule rule = Rule.getInstance(child, policyMetaData, null);
-	        			if(rule.getEffect() == effectA && state == 0){
-	        				expression.append(z3ExpressionHelper.getTrueTargetTrueConditionExpression(rule)).append(System.lineSeparator());
-	        				state = 1;
-	        			} else if(rule.getEffect() == effectB && state == 1){
-	        				expression.append(z3ExpressionHelper.getTrueTargetTrueConditionExpression(rule)).append(System.lineSeparator());
-	        				state = 2;
-	        			}
-	        			else{
-	        				expression.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule).append(System.lineSeparator()));
-	        			}
-	        		}
-	        	}
-	        	if(state == 2){
-	        		boolean sat = Z3StrUtil.processExpression(preExpression + expression.toString(), z3ExpressionHelper);
-	    			if (sat == true) {
-	    			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-	    			}
+	        	int j = 0;
+	        	boolean continueFlag;
+	            while(true){
+	            	StringBuilder expression = new StringBuilder();
+		            continueFlag = false;
+	            	state = 0;
+	            	for (int i = 0; i < j; i++) {
+	            		Node child = children.item(i);
+	            		if(XACMLElementUtil.isRule(child)){
+		        			Rule rule = Rule.getInstance(child, policyMetaData, null);
+		        			if(XACMLElementUtil.isRule(child)){
+		        				expression.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule).append(System.lineSeparator()));
+		        			}
+	            		}
+	            	}
+		            for (int i = j; i < children.getLength(); i++) {
+		        		Node child = children.item(i);
+		        		if(XACMLElementUtil.isRule(child)){
+		        			Rule rule = Rule.getInstance(child, policyMetaData, null);
+		        			if(rule.getEffect() == effectA && state == 0){
+		        				expression.append(z3ExpressionHelper.getTrueTargetTrueConditionExpression(rule)).append(System.lineSeparator());
+		        				state = 1;
+		        				if(j==0){
+		        					j = i;
+		        				}
+		        			} else if(rule.getEffect() == effectB && state == 1){
+		        				expression.append(z3ExpressionHelper.getTrueTargetTrueConditionExpression(rule)).append(System.lineSeparator());
+		        				state = 2;
+		        			}
+		        			else{
+		        				expression.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule).append(System.lineSeparator()));
+		        			}
+		        		}
+		        	}
+		        	if(state == 2){
+		        		boolean sat = Z3StrUtil.processExpression(preExpression + expression.toString(), z3ExpressionHelper);
+		    			if (sat == true) {
+		    			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+		    			    break;
+		    			} else{
+		    				continueFlag = true;
+		    			}
+		        	}
+		        	if(!continueFlag){
+		        		break;
+		        	}
+		        	j++;
 	        	}
 	        }else{
 	        	for (int i = 0; i < children.getLength(); i++) {
