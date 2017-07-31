@@ -22,8 +22,10 @@ public class MutationMethodForPropagationForMutantDirectory {
 		 map.put("createRemoveRuleMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createRuleChangeComparisonFunctionMutants", "SELF");
 		 map.put("createPolicyTargetChangeComparisonFunctionMutants", "SELF");
-		 map.put("createAddNewRuleMutants", "SELF");
+		 map.put("createAddNewRuleMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createRemoveDefaultRulesMutant", "SELF");
+		 map.put("createRemoveParallelTargetElementMutants", "SELF");
+			
 	 }
 	 
 	 public static String getMutationMethod(String method){

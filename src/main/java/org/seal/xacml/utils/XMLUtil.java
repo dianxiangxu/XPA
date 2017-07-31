@@ -27,7 +27,6 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.seal.policyUtils.PolicyLoader;
-import org.seal.semanticMutation.Mutator;
 import org.seal.xacml.NameDirectory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -104,7 +103,7 @@ public class XMLUtil {
 	}
     
 	public static Node findInChildNodes(Node parent, String localName) {
-	    List<Node> childNodes = Mutator.getChildNodeList(parent);
+	    List<Node> childNodes = getChildNodeList(parent);
 	    for (Node child : childNodes) {
 	        if (localName.equals(child.getLocalName())) {
 	            return child;
@@ -159,5 +158,7 @@ public class XMLUtil {
 		}
 	    return condition;
 	}
+	
+	
 
 }

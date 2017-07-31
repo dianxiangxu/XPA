@@ -40,6 +40,7 @@ import org.w3c.dom.NodeList;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.PolicyMetaData;
+import org.wso2.balana.xacml3.AnyOfSelection;
 import org.xml.sax.SAXException;
 
 /**
@@ -149,6 +150,8 @@ public class Mutator {
         ruleMutationMethods.add("createRemoveNotFunctionMutants");
         ruleMutationMethods.add("createRemoveRuleMutants");
         ruleMutationMethods.add("createAddNewRuleMutants");
+        ruleMutationMethods.add("createRemoveParallelTargetElementMutants");
+        targetMutationMethods.add("createRemoveParallelTargetElementMutants");
 
         targetMutationMethods.add("createPolicyTargetTrueMutants");
         targetMutationMethods.add("createPolicyTargetFalseMutants");
@@ -947,6 +950,57 @@ public class Mutator {
         return mutant;
     }
     
+    /**
+     */
+    public List<Mutant> createRemoveParallelTargetElementMutants(String xPathString) throws XPathExpressionException, ParsingException, IOException, ParserConfigurationException, SAXException {
+        int faultLocation = xpathMapping.get(xPathString);
+        String targetXpathString = null;
+        if(xPathString.contains("[local-name()='Target'")){
+        	targetXpathString = xPathString;
+        }
+        else{
+        	targetXpathString = xPathString + "/*[local-name()='Target' and 1]";
+        }  
+        	
+        
+    	List<Mutant> list = new ArrayList<>();
+        NodeList nodes = (NodeList) xPath.evaluate(targetXpathString, doc.getDocumentElement(), XPathConstants.NODESET);
+        Node node = nodes.item(0);
+        if (node != null && !isEmptyNode(node)) {
+            //change doc
+            List<Node> children = getChildNodeList(node);
+            int allOfCount = 0;
+            if(children.size()>1){
+	            for (Node child : children) {
+	            	if(child!=null && child.getLocalName() !=null && child.getLocalName().equals("AnyOf")){
+	            		List<Node> childrenAllOf = getChildNodeList(child);
+	            		if(childrenAllOf.size() > 2){
+	            			for(Node childAllOf:childrenAllOf){
+	            				if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+	            					allOfCount++;
+	            				}
+	            			}
+	            			if(allOfCount > 1){
+	            				for(int i = 0; i < childrenAllOf.size(); i++){
+	            					Node childAllOf = childrenAllOf.get(i);
+	            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+	            						child.removeChild(childAllOf);
+	            						Node nextChild = childAllOf.getNextSibling();
+	            						Mutant mutant = new Mutant(PolicyLoader.loadPolicy(doc),(baseMutantName.equals("") ? "" : baseMutantName + "_") +MutationMethodAbbrDirectory.getAbbr("createRemoveParallelTargetElementMutants")+ "_" + faultLocation + "_" + 1 + "_" + i );
+	            				        list.add(mutant);
+	            				        child.insertBefore(childAllOf, nextChild);
+	            					}
+	            					
+	            				}
+	            			}
+	            		}
+	            	}
+	            }
+            }
+        }
+        return list;
+    }
+      
     private static void traverse(Node node, List<String> paths, PolicyMetaData policyMetaData) throws ParsingException, IOException {
     	if (XACMLElementUtil.isRule(node)) {
     		if(XACMLElementUtil.isDefaultRule(node, policyMetaData)){

@@ -2,6 +2,7 @@ package org.seal.xacml.helpers;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,10 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.seal.xacml.Attr;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.seal.xacml.utils.XMLUtil;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.PolicyMetaData;
 import org.wso2.balana.Rule;
@@ -28,6 +32,7 @@ import org.wso2.balana.cond.Function;
 import org.wso2.balana.xacml3.AllOfSelection;
 import org.wso2.balana.xacml3.AnyOfSelection;
 import org.wso2.balana.xacml3.Target;
+import org.xml.sax.SAXException;
 
 public class Z3StrExpressionHelper {
 	private Map<String,String> nameMap;
@@ -462,4 +467,66 @@ public class Z3StrExpressionHelper {
         		}
         }
     }
+	
+	public List<String> getRPTEExpression(Target target,PolicyMetaData policyMetaData) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+		String targetStr = null;
+		if(target!=null){
+			StringBuilder targetSb = new StringBuilder();
+			target.encode(targetSb);
+			targetStr = targetSb.toString();
+		}
+		List<String> expressions = new ArrayList<String>();
+    	if(targetStr!=null){
+    		Node targetNode = XMLUtil.loadXMLDocumentFromString(targetStr);
+
+    		if (targetNode != null) {
+	            List<Node> children = XMLUtil.getChildNodeList(targetNode.getChildNodes().item(0));
+	            
+	            int allOfCount = 0;
+	            if(children.size()>0){
+		            for (Node child : children) {
+		            	if(child!=null && child.getLocalName() !=null && child.getLocalName().equals("AnyOf")){
+		            		List<Node> childrenAllOf = XMLUtil.getChildNodeList(child);
+		            		if(childrenAllOf.size() > 0){
+		            			for(Node childAllOf:childrenAllOf){
+		            				if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+		            					allOfCount++;
+		            				}
+		            			}
+		            			if(allOfCount > 1){
+		            				for(int i = 0; i < childrenAllOf.size(); i++){
+		            					Node childAllOf = childrenAllOf.get(i);
+		            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+		            						StringBuilder currentPreExpression = new StringBuilder();
+		            						child.removeChild(childAllOf);
+		            						Node nextChild = childAllOf.getNextSibling();
+		            						currentPreExpression.append(getFalseTargetExpression(target));
+		            						List<Node> childrenAllOfCopy = new ArrayList<Node>();
+		            						childrenAllOfCopy.addAll(XMLUtil.getChildNodeList(child));
+		            						
+		            						for(Node c:childrenAllOfCopy){
+		            							child.removeChild(c);
+		            						}
+		            						child.appendChild(childAllOf);
+		            						Target targetTrue = Target.getInstance(targetNode, policyMetaData);
+		            						currentPreExpression.append(System.lineSeparator()).append(getTrueTargetExpression(targetTrue));
+		            						child.removeChild(childAllOf);
+		            						for(Node c:childrenAllOfCopy){ 
+		            							child.appendChild(c);
+		            						}
+		            						child.insertBefore(childAllOf, nextChild);
+		            						expressions.add(currentPreExpression.toString());
+		            					}
+		            					
+		            				}
+		            			}
+		            		}
+		            	}
+		            }
+	            }
+	        }
+		}
+    	return expressions;
+    }
+	
 }
