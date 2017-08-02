@@ -208,26 +208,6 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	    return ruleExpression;
 	}
 	
-	/*public List<String> generatePTFRequests() throws IOException{
-		if(!policy.isTargetEmpty()){
-			Target policyTarget = (Target)policy.getTarget();
-			List<AnyOfSelection> anyOf = policyTarget.getAnyOfSelections();
-			if(anyOf.size() != 0){
-				String expression = z3ExpressionHelper.getTrueTargetExpression(policyTarget).toString();
-				boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
-				String request = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-				List<String> requests = new ArrayList<String>();
-				requests.add(request);
-				if (sat == true) {
-				    setRequests(requests);
-				} else{
-					setRequests(null);
-				}
-			}
-		}
-		return getRequests();
-	}*/
-	
 	public List<String> generateCRERequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		RuleCoverage coverage = new RuleCoverage(policyFilePath);
 		return coverage.generateRequests();
@@ -523,8 +503,7 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 		    }
 	        NodeList children = node.getChildNodes();
 	    	StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
-	    	boolean isRule;
-    		
+	    	
 	        if(isPolicy){
 	        	int effectA, effectB;
 	            switch (mutationMethod) {

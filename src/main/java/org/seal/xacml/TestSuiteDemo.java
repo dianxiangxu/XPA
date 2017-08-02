@@ -23,22 +23,35 @@ public class TestSuiteDemo {
 
 	private List<TestRecord> testRecords;
 	private String policyFilePath;
+	private String type;
 
-	public TestSuiteDemo(List<TestRecord> requestRecords, String policyFilePath) {
+	public TestSuiteDemo(List<TestRecord> requestRecords, String policyFilePath, String type) {
 		this.testRecords = requestRecords;
 		this.policyFilePath = policyFilePath;
+		this.type = type;
 	}
 	
-	public TestSuiteDemo(String policyFilePath,List<String> requests) {
+	public TestSuiteDemo(String policyFilePath,List<String> requests, String type) {
 		this.testRecords = new ArrayList<TestRecord>();
 		for(int i = 0; i < requests.size();i++){
 			testRecords.add(new TestRecord(requests.get(i),"",TestUtil.getName(i)));
 		}
 		this.policyFilePath = policyFilePath;
+		this.type = type;
+	}
+	
+	public TestSuiteDemo(String policyFilePath, String type, List<TaggedRequest> requests) {
+		this.testRecords = new ArrayList<TestRecord>();
+		for(int i = 0; i < requests.size();i++){
+			testRecords.add(new TestRecord(requests.get(i).getBody(),"",TestUtil.getName(i) + "-" + requests.get(i).getTitle()));
+		}
+		this.policyFilePath = policyFilePath;
+		this.type = type;
 	}
 
 	public TestSuiteDemo(String testSuiteMetaFilePath, String policyFilePath) throws Exception {
-		this(readTestSuite(testSuiteMetaFilePath), policyFilePath);
+		this.policyFilePath = policyFilePath;
+		this.testRecords = readTestSuite(testSuiteMetaFilePath);
 	}
 	
 	public static List<TestRecord> readTestSuite(String testSuiteMetaFilePath) throws Exception {
@@ -127,20 +140,17 @@ public class TestSuiteDemo {
 		}
 		return null;
 	}
-
-	
-	
 	
 	public void save() throws IOException{
-		TestUtil.setUpDefaultTestSuiteDirectory(policyFilePath,NameDirectory.RULE_COVERAGE);
-		String testSuiteDirectory = TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, NameDirectory.RULE_COVERAGE);	
-		String metaFilePath = testSuiteDirectory + File.separator + TestUtil.getTestSuiteMetaFileName(XACMLElementUtil.getPolicyName(policyFilePath), NameDirectory.RULE_COVERAGE);
+		TestUtil.setUpDefaultTestSuiteDirectory(policyFilePath,type);
+		String testSuiteDirectory = TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, type);	
+		String metaFilePath = testSuiteDirectory + File.separator + TestUtil.getTestSuiteMetaFileName(XACMLElementUtil.getPolicyName(policyFilePath), type);
 		
 		for(int i = 0; i < testRecords.size();i++){
 			String fileNamePrefix = PropertiesLoader.getProperties("config").getProperty("requestFileNamePrefix");
 			String index = String.valueOf(i+1);
 			String extension = PropertiesLoader.getProperties("config").getProperty("testRequestFileExtension");
-			String filePath =  testSuiteDirectory + File.separator + fileNamePrefix + index + "." + extension;
+			String filePath =  testSuiteDirectory + File.separator + testRecords.get(i).getName() + "." + extension;
 			FileIOUtil.writeFile(filePath, testRecords.get(i).getRequest());
 		}
 		writeMetaFile(metaFilePath);

@@ -5,7 +5,9 @@ import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.ButtonGroup;
@@ -28,6 +30,7 @@ import org.seal.xacml.RequestGeneratorBase;
 import org.seal.xacml.TaggedRequest;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.TestSuiteDemo;
+import org.seal.xacml.components.MutationBasedTestMutationMethods;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
 import org.seal.xacml.utils.ExceptionUtil;
@@ -44,6 +47,7 @@ public class TestPanelDemo extends JPanel {
 	private Vector<Vector<Object>> data;
 	private TestTablePanelDemo requestTablePanel;
 	private JPanel requestPanel;
+	private String type;
 
 	private boolean hasFailure;
 	
@@ -197,9 +201,10 @@ public class TestPanelDemo extends JPanel {
 			String policyFilePath = demo.getWorkingPolicyFilePath();
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				try{
+					this.type = NameDirectory.RULE_COVERAGE;
 					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
 					List<String> requests = requestGenerator.generateRequests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests);
+					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.RULE_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_COVERAGE);
 				}catch(Exception e){
@@ -293,18 +298,17 @@ public class TestPanelDemo extends JPanel {
 		List<TaggedRequest> taggedRequests;
 		try{
 			testGenerator = new MutationBasedTestGenerator(demo.getWorkingPolicyFilePath());
-			List<String> mutationMethods = new ArrayList<String>();
-			mutationMethods.add("createPolicyTargetTrueMutants");
-			mutationMethods.add("createPolicyTargetFalseMutants");
-			mutationMethods.add("createRuleEffectFlippingMutants");
-			mutationMethods.add("createRuleTargetTrueMutants");
-			mutationMethods.add("createRuleTargetFalseMutants");
-			mutationMethods.add("createRuleConditionTrueMutants");
-			mutationMethods.add("createRuleConditionFalseMutants");
-			mutationMethods.add("createAddNotFunctionMutants");
-			
-			taggedRequests = testGenerator.generateRequests(mutationMethods);
-			String hi = "";
+			MutationBasedTestMutationMethods mbtMethods = new MutationBasedTestMutationMethods();
+			int result = JOptionPane.showConfirmDialog(demo, mbtMethods.createPanel(),"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
+			String policyFilePath = demo.getWorkingPolicyFilePath();
+			this.type = NameDirectory.MUTATION_BASED_TEST;
+			if (result == JOptionPane.OK_OPTION) {
+				List<String> mutationMethods = mbtMethods.getMutationOperatorList();
+				taggedRequests = testGenerator.generateRequests(mutationMethods);
+				TestSuiteDemo suite = new TestSuiteDemo(policyFilePath, this.type, taggedRequests);
+				suite.save();
+				
+			}
 		}catch(Exception e){
 			ExceptionUtil.handleInDefaultLevel(e);
 		}
@@ -366,7 +370,7 @@ public class TestPanelDemo extends JPanel {
 			for (Vector<Object> child : data) {
 				recordList.add(TestUtil.getTestRecord(child));
 			}
-			TestSuiteDemo testSuite = new TestSuiteDemo(recordList, "GenTests/");
+			TestSuiteDemo testSuite = new TestSuiteDemo(recordList, "GenTests/",this.type);
 			testSuite.writeMetaFile(workingTestSuiteFileName);
 			System.out.println(workingTestSuiteFileName + " saved.");
 			requestTablePanel.validate();

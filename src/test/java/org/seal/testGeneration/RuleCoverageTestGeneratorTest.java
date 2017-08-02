@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 
 import org.custommonkey.xmlunit.XMLAssert;
 import org.junit.Test;
+import org.seal.xacml.NameDirectory;
 import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.utils.PropertiesLoader;
@@ -24,7 +25,7 @@ public class RuleCoverageTestGeneratorTest {
 			policyEditor.openFile(policyPath);
 			demo.setEditorPanel(policyEditor);
 			requestGenerator = new RuleCoverage(policyPath);
-			TestSuiteDemo testSuite = new TestSuiteDemo(policyPath,requestGenerator.generateRequests());
+			TestSuiteDemo testSuite = new TestSuiteDemo(policyPath,requestGenerator.generateRequests(),NameDirectory.MUTATION_BASED_TEST);
 			testSuite.save();
 			
 			File requestsFolder = new File(System.getProperty("user.dir")+"/src/test/resources/org/seal/policies/"+ policies[l]+"/test_suites/"+ policies[l]+"_Exclusive");
