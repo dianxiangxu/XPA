@@ -307,7 +307,9 @@ public class TestPanelDemo extends JPanel {
 				taggedRequests = testGenerator.generateRequests(mutationMethods);
 				TestSuiteDemo suite = new TestSuiteDemo(policyFilePath, this.type, taggedRequests);
 				suite.save();
-				
+				this.testSuite = suite;
+				this.workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MUTATION_BASED_TEST);
+				setUpTestPanel();
 			}
 		}catch(Exception e){
 			ExceptionUtil.handleInDefaultLevel(e);

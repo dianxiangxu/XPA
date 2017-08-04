@@ -57,7 +57,7 @@ public class TestUtil {
 		String testSuiteMetaFileName = XACMLElementUtil.getPolicyName(policyFilePath) + delimeter + coverageName + delimeter + config.getProperty("testSuiteMetaFileName");
 		String testSuiteMetaFileExtension = config.getProperty("testSuiteMetaFileExtension");
 		String name = testSuiteMetaFileName + "." + testSuiteMetaFileExtension;
-		return TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, NameDirectory.RULE_COVERAGE) + File.separator + name;
+		return TestUtil.getDefaultTestSuiteDirectoryPath(policyFilePath, coverageName) + File.separator + name;
 	}
 	
 	public static String getName(int index){

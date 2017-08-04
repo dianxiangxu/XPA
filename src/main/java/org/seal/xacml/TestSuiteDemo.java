@@ -129,7 +129,7 @@ public class TestSuiteDemo {
 		for (int i = 0; i < testCells.length; i++)
 			testCells[i] = testRow.createCell(i);
 		testCells[0].setCellValue(rowIndex);
-		testCells[1].setCellValue(TestUtil.getName(rowIndex-1));
+		testCells[1].setCellValue(test.getName());
 		testCells[2].setCellValue(test.getOracle());
 	}
 
