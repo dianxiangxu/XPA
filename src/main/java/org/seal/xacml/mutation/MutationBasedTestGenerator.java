@@ -259,18 +259,20 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	}
 	
 	public List<String> generateRPTERequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
-		traverseForRPTE(doc.getDocumentElement(),new StringBuilder(),true,true, new ArrayList<Rule>());
+		traverseForRPTE(doc.getDocumentElement(),new StringBuilder(),true, new ArrayList<Rule>());
 		List<String> reqs = getRequests();
 		return reqs;
 	}
 	
-	private void traverseForRPTE(Element node, StringBuilder preExpression,boolean notForRule,boolean falsifyPostRules,  List<Rule> previousRules) throws IOException, ParsingException, ParserConfigurationException, SAXException{
+	private void traverseForRPTE(Element node, StringBuilder preExpression,boolean notForRule,List<Rule> previousRules) throws IOException, ParsingException, ParserConfigurationException, SAXException{
 		boolean isPolicy = XACMLElementUtil.isPolicy(node);
 		if ( isPolicy || XACMLElementUtil.isPolicySet(node)) {
 		    Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
 		    if (isPolicy) {
+		    	boolean noParallelTarget = false;
+	            
 		    	if (targetNode != null) {
-		            List<Node> children = XMLUtil.getChildNodeList(targetNode);
+		    		List<Node> children = XMLUtil.getChildNodeList(targetNode);
 		            int allOfCount = 0;
 		            if(children.size()>1){
 			            for (Node child : children) {
@@ -308,38 +310,149 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			            						child.insertBefore(childAllOf, nextChild);
 			            						NodeList childs = node.getChildNodes();
 			            						boolean flag = true;
+			            						
 			            						if(!XACMLElementUtil.isRule(node) && XMLUtil.isTraversableElement(node)){
 			            							for (int j = 0; j < childs.getLength() && flag; j++) {
 				            				            Node childCur = childs.item(j);
 				            				            if (childCur instanceof Element && XMLUtil.isTraversableElement(childCur) && flag ) {
-				            				            	traverseForRPTE((Element)childCur, currentPreExpression,true,false,new ArrayList<Rule>());
+				            				            	traverseForRPTE((Element)childCur, currentPreExpression,true,new ArrayList<Rule>());
 				            				            	flag = false;
 				            				            
 					            				            for (int k = 0; k < childs.getLength(); k++) {
 						            				            Node childC = childs.item(k);
 						            				            if (childC instanceof Element && XMLUtil.isTraversableElement(childC) && XACMLElementUtil.isRule(childC)) {
-						            				            	traverseForRPTE((Element)childC, currentPreExpression,false,true,previousRules);
+						            				            	traverseForRPTE((Element)childC, currentPreExpression,false,previousRules);
 						            				            }
 						            				        }
 				            				            }
 				            				        }
 			            						}
+			            						
+			            					}
+			            				}
+			            			}else {
+			    			      		noParallelTarget = true;
+			    			      	}
+			            		}else {
+						      		noParallelTarget = true;
+						      	}
+			            	}else {
+					      		noParallelTarget = true;
+					      	}
+			            }
+		            }else {
+			      		noParallelTarget = true;
+			      	}
+		        }else {
+		      		noParallelTarget = true;
+		      	}
+		    	if(noParallelTarget){
+			      	NodeList childs = node.getChildNodes();
+			      	StringBuilder currentPreExpression = new StringBuilder(preExpression.toString());
+			      	Target target = Target.getInstance(targetNode, policyMetaData);
+					currentPreExpression.append(z3ExpressionHelper.getTrueTargetExpression(target));
+					
+					if(XMLUtil.isTraversableElement(node)){
+						for (int j = 0; j < childs.getLength(); j++) {
+				            Node childC = childs.item(j);
+		                    if (childC instanceof Element && XMLUtil.isTraversableElement(childC) && XACMLElementUtil.isRule(childC)){
+				            	traverseForRPTE((Element)childC, currentPreExpression,false,previousRules);
+				            }
+					        
+				        }
+					}
+		      	}
+		    } else{
+		    	boolean noParallelTarget = false;
+		      	if (targetNode != null) {
+		            List<Node> children = XMLUtil.getChildNodeList(targetNode);
+		            int allOfCount = 0;
+		            if(children.size()>1){
+			            for (Node child : children) {
+			            	if(child!=null && child.getLocalName() !=null && child.getLocalName().equals("AnyOf")){
+			            		List<Node> childrenAllOf = XMLUtil.getChildNodeList(child);
+			            		if(childrenAllOf.size() > 2){
+			            			for(Node childAllOf:childrenAllOf){
+			            				if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+			            					allOfCount++;
+			            				}
+			            			}
+			            			if(allOfCount > 1){
+			            				for(int i = 0; i < childrenAllOf.size(); i++){
+			            					Node childAllOf = childrenAllOf.get(i);
+			            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+			            						previousRules = new ArrayList<Rule>();
+			            						StringBuilder currentPreExpression = new StringBuilder(preExpression.toString());
+			            						child.removeChild(childAllOf);
+			            						Node nextChild = childAllOf.getNextSibling();
+			            						Target target = Target.getInstance(targetNode, policyMetaData);
+			            						currentPreExpression.append(z3ExpressionHelper.getFalseTargetExpression(target));
+			            						List<Node> childrenAllOfCopy = new ArrayList<Node>();
+			            						childrenAllOfCopy.addAll(XMLUtil.getChildNodeList(child));
+			            						
+			            						for(Node c:childrenAllOfCopy){
+			            							child.removeChild(c);
+			            						}
+			            						child.appendChild(childAllOf);
+			            						Target targetTrue = Target.getInstance(targetNode, policyMetaData);
+			            						currentPreExpression.append(System.lineSeparator()).append(z3ExpressionHelper.getTrueTargetExpression(targetTrue));
+			            						child.removeChild(childAllOf);
+			            						for(Node c:childrenAllOfCopy){ 
+			            							child.appendChild(c);
+			            						}
+			            						child.insertBefore(childAllOf, nextChild);
+			            						NodeList childs = node.getChildNodes();
+			            						if(XMLUtil.isTraversableElement(node)){
+			            							for (int j = 0; j < childs.getLength(); j++) {
+				            				            Node childC = childs.item(j);
+		            				                    if (childC instanceof Element && XMLUtil.isTraversableElement(childC) && (XACMLElementUtil.isPolicy(childC)||XACMLElementUtil.isPolicySet(childC))) {
+				            				            	traverseForRPTE((Element)childC, currentPreExpression,true,new ArrayList<Rule>());
+				            				            }
+					            				        
+				            				        }
+			            						}
+			            	
 			            					}
 			            				}
 			            			}
-			            		}
+			            			else {
+			        		      		noParallelTarget = true;
+			        		      	}
+			            		}else {
+			    		      		noParallelTarget = true;
+			    		      	}
 			            	}
+			            	else {
+					      		noParallelTarget = true;
+					      	}
 			            }
-		            }
-		        }
-		    }
+		            }else {
+			      		noParallelTarget = true;
+			      	}
+		      	} else {
+		      		noParallelTarget = true;
+		      	}
+		      	if(noParallelTarget){
+			      	NodeList childs = node.getChildNodes();
+			      	StringBuilder currentPreExpression = new StringBuilder(preExpression.toString());
+			      	Target target = Target.getInstance(targetNode, policyMetaData);
+					currentPreExpression.append(z3ExpressionHelper.getTrueTargetExpression(target));
+					
+					if(XMLUtil.isTraversableElement(node)){
+						for (int j = 0; j < childs.getLength(); j++) {
+				            Node childC = childs.item(j);
+		                    if (childC instanceof Element && XMLUtil.isTraversableElement(childC) && (XACMLElementUtil.isPolicy(childC)||XACMLElementUtil.isPolicySet(childC))) {
+				            	traverseForRPTE((Element)childC, currentPreExpression,true,new ArrayList<Rule>());
+				            }
+					        
+				        }
+					}
+		      	}
+			}
 		} else if (XACMLElementUtil.isRule(node)) {
 	    	List<String> expressions;
-	    	if(falsifyPostRules){
-	    		expressions = getRuleExpressionForTruthValuesWithPostRules(node,preExpression,previousRules,notForRule);
-	    	} else{
-	    		expressions = getRuleCoverageExpression(node,preExpression,previousRules);
-	    	}
+	    	expressions = getRuleExpressionForTruthValuesWithPostRules(node,preExpression,previousRules,notForRule);
+	    	
 	    	for(String expression:expressions){
 	    		boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
 	    		if (sat == true) {
@@ -350,26 +463,18 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 		    return;
 		}
 	}
-	public List<String> getRuleCoverageExpression (Element node, StringBuilder preExpression, List<Rule> previousRules) throws IOException, ParsingException, ParserConfigurationException, SAXException{
-		return getRuleExpressionForTruthValues(node, preExpression, previousRules,false);
-	}
+	
 
 
-public List<String> getRuleExpressionForTruthValues(Element node, StringBuilder preExpression, List<Rule> previousRules,boolean notForRule) throws IOException, ParsingException, ParserConfigurationException, SAXException{
+public List<String> getRuleExpressionForTruthValues(Element node, StringBuilder preExpression, List<Rule> previousRules) throws IOException, ParsingException, ParserConfigurationException, SAXException{
     Target target = XMLUtil.getTarget(node, policyMetaData);
     Condition condition = XMLUtil.getCondition(node, policyMetaData);
     List<StringBuffer> ruleExpressions = new ArrayList<StringBuffer>();
     if(target != null){
     	StringBuffer ruleExpression = new StringBuffer();
-    	if(notForRule){
-	    	ruleExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
+    		ruleExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
 	    	ruleExpressions.add(ruleExpression);
-    	}else{
-    		List<String> exps = z3ExpressionHelper.getRPTEExpression(target,policyMetaData);
-    		for(String exp:exps){
-    			ruleExpressions.add(new StringBuffer(exp + System.lineSeparator()));
-    		}
-    	}
+    	
 	    
     }
     if(condition != null){
@@ -387,13 +492,38 @@ public List<String> getRuleExpressionForTruthValues(Element node, StringBuilder 
 		falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 	}
     List<String> expressions = new ArrayList<String>();
+    StringBuffer falsifyPostRules = new StringBuffer();
+    List<Rule> postRules = new ArrayList<Rule>();
+    Node sibling = null;
+	Node n = node;
+	
+    while(true){
+		sibling = n.getNextSibling();
+		if(sibling == null){
+			break;
+		} else{
+			if(sibling.getNodeType() == Node.ELEMENT_NODE){
+				if(XACMLElementUtil.isRule(sibling)){
+					postRules.add(Rule.getInstance(sibling, policyMetaData, null));
+				}
+			} 
+		}
+		n = sibling;
+	}
+    for(Rule rule:postRules){
+    	falsifyPostRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
+	}
     for(StringBuffer ruleExpression:ruleExpressions){
-    	expressions.add(preExpression.toString()+ruleExpression+falsifyPreviousRules);
+    	expressions.add(preExpression.toString()+ruleExpression+falsifyPreviousRules+ System.lineSeparator()+falsifyPostRules);
     }
+    
     return expressions;
 }
 
 public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, StringBuilder preExpression, List<Rule> previousRules,boolean notForRule) throws IOException, ParsingException, ParserConfigurationException, SAXException{
+	if(notForRule){
+		return getRuleExpressionForTruthValues(node,preExpression,previousRules);
+	}
 	List<Rule> postRules = new ArrayList<Rule>();
 	Node sibling = null;
 	Node n = node;

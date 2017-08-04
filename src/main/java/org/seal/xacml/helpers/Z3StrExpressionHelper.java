@@ -167,6 +167,9 @@ public class Z3StrExpressionHelper {
 		}
 		targetsb.append(getTrueTargetExpression(target).toString().trim());
 		conditionsb.append(getTrueConditionExpression(condition).toString().trim());
+		if(targetsb.length() == 0 && conditionsb.length()==0){
+			return sb;
+		}
 		sb.append("(not (and ");
 		sb.append(targetsb);
 		sb.append(conditionsb);
