@@ -84,8 +84,8 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.add(createPolicyMenu());
 		menuBar.add(createTestMenu());
-		menuBar.add(createMutationMenu());
 		menuBar.add(createDebuggingMenu());
+		menuBar.add(createMutationMenu());
 		menuBar.add(createHelpMenu());
 		return menuBar;
 	}
@@ -490,11 +490,8 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 				createNavigationIcon("images/policy.gif"), editorPanel);
 		mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
 				testPanel);
-		mainTabbedPane.addTab("Mutants",
-				createNavigationIcon("images/mutation.gif"), mutationPanel);
 		mainTabbedPane.addTab("Debugging",
 				createNavigationIcon("images/mutation.gif"), debugPanel);
-		// mainTabbedPane.addChangeListener(this);
 		mainTabbedPane.setSelectedComponent(editorPanel);
 	}
 
@@ -507,6 +504,9 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	}
 
 	public void setToMutantPane(){
+		if(mainTabbedPane.indexOfTab("Mutant") == -1){
+			mainTabbedPane.addTab("Mutants", createNavigationIcon("images/mutation.gif"), mutationPanel);
+		}
 		mainTabbedPane.setSelectedComponent(mutationPanel);		
 	}
 	
