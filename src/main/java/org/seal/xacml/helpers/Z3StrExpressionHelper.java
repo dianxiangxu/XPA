@@ -16,7 +16,6 @@ import org.seal.xacml.Attr;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.seal.xacml.utils.XMLUtil;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.PolicyMetaData;
 import org.wso2.balana.Rule;
@@ -183,7 +182,7 @@ public class Z3StrExpressionHelper {
 		StringBuffer sb = new StringBuffer();
 		Target target = (Target) rule.getTarget();
 		Condition condition = (Condition) rule.getCondition();
-		if(target == null && condition == null){
+		if((target == null && condition == null)|| (targetsb.length() == 0 && conditionsb.length()==0)){
 			return sb;
 		}
 		targetsb.append(getTrueTargetExpression(target).toString().trim());
@@ -195,7 +194,7 @@ public class Z3StrExpressionHelper {
 		return sb;
 	}
 	
-	private String getName(AttributeDesignator attr) {
+	public String getName(AttributeDesignator attr) {
 		String uri = attr.getId().toString();
 		boolean has = true;
 		if (nameMap.containsKey(uri)) {
@@ -219,7 +218,7 @@ public class Z3StrExpressionHelper {
 		}
 	}
 	
-	private String getType(AttributeDesignator attr) {
+	public String getType(AttributeDesignator attr) {
 		String name = getName(attr);
 		String type = attr.getType().toString();
 		if (typeMap.containsKey(name)) {
@@ -471,6 +470,163 @@ public class Z3StrExpressionHelper {
         }
     }
 	
+	/*
+	public List<ExpressionWithTruthValue> getMCDCExpssions(Target target){
+		List<ExpressionWithTruthValue> expressions = new ArrayList<ExpressionWithTruthValue>();
+		if (target != null) {
+			for (AnyOfSelection anyofselection : target.getAnyOfSelections()) {
+				int n = anyofselection.getAllOfSelections().size() + 1;
+				for(int i = 0; i< n;i++){import org.seal.xacml.components.ExpressionWithTruthValue;
+
+					int k = 0;
+					StringBuilder orBuilder = new StringBuilder();
+					for (AllOfSelection allof : anyofselection.getAllOfSelections()) {
+						StringBuilder allBuilder = new StringBuilder();
+						for (TargetMatch match : allof.getMatches()) {
+							if (match.getEval() instanceof AttributeDesignator) {
+								AttributeDesignator attribute = (AttributeDesignator) match.getEval();
+								if(attribute.getType().toString().contains("boolean")){
+									allBuilder.append(getName(attribute));
+								}else{
+									allBuilder.append(" (" + getOperator(match.getMatchFunction().encode()) + " " + getName(attribute) + " ");
+								}
+								if (attribute.getType().toString().contains("string")) {
+									String value = match.getAttrValue().encode();
+									value = value.replaceAll(System.lineSeparator(), "");
+									value = value.trim();
+									allBuilder.append("\"" + value + "\")");
+								}
+								if (attribute.getType().toString().contains("integer")) {
+									String value = match.getAttrValue().encode();
+									value = value.replaceAll(System.lineSeparator(), "");
+									value.trim();
+									value = value.trim();
+									allBuilder.append(value + ")");
+								}
+								
+								getType(attribute);
+								Attr myattr = new Attr(attribute);
+								if (!collector.contains(myattr)) {
+									collector.add(myattr);
+								}
+							}
+						}
+						allBuilder.insert(0, " (and ");
+						allBuilder.append(")");
+						if(i > 0 && k==(i-1)){
+							orBuilder.append(allBuilder);
+						} else{
+							orBuilder.append("(not " + allBuilder + ")");
+						}
+						k++;
+					}
+					orBuilder.insert(0, " (or ");
+					orBuilder.append(")");
+					expressions.add(new ExpressionWithTruthValue(orBuilder.toString(),true));
+				}
+			}
+		}
+		return expressions;
+	} */
+	
+	public List<String> getMCDCExpssions(Target target){
+		List<String> expressions = new ArrayList<String>();
+		if (target != null) {
+			for (AnyOfSelection anyofselection : target.getAnyOfSelections()) {
+				int n = anyofselection.getAllOfSelections().size() + 1;
+				for(int i = 0; i< n;i++){
+					List<StringBuilder> orBuilders = new ArrayList<StringBuilder>();
+					
+					int k = 0;
+					StringBuilder orBuilder = new StringBuilder();
+					for (AllOfSelection allof : anyofselection.getAllOfSelections()) {
+						int m = allof.getMatches().size() + 1;
+						List<StringBuilder> allBuilders = new ArrayList<StringBuilder>();
+						for(int l = 0; l < m; l++){
+							StringBuilder allBuilder = new StringBuilder();
+							int p = 0;
+							for (TargetMatch match : allof.getMatches()) {
+								if (match.getEval() instanceof AttributeDesignator) {
+									AttributeDesignator attribute = (AttributeDesignator) match.getEval();
+									StringBuilder nb = new StringBuilder();
+									if(attribute.getType().toString().contains("boolean")){
+										nb.append(getName(attribute));
+									}else{
+										nb.append(" (" + getOperator(match.getMatchFunction().encode()) + " " + getName(attribute) + " ");
+									}
+									if (attribute.getType().toString().contains("string")) {
+										String value = match.getAttrValue().encode();
+										value = value.replaceAll(System.lineSeparator(), "");
+										value = value.trim();
+										nb.append("\"" + value + "\")");
+									}
+									if (attribute.getType().toString().contains("integer")) {
+										String value = match.getAttrValue().encode();
+										value = value.replaceAll(System.lineSeparator(), "");
+										value.trim();
+										value = value.trim();
+										nb.append(value + ")");
+									}
+									
+									if(l > 0 && p ==(l-1)){
+										nb.insert(0,"(not ");
+										nb.append(")");
+									} 
+									allBuilder.append(nb);
+									getType(attribute);
+									Attr myattr = new Attr(attribute);
+									if (!collector.contains(myattr)) {
+										collector.add(myattr);
+									}
+								}
+								p++;
+							}
+							
+							allBuilder.insert(0, " (and ");
+							allBuilder.append(")");
+							allBuilders.add(allBuilder);
+						}
+						List<StringBuilder> oldBuilders = new ArrayList<StringBuilder>();
+						oldBuilders.addAll(orBuilders);
+						orBuilders = new ArrayList<StringBuilder>();
+						if(oldBuilders.size() > 0){
+							for(StringBuilder ob:oldBuilders){
+								
+								for(StringBuilder ab:allBuilders){
+									StringBuilder sb = new StringBuilder(ob.toString());
+									if(i > 0 && k==(i-1)){
+										sb.append(ab);
+									} else{
+										sb.append("(not " + ab + ")");
+									}
+									orBuilders.add(sb);
+								}
+							}
+						} else{
+							for(StringBuilder ab:allBuilders){
+								StringBuilder ob = new StringBuilder();
+								if(i > 0 && k==(i-1)){
+									ob.append(ab);
+								} else{
+									ob.append("(not " + ab + ")");
+								}
+								orBuilders.add(ob);
+							}
+						}
+						k++;
+					}
+					for(StringBuilder ob:orBuilders){
+						ob.insert(0, " (or ");
+						ob.append(")");
+						expressions.add(ob.toString());
+					}
+					
+				}
+			}
+		}
+		return expressions;
+	}
+	
 	public List<String> getRPTEExpression(Target target,PolicyMetaData policyMetaData) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		String targetStr = null;
 		if(target!=null){
@@ -531,5 +687,6 @@ public class Z3StrExpressionHelper {
 		}
     	return expressions;
     }
+	
 	
 }

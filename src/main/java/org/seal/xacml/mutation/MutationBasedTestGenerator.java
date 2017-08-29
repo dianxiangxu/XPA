@@ -66,10 +66,6 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			Method method = cls.getDeclaredMethod(methodName, noParams);
 			List<String> requests = (List<String>)method.invoke(this, null);
 			int j = 0;
-			for(Mutant mutant:mutants){
-				File f = new File(mutant.getName());//
-				FileIOUtil.writeFile(f, mutant.encode());//
-			}
 			for(int i = 0; i< requests.size();i++){
 				AbstractPolicy p;
 				String mutantForPropagationForPolicy = MutationMethodForPropagationForPolicyDirectory.getMutationMethod(currentMutationMethod);
@@ -83,8 +79,6 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 					p = mut.getPolicy();
 				}
 				if(doRequestPropagatesMutationFault(requests.get(i), p, mutants)){
-					File r = new File(tag+(i+1));//
-					FileIOUtil.writeFile(r, requests.get(i));//
 					taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
 					j = i+1;
 				}

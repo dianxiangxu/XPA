@@ -9,7 +9,7 @@ class PolicyElementCoefficient implements Comparable<PolicyElementCoefficient> {
     private int rank;
 
     PolicyElementCoefficient(double suspiciousScore, int index) {
-        this.suspiciousScore = suspiciousScore;
+    	this.suspiciousScore = suspiciousScore;
         this.index = index;
     }
 
