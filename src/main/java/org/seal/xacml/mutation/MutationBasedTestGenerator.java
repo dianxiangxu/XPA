@@ -62,6 +62,7 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 			List<Mutant> mutants = (List<Mutant>)e.getValue();
 			currentMutationMethod = e.getKey().toString();
 			String tag = MutationMethodAbbrDirectory.getAbbr(currentMutationMethod);
+			setRequests(new ArrayList<String>());
 			String methodName = "generate" + tag + "Requests";
 			Method method = cls.getDeclaredMethod(methodName, noParams);
 			List<String> requests = (List<String>)method.invoke(this, null);
@@ -438,7 +439,6 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 		                    if (childC instanceof Element && XMLUtil.isTraversableElement(childC) && (XACMLElementUtil.isPolicy(childC)||XACMLElementUtil.isPolicySet(childC))) {
 				            	traverseForRPTE((Element)childC, currentPreExpression,true,new ArrayList<Rule>());
 				            }
-					        
 				        }
 					}
 		      	}
@@ -626,7 +626,6 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 		        }
 		    }
 	        NodeList children = node.getChildNodes();
-	    	StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
 	    	
 	        if(isPolicy){
 	        	int effectA, effectB;
@@ -678,7 +677,8 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 		        		}
 		        	}
 		        	if(state == 2){
-		        		boolean sat = Z3StrUtil.processExpression(preExpression + expression.toString(), z3ExpressionHelper);
+		        		String finalExpression = preExpression + expression.toString();
+		        		boolean sat = Z3StrUtil.processExpression(finalExpression, z3ExpressionHelper);
 		    			if (sat == true) {
 		    			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 		    			    break;
@@ -694,6 +694,8 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 	        }else{
 	        	for (int i = 0; i < children.getLength(); i++) {
 	        		Node child = children.item(i);
+	        		StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
+	    	    	
 	        		if (child instanceof Element && XMLUtil.isTraversableElement(child)) {
 	        			traverseForPermitOrDeny((Element)child, preExpressionCurrent, mutationMethod);
 	        		}

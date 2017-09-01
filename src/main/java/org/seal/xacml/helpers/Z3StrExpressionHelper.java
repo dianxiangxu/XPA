@@ -182,11 +182,14 @@ public class Z3StrExpressionHelper {
 		StringBuffer sb = new StringBuffer();
 		Target target = (Target) rule.getTarget();
 		Condition condition = (Condition) rule.getCondition();
-		if((target == null && condition == null)|| (targetsb.length() == 0 && conditionsb.length()==0)){
+		if((target == null && condition == null)){
 			return sb;
 		}
 		targetsb.append(getTrueTargetExpression(target).toString().trim());
 		conditionsb.append(getTrueConditionExpression(condition).toString().trim());
+		if((targetsb.length() == 0 && conditionsb.length()==0)){
+			return sb;
+		}
 		sb.append("(and ");
 		sb.append(targetsb);
 		sb.append(" " + conditionsb);
