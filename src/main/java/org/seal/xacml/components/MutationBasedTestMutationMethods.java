@@ -28,6 +28,9 @@ public class MutationBasedTestMutationMethods {
 	private JCheckBox boxANF;
 	private JCheckBox boxRNF;
 	private JCheckBox boxRPTE;
+	private JCheckBox boxCCA;
+	private JCheckBox boxRCCF;
+	private JCheckBox boxPCCF;
 	private JCheckBox boxSelectAll;
 	
 	
@@ -159,7 +162,32 @@ public class MutationBasedTestMutationMethods {
 		this.boxRPTE = boxRPTE;
 	}
 
+	public JCheckBox getBoxCCA() {
+		return boxCCA;
+	}
 
+
+	public void setBoxCCA(JCheckBox boxCCA) {
+		this.boxCCA = boxCCA;
+	}
+
+	public JCheckBox getBoxRCCF() {
+		return boxRCCF;
+	}
+
+
+	public void setBoxRCCF(JCheckBox boxRCCF) {
+		this.boxRCCF = boxRCCF;
+	}
+
+	public JCheckBox getBoxPCCF() {
+		return boxPCCF;
+	}
+
+	public void setBoxPCCF(JCheckBox boxPCCF) {
+		this.boxPCCF = boxPCCF;
+	}
+	
 	public JCheckBox getBoxSelectAll() {
 		return boxSelectAll;
 	}
@@ -183,6 +211,9 @@ public class MutationBasedTestMutationMethods {
 		boxFDR = new JCheckBox("First Deny Rules (FDR)");
 		boxANF = new JCheckBox("Add Not Function (ANF)");
 		boxRNF = new JCheckBox("Remove Not Function (RNF)");
+		boxCCA = new JCheckBox("Change Combining Algorithm (CCA)");
+		boxRCCF = new JCheckBox("Rule Change Comparision Function (RCCF)");
+		boxPCCF = new JCheckBox("Policy Change Comparision Function (PCCF)");
 		boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
 		boxSelectAll = new JCheckBox("Select All");
 		
@@ -226,6 +257,15 @@ public class MutationBasedTestMutationMethods {
 		if (boxRNF.isSelected()) {
 			lst.add("createRemoveNotFunctionMutants");
 		}
+		if (boxCCA.isSelected()) {
+			lst.add("createCombiningAlgorithmMutants");
+		}
+		if (boxRCCF.isSelected()) {
+			lst.add("createRuleChangeComparisonFunctionMutants");
+		}
+		if (boxPCCF.isSelected()) {
+			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
+		}
 		if (boxRPTE.isSelected()) {
 			lst.add("createRemoveParallelTargetElementMutants");
 		}
@@ -246,6 +286,7 @@ public class MutationBasedTestMutationMethods {
 		boxANF.setSelected(selected);
 		boxRNF.setSelected(selected);
 		boxRPTE.setSelected(selected);
+		boxCCA.setSelected(selected);
 		boxSelectAll.setSelected(selected);
 	}
 	
@@ -278,10 +319,11 @@ public class MutationBasedTestMutationMethods {
 		panel.add(boxANF);
 		panel.add(boxRNF);
 		panel.add(boxRPTE);
+		panel.add(boxCCA);
+		panel.add(boxRCCF);
+		panel.add(boxPCCF);
 		panel.add(boxSelectAll);
-		
 		panel.setBorder(new TitledBorder(new EtchedBorder(), ""));
-
 		return panel;
 	}
 

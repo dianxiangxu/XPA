@@ -25,6 +25,7 @@ public class MutationMethodForPropagationForMutantDirectory {
 		 map.put("createAddNewRuleMutants", "createRemoveDefaultRulesMutant");
 		 map.put("createRemoveDefaultRulesMutant", "SELF");
 		 map.put("createRemoveParallelTargetElementMutants", "SELF");
+		 map.put("createCombiningAlgorithmMutants", "SELF");
 			
 	 }
 	 

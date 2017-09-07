@@ -25,6 +25,9 @@ public class MutationMethodAbbrDirectory {
 		 map.put("createAddNewRuleMutants", "ANR");
 		 map.put("createRemoveDefaultRulesMutant", "RDR");
 		 map.put("createRemoveParallelTargetElementMutants", "RPTE");
+		 map.put("createCombiningAlgorithmMutants", "CCA");
+		 map.put("createRuleChangeComparisonFunctionMutants", "RCCF");
+		 map.put("createPolicyTargetChangeComparisonFunctionMutants", "PCCF");
 	 }
 	 
 	 public static String getAbbr(String method){
