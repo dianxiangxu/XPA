@@ -228,8 +228,18 @@ public class AttributeSelector extends AbstractAttributeSelector {
         return true;
     }
 
-
+//ROSHAN Oct 17, 2017
     public void encode(StringBuilder builder) {
+        String tag = "<AttributeSelector Path=\"" + path + "\" DataType=\""
+                + type.toString() + "\"" + " Category=\"" + category + "\"";
 
+        if (isMustBePresent()){
+            tag += " MustBePresent=\"true\"";
+        } else{
+        	tag += " MustBePresent=\"false\"";
+        }
+        tag += "/>\n";
+
+        builder.append(tag);
     }
 }

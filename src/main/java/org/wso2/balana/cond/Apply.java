@@ -45,6 +45,7 @@ import java.util.List;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.wso2.balana.attr.xacml3.AttributeSelector;
 import org.wso2.balana.ctx.EvaluationCtx;
 
 /**
@@ -343,7 +344,14 @@ public class Apply implements Evaluatable {
         Iterator it = xprs.iterator();
         while (it.hasNext()) {
             Expression xpr = (Expression) (it.next());
+            if(xpr instanceof AttributeSelector){
+            	AttributeSelector aXpr =(AttributeSelector)xpr;
+            	aXpr.encode(builder);
+                
+
+            } else{
             xpr.encode(builder);
+            }
         }
 
         builder.append("</Apply>\n");

@@ -286,6 +286,9 @@ public class MutationBasedTestMutationMethods {
 		boxANF.setSelected(selected);
 		boxRNF.setSelected(selected);
 		boxRPTE.setSelected(selected);
+		boxRCCF.setSelected(selected);
+		boxPCCF.setSelected(selected);
+		
 		boxCCA.setSelected(selected);
 		boxSelectAll.setSelected(selected);
 	}
