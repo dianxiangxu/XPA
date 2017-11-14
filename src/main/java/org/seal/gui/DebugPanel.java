@@ -16,6 +16,7 @@ import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -26,6 +27,7 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import org.apache.commons.io.IOUtils;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
@@ -73,6 +75,7 @@ public class DebugPanel extends JPanel {
 	private JCheckBox boxSelectAll = new JCheckBox("Select All"); // All 13 types of mutation.
 	private JTable table;
 	private static int xPathCol;
+	private static int suspiciousScoreCol;
 	
 	public DebugPanel(Demo xpa) {
 		this.xpa = xpa;
@@ -114,7 +117,10 @@ public class DebugPanel extends JPanel {
 					        if (row >= 0 && col ==targetCol) {
 					            String xPathString = table.getValueAt( row, col).toString();
 					            String content = XMLUtil.getElementByXPath(xPathString, xpa.getWorkingPolicyFile());
-					            PopupFrame.showContent("Element at "+xPathString, content);
+//					            PopupFrame.showContent("Element at "+xPathString, content);
+					            
+					            popUp(xPathString, content);
+					            
 					        }
 					    }
 					});
@@ -142,6 +148,14 @@ public class DebugPanel extends JPanel {
 		}
 	}
 
+	public void popUp(String title, String content){
+		JFrame frame = new JFrame("JOptionPane showMessageDialog example");
+        JOptionPane.showMessageDialog(frame,
+        		content,
+        		"Element at "+title,
+        	    JOptionPane.PLAIN_MESSAGE);
+	}
+	
 	public void fixFault(){
 		if(checkInputs()){
 			TestSuite testSuite = getTestSuite();
@@ -334,12 +348,27 @@ public class DebugPanel extends JPanel {
 				Vector<Object> vector = new Vector<Object>();
 				vector.add((i+1));
 				vector.add(suspicions.get(i));
+			
 				vector.add(suspiciousScores.get(i));
 				vector.add(xpaths.get(suspicions.get(i)));
 				data.add(vector);
 			}
 			tablePanel = new GeneralTablePanel(data, columnNames, columnNames.length);
 			tablePanel.setMinRows(data.size());
+			
+
+			
+			
+			table = tablePanel.getTable();
+			suspiciousScoreCol = table.getColumn("Suspicious Score").getModelIndex();
+			
+			for(int i = 0; i<suspicions.size();i++){
+				table.getColumnModel().getColumn(suspiciousScoreCol).setCellRenderer(new susPiciousColumnCellRenderer());
+			}
+			
+			
+			
+		
 			
 			JScrollPane scrollpane = new JScrollPane(tablePanel);
 			add(scrollpane, BorderLayout.CENTER);
@@ -429,6 +458,41 @@ public class DebugPanel extends JPanel {
 			if (column == xPathCol) {
 			
 				c.setForeground(Color.blue);
+				
+			}
+			return c;
+		}
+	}
+	
+	static class susPiciousColumnCellRenderer extends DefaultTableCellRenderer {
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
+			Component c = super.getTableCellRendererComponent(table, value,isSelected, hasFocus, row, column);
+			
+			double d = (double)value;
+
+			if (column == suspiciousScoreCol) {
+			
+				int r = 255;
+				int g = 255;
+				
+				double temp = d * 100;
+				temp = (temp < 0.0) ? temp * (-1) : temp;
+				Long L = Math.round(temp);
+				r = Integer.valueOf(L.intValue());
+				
+				if (d >= 0.0) {
+					if (d > 0.0) {
+						r += 100;
+						r = (r > 255) ? 255 : r;
+						g -= r;
+					}
+					System.out.println(r);
+				} else {
+					g -= r;
+				}
+				Color myColor = new Color(r,g,0);
+				c.setBackground(myColor);
+				
 			}
 			return c;
 		}

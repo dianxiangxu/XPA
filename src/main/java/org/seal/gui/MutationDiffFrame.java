@@ -5,8 +5,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -47,17 +50,44 @@ public class MutationDiffFrame extends JFrame
         for(DiffItem item:repairedContent){
         	appendToPane(tPaneTwo, item.line+"\n", item.color);
         }
+        
+        
+        
+        
         JScrollPane panelTwoScroll = new JScrollPane(panelTwo);
         panelTwoScroll.setViewportView(tPaneTwo);
         container.setLayout(new GridLayout(1,2));
         container.add(panelOneScroll);
         container.add(panelTwoScroll);
+        container.setLayout(new GridLayout(2,0));
+        
+        
+        JPanel panelThree = new JPanel();
+        JButton b = new JButton("OK");
+    	Dimension d = new Dimension(100,30);
+        b.setPreferredSize(d);
 
+        panelThree.add(b);        
+        
+        container.add(panelThree);
+    	
+    	
         this.add(container);
         this.setTitle("Difference between original policy and repaired policy");
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+        
+       
+
+        b.addActionListener(new ActionListener() {
+			 
+            public void actionPerformed(ActionEvent e)
+            {
+            	dispose();
+            }
+        });      
+ 
     }
 
     private void appendToPane(JTextPane tp, String msg, Color c)

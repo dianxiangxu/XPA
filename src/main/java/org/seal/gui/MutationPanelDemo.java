@@ -1,10 +1,20 @@
 package org.seal.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,13 +23,23 @@ import java.util.Vector;
 
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.seal.gui.DebugPanel.XPAthColumnCellRenderer;
 import org.seal.mutation.PolicySpreadSheetMutantSuiteDemo;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
@@ -30,8 +50,17 @@ import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.MutantUtil;
 import org.seal.xacml.utils.XACMLElementUtil;
+import org.seal.xacml.utils.XMLUtil;
 import org.umu.editor.XMLFileFilter;
+import org.w3c.dom.NodeList;
 import org.wso2.balana.AbstractPolicy;
+
+import sun.security.provider.certpath.Builder;
+
+import com.sun.xml.internal.txw2.Document;
+
+
+
 
 public class MutationPanelDemo extends JPanel {
 	
@@ -61,6 +90,9 @@ public class MutationPanelDemo extends JPanel {
 	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
 	 
 	 
+	private JTable table;
+	private static int xPathCol;
+	
 	private JCheckBox boxFPR = new JCheckBox("First Permit Rules (FPR)");
 	private JCheckBox boxFDR = new JCheckBox("First Deny Rules (FDR)");
 	//private JCheckBox boxRTR = new JCheckBox("Rule Type Replaced (RTR) - Not implemented");
@@ -194,12 +226,76 @@ public class MutationPanelDemo extends JPanel {
 			JScrollPane scrollpane = new JScrollPane(tablePanel);
 			add(scrollpane, BorderLayout.CENTER);
 			xpa.setToMutantPane();
-			xpa.updateMainTabbedPane();
+			xpa.updateMainTabbedPane();	
+			
+			
+			table = tablePanel.getTable();
+			xPathCol = table.getColumn("Mutant File").getModelIndex();
+			
+			table.getColumnModel().getColumn(xPathCol).setCellRenderer(new XPAthColumnCellRenderer());
+			table.addMouseListener(new java.awt.event.MouseAdapter() {
+			    @Override
+			    public void mouseClicked(java.awt.event.MouseEvent evt) {
+			        int row = table.rowAtPoint(evt.getPoint());
+			        int targetCol = table.getColumn("Mutant File").getModelIndex();
+
+			        int col = table.columnAtPoint(evt.getPoint());
+			        if (row >= 0 && col ==targetCol) {
+			            String xPathString = table.getValueAt( row, col).toString();
+			            
+			            String pathString = xpa.getWorkingPolicyFilePath();
+			            
+			            String splitString = pathString.substring(0,pathString.lastIndexOf("/"));
+			            
+			            String resultString = splitString + "/" + xPathString;			            			      
+			            
+			            StringBuilder sb = new StringBuilder();
+			            try (BufferedReader br = new BufferedReader(new FileReader(resultString))) {
+			    			String sCurrentLine;
+			    			while ((sCurrentLine = br.readLine()) != null) {
+			    				sb.append(sCurrentLine).append("\n");
+			    				sCurrentLine = br.readLine();
+			    			}
+			    		} catch (IOException e) {
+			    			e.printStackTrace();
+			    		} 
+			            PopupFrame.showContent("Element at "+xPathString, sb.toString());
+
+			        }
+			    }
+			});
+			
+			table.addMouseMotionListener(new java.awt.event.MouseAdapter() {
+			    @Override
+			    public void mouseMoved(java.awt.event.MouseEvent evt) {
+			    	if(table.rowAtPoint(evt.getPoint())<table.getRowCount() && table.columnAtPoint(evt.getPoint())==xPathCol)
+			    	{
+			    	    setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+			    	}
+			    	else
+			    	{
+			    	    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			    	}
+			    }
+			});
+			
+			
 		} catch (Exception e) {
 
 		}
 	}
-	
+	public String readFile(String path) throws IOException{
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(path))){
+        	String sCurrentLine;
+        	while ((sCurrentLine = br.readLine()) != null) {
+        		sb.append(sCurrentLine);
+        	}
+
+        }
+
+      return sb.toString();
+}
 	public void setUpMutantPanel(){
 		removeAll();
 		setLayout(new BorderLayout());
@@ -218,6 +314,7 @@ public class MutationPanelDemo extends JPanel {
 			add(scrollpane, BorderLayout.CENTER);
 			xpa.setToMutantPane();
 			xpa.updateMainTabbedPane();
+			
 		} catch (Exception e) {
 
 		}
@@ -276,6 +373,8 @@ public class MutationPanelDemo extends JPanel {
 				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants,XACMLElementUtil.getPolicyName(policyFile) + "_mutants.xls");
 				setUpMutantPanel(mutants);
+				
+			
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -372,9 +471,24 @@ public class MutationPanelDemo extends JPanel {
 			xpa.setToMutantPane();
 			xpa.updateMainTabbedPane();
 			JOptionPane.showMessageDialog(xpa, "Mutation testing results are saved into file: \n" + outputFileName);
+			
+			
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
+	static class XPAthColumnCellRenderer extends DefaultTableCellRenderer {
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
+			Component c = super.getTableCellRendererComponent(table, value,isSelected, hasFocus, row, column);
+			if (column == xPathCol) {
+			
+				c.setForeground(Color.blue);
+			}
+			return c;
+		}
+	}
 }
+
+

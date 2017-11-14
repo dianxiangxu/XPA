@@ -94,6 +94,8 @@ public class XMLUtil {
         return elementString;
 	}
 	
+	
+	
 	public static boolean isTraversableElement(Node e){
 		if(rulePattern.matcher(e.getLocalName()).matches()||policysetPattern.matcher(e.getLocalName()).matches() || policyPattern.matcher(e.getLocalName()).matches()){
 			return true;

@@ -1,6 +1,8 @@
 package org.seal.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.io.File;
 import java.util.ArrayList;
@@ -14,11 +16,14 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.seal.combiningalgorithms.LoadPolicyDemo;
 import org.seal.combiningalgorithms.PolicyXDemo;
+import org.seal.gui.DebugPanel.susPiciousColumnCellRenderer;
 import org.seal.policyUtils.PolicyLoader;
 import org.seal.semanticCoverage.TestSuite;
 import org.seal.testGeneration.Demo;
@@ -48,6 +53,8 @@ public class TestPanelDemo extends JPanel {
 	private String type;
 
 	private boolean hasFailure;
+
+	private static int verdictCol;
 	
 	public TestPanelDemo(Demo demo) {
 		this.demo = demo;
@@ -288,6 +295,11 @@ public class TestPanelDemo extends JPanel {
 						child.set(5, "pass");
 					else {
 						child.set(5, "fail");
+						
+						
+						
+						requestTablePanel.table.getColumnModel().getColumn(5).setCellRenderer(new verdictColumnCellRenderer());
+
 						hasFailure = true;
 					}
 				}
@@ -300,7 +312,27 @@ public class TestPanelDemo extends JPanel {
 		requestTablePanel.validate();
 		requestTablePanel.updateUI();
 	}
+	
+	static class verdictColumnCellRenderer extends DefaultTableCellRenderer {
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
+			Component c = super.getTableCellRendererComponent(table, value,isSelected, hasFocus, row, column);
 
+//			double d = (double)value;
+			if (column == 5) {
+				if (new String("fail").equals(value.toString())) {
+					System.out.println("executed.....");
+					Color myColor = new Color(255,0,0);
+					c.setBackground(myColor);
+				}else {
+					Color myColor = new Color(255,255,255);
+					c.setBackground(myColor);
+				}
+			}
+			
+			
+			return c;
+		}
+	}
 	public void saveActualResponsesAsOracleValues() {
 		if (!hasTests()) {
 			JOptionPane.showMessageDialog(demo, "There are no tests.");

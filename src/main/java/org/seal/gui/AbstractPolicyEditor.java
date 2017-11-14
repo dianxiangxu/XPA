@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 public abstract class AbstractPolicyEditor extends JPanel{
 
 	abstract public File getWorkingPolicyFile();	
-	
+		
 	abstract public void openFile();
 
 	public void newFile() {
