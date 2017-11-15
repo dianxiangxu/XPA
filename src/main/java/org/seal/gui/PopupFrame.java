@@ -5,6 +5,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.JButton;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class PopupFrame extends JFrame{
 	/**
@@ -14,10 +20,41 @@ public class PopupFrame extends JFrame{
 	private static String title;
 	private static String content;
     public PopupFrame(String title, String content){
+    	
+    	////
+    	JButton b = new JButton("OK");
+    	
+    	////
+    	
 		JPanel container = new JPanel();
-		JTextArea tArea = new JTextArea();  
+		JTextArea tArea = new JTextArea(); 
+		tArea.setEditable(false);
 		tArea.setText(content);
-		container.add(tArea);
+
+	    JScrollPane scroll = new JScrollPane(tArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		scroll.setBounds(10,11,455,259);
+
+		container.add(scroll);
+		
+		tArea.setPreferredSize(new Dimension(700, 800));
+		container.setPreferredSize(new Dimension(800, 800));
+		
+		//////
+		container.add(b, BorderLayout.SOUTH);
+
+		
+		b.addActionListener(new ActionListener() {
+			 
+	            public void actionPerformed(ActionEvent e)
+	            {
+	            	dispose();
+	            }
+	        });      
+	 
+	
+		//////
+		 
+		 
 		JScrollPane scrollPane = new JScrollPane(container);
 		
 	    this.add(scrollPane);

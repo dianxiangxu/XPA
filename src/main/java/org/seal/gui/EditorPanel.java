@@ -17,6 +17,7 @@ public class EditorPanel extends AbstractPolicyEditor {
 	private XPA xpa;
 	
 	private File workingPolicyFile;
+	
 
 	private JTextArea textArea = new JTextArea();
 	

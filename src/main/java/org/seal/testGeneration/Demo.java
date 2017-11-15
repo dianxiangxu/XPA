@@ -147,46 +147,46 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	}
 
 	public void createToolBar() {
-		Insets margins = new Insets(1, 1, 1, 1);
-
-		JButton button = null;
-		JToolBar toolBar = new JToolBar();
-		add(toolBar, BorderLayout.PAGE_START);
-
-		// new button
-		button = new JButton(newAction);
-		button.setMargin(margins);
-		button.setBorderPainted(false);
-
-		if (button.getIcon() != null) {
-			button.setText(""); // an icon-only button
-		}
-		toolBar.add(button);
-
-		// open button
-		button = new JButton(openAction);
-		button.setMargin(margins);
-		button.setBorderPainted(false);
-		if (button.getIcon() != null) {
-			button.setText(""); // an icon-only button
-		}
-		toolBar.add(button);
-
-		// save button
-		button = new JButton(saveAction);
-		button.setMargin(margins);
-		button.setBorderPainted(false);
-		if (button.getIcon() != null) {
-			button.setText(""); // an icon-only button
-		}
-		toolBar.add(button);
+//		Insets margins = new Insets(1, 1, 1, 1);
+//
+//		JButton button = null;
+//		JToolBar toolBar = new JToolBar();
+//		add(toolBar, BorderLayout.PAGE_START);
+//
+//		// new button
+//		button = new JButton(newAction);
+//		button.setMargin(margins);
+//		button.setBorderPainted(false);
+//
+//		if (button.getIcon() != null) {
+//			button.setText(""); // an icon-only button
+//		}
+//		toolBar.add(button);
+//
+//		// open button
+//		button = new JButton(openAction);
+//		button.setMargin(margins);
+//		button.setBorderPainted(false);
+//		if (button.getIcon() != null) {
+//			button.setText(""); // an icon-only button
+//		}
+//		toolBar.add(button);
+//
+//		// save button
+//		button = new JButton(saveAction);
+//		button.setMargin(margins);
+//		button.setBorderPainted(false);
+//		if (button.getIcon() != null) {
+//			button.setText(""); // an icon-only button
+//		}
+//		toolBar.add(button);
 
 	}
 
 	protected JMenu createPolicyMenu() {
 		JMenuItem menuItem = null;
 		JMenu fileMenu = new JMenu("Policy");
-		Action[] actions = { newAction, openAction, saveAction, saveAsAction,
+		Action[] actions = { openAction, saveAction, saveAsAction,
 				checkSchemaAction };
 		for (int i = 0; i < actions.length; i++) {
 			menuItem = new JMenuItem(actions[i]);
@@ -284,6 +284,10 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		}
 
 		public void actionPerformed(ActionEvent e) {
+			
+			
+			
+
 			editorPanel.newFile();
 		}
 	}
@@ -298,6 +302,24 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 
 		public void actionPerformed(ActionEvent e) {
 			editorPanel.openFile();
+//			System.out.print("dkjfdkjfdfjk");
+			
+			switch(mainTabbedPane.getTabCount()) {
+			case 2:
+				mainTabbedPane.removeTabAt(1);
+			break;
+			case 3:
+				mainTabbedPane.removeTabAt(2);
+				mainTabbedPane.removeTabAt(1);
+				break;
+			case 4:
+				mainTabbedPane.removeTabAt(3);
+				mainTabbedPane.removeTabAt(2);
+				mainTabbedPane.removeTabAt(1);
+				break;
+			
+		}
+		
 		}
 	}
 
@@ -310,7 +332,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		}
 
 		public void actionPerformed(ActionEvent e) {
-//			editorPanel.saveFile();
+			editorPanel.saveFile();
 		}//
 	}
 
@@ -488,10 +510,12 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 		mainTabbedPane.setBorder(BorderFactory.createEtchedBorder(0));
 		mainTabbedPane.addTab("Policy",
 				createNavigationIcon("images/policy.gif"), editorPanel);
-		mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
-				testPanel);
-		mainTabbedPane.addTab("Debugging",
-				createNavigationIcon("images/mutation.gif"), debugPanel);
+//		mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
+//				testPanel);
+//		mainTabbedPane.addTab("Debugging",
+//				createNavigationIcon("images/mutation.gif"), debugPanel);
+		
+
 		mainTabbedPane.setSelectedComponent(editorPanel);
 	}
 
@@ -500,6 +524,11 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	}
 
 	public void setToTestPane(){
+		
+		if(mainTabbedPane.indexOfTab("Test") == -1){
+			mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
+					testPanel);
+		}
 		mainTabbedPane.setSelectedComponent(testPanel);		
 	}
 
@@ -511,6 +540,10 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	}
 	
 	public void setToDebugPane(){
+		if(mainTabbedPane.indexOfTab("Debud") == -1){
+			mainTabbedPane.addTab("Debugging",
+					createNavigationIcon("images/mutation.gif"), debugPanel);
+		}
 		mainTabbedPane.setSelectedComponent(debugPanel);		
 	}
 
@@ -557,7 +590,7 @@ public class Demo extends JFrame implements ItemListener, ActionListener {
 	public File getWorkingPolicyFile() {
 		return editorPanel.getWorkingPolicyFile();
 	}
-
+	
 	public String getWorkingPolicyFilePath() {
 		return editorPanel.getWorkingPolicyFile().getAbsolutePath();
 		
