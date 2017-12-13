@@ -1,14 +1,40 @@
-package org.seal.gui;
+package org.seal.xacml.xpa;
 
-import org.seal.coverage.PolicySpreadSheetTestSuite;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+
+import org.seal.gui.AbstractPolicyEditor;
+import org.seal.gui.DebugPanel;
+import org.seal.gui.MutationPanel;
+import org.seal.gui.TestPanel;
+import org.seal.xacml.TestSuiteDemo;
 import org.umu.editor.VentanaMensajes;
 import org.umu.editorXacml3.PolicyEditorPanel;
-
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
 
 public class XPA extends JFrame implements ItemListener, ActionListener {
 	
@@ -47,7 +73,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		java.net.URL imageURL = this.getClass().getClassLoader()
 				.getResource(imgLocation);
 		if (imageURL == null) {
-			System.err.println("Resource not found: " + imgLocation);
+			//System.err.println("Resource not found: " + imgLocation);
 			return null;
 		} else {
 			return new ImageIcon(imageURL);
@@ -58,8 +84,8 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.add(createPolicyMenu());
 		menuBar.add(createTestMenu());
-		menuBar.add(createMutationMenu());
 		menuBar.add(createDebuggingMenu());
+		menuBar.add(createMutationMenu());
 		menuBar.add(createHelpMenu());
 		return menuBar;
 	}
@@ -114,60 +140,60 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 				createNavigationIcon(""), "LocalizeFault", new Integer(
 						KeyEvent.VK_L));
 
-		fixFaultAction = new FixFaultAction("Fix Fault",
-				createNavigationIcon(""), "FixFault", new Integer(
+		fixFaultAction = new FixFaultAction("Repair",
+				createNavigationIcon(""), "Repair", new Integer(
 						KeyEvent.VK_F));
 
 	}
 
 	public void createToolBar() {
-		Insets margins = new Insets(1, 1, 1, 1);
-
-		JButton button = null;
-		JToolBar toolBar = new JToolBar();
-		add(toolBar, BorderLayout.PAGE_START);
-
-		// new button
-		button = new JButton(newAction);
-		button.setMargin(margins);
-		button.setBorderPainted(false);
-
-		if (button.getIcon() != null) {
-			button.setText(""); // an icon-only button
-		}
-		toolBar.add(button);
-
-		// open button
-		button = new JButton(openAction);
-		button.setMargin(margins);
-		button.setBorderPainted(false);
-		if (button.getIcon() != null) {
-			button.setText(""); // an icon-only button
-		}
-		toolBar.add(button);
-
-		// save button
-		button = new JButton(saveAction);
-		button.setMargin(margins);
-		button.setBorderPainted(false);
-		if (button.getIcon() != null) {
-			button.setText(""); // an icon-only button
-		}
-		toolBar.add(button);
+//		Insets margins = new Insets(1, 1, 1, 1);
+//
+//		JButton button = null;
+//		JToolBar toolBar = new JToolBar();
+//		add(toolBar, BorderLayout.PAGE_START);
+//
+//		// new button
+//		button = new JButton(newAction);
+//		button.setMargin(margins);
+//		button.setBorderPainted(false);
+//
+//		if (button.getIcon() != null) {
+//			button.setText(""); // an icon-only button
+//		}
+//		toolBar.add(button);
+//
+//		// open button
+//		button = new JButton(openAction);
+//		button.setMargin(margins);
+//		button.setBorderPainted(false);
+//		if (button.getIcon() != null) {
+//			button.setText(""); // an icon-only button
+//		}
+//		toolBar.add(button);
+//
+//		// save button
+//		button = new JButton(saveAction);
+//		button.setMargin(margins);
+//		button.setBorderPainted(false);
+//		if (button.getIcon() != null) {
+//			button.setText(""); // an icon-only button
+//		}
+//		toolBar.add(button);
 
 	}
 
 	protected JMenu createPolicyMenu() {
 		JMenuItem menuItem = null;
 		JMenu fileMenu = new JMenu("Policy");
-		Action[] actions = { newAction, openAction, saveAction, saveAsAction,
+		Action[] actions = { openAction, saveAction, saveAsAction,
 				checkSchemaAction };
 		for (int i = 0; i < actions.length; i++) {
 			menuItem = new JMenuItem(actions[i]);
 			menuItem.setIcon(null); // arbitrarily chose not to use icon
 			fileMenu.add(menuItem);
 		}
-		fileMenu.addSeparator();
+		fileMenu.addSeparator();//
 		fileMenu.add(createMenuItem("Exit"));
 		return fileMenu;
 	}
@@ -258,6 +284,10 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		}
 
 		public void actionPerformed(ActionEvent e) {
+			
+			
+			
+
 			editorPanel.newFile();
 		}
 	}
@@ -272,6 +302,24 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 
 		public void actionPerformed(ActionEvent e) {
 			editorPanel.openFile();
+//			System.out.print("dkjfdkjfdfjk");
+			
+			switch(mainTabbedPane.getTabCount()) {
+			case 2:
+				mainTabbedPane.removeTabAt(1);
+			break;
+			case 3:
+				mainTabbedPane.removeTabAt(2);
+				mainTabbedPane.removeTabAt(1);
+				break;
+			case 4:
+				mainTabbedPane.removeTabAt(3);
+				mainTabbedPane.removeTabAt(2);
+				mainTabbedPane.removeTabAt(1);
+				break;
+			
+		}
+		
 		}
 	}
 
@@ -284,8 +332,8 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		}
 
 		public void actionPerformed(ActionEvent e) {
-//			editorPanel.saveFile();
-		}
+			editorPanel.saveFile();
+		}//
 	}
 
 	public class SaveAsAction extends AbstractAction {
@@ -312,7 +360,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		public void actionPerformed(ActionEvent e) {
 //			editorPanel.checkSchema();
 		}
-	}
+	}//
 
 	public class OpenTestsAction extends AbstractAction {
 		public OpenTestsAction(String text, ImageIcon icon, String desc,
@@ -339,7 +387,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 			testPanel.generateCoverageBasedTests();		
 		}
 	}
-
+	//
 	public class GenerateMutationBasedTestsAction extends AbstractAction {
 		public GenerateMutationBasedTestsAction(String text, ImageIcon icon, String desc,
 				Integer mnemonic) {
@@ -347,7 +395,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 			putValue(SHORT_DESCRIPTION, desc);
 			putValue(MNEMONIC_KEY, mnemonic);
 		}
-
+		
 		public void actionPerformed(ActionEvent e) {
 			testPanel.generateMutationBasedTests();		
 		}
@@ -367,8 +415,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	}
 
 	public class OpenMutantsAction extends AbstractAction {
-		public OpenMutantsAction(String text, ImageIcon icon, String desc,
-				Integer mnemonic) {
+		public OpenMutantsAction(String text, ImageIcon icon, String desc,Integer mnemonic) {
 			super(text, icon);
 			putValue(SHORT_DESCRIPTION, desc);
 			putValue(MNEMONIC_KEY, mnemonic);
@@ -394,7 +441,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 
 	public class RunMutantsAction extends AbstractAction {
 		public RunMutantsAction(String text, ImageIcon icon, String desc,
-				Integer mnemonic) {
+				Integer mnemonic) {//
 			super(text, icon);
 			putValue(SHORT_DESCRIPTION, desc);
 			putValue(MNEMONIC_KEY, mnemonic);
@@ -448,26 +495,27 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		mainTabbedPane.validate();
 		mainTabbedPane.updateUI();
 	}
-	
+	public void setEditorPanel(AbstractPolicyEditor editorPanel){
+		this.editorPanel =   editorPanel;
+	}
 	private void createMainTabbedPane() {
 		editorPanel = new PolicyEditorPanel();
 //		editorPanel = new EditorPanel(this);
 
 		testPanel = new TestPanel(this);
 		mutationPanel = new MutationPanel(this);
-	//	debugPanel = new DebugPanel(this);
+		debugPanel = new DebugPanel(this);
 		
 		mainTabbedPane = new JTabbedPane();
 		mainTabbedPane.setBorder(BorderFactory.createEtchedBorder(0));
 		mainTabbedPane.addTab("Policy",
 				createNavigationIcon("images/policy.gif"), editorPanel);
-		mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
-				testPanel);
-		mainTabbedPane.addTab("Mutants",
-				createNavigationIcon("images/mutation.gif"), mutationPanel);
-		mainTabbedPane.addTab("Debugging",
-				createNavigationIcon("images/mutation.gif"), debugPanel);
-		// mainTabbedPane.addChangeListener(this);
+//		mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
+//				testPanel);
+//		mainTabbedPane.addTab("Debugging",
+//				createNavigationIcon("images/mutation.gif"), debugPanel);
+		
+
 		mainTabbedPane.setSelectedComponent(editorPanel);
 	}
 
@@ -476,11 +524,27 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	}
 
 	public void setToTestPane(){
+		
+		if(mainTabbedPane.indexOfTab("Test") == -1){
+			mainTabbedPane.addTab("Tests", createNavigationIcon("images/test.gif"),
+					testPanel);
+		}
 		mainTabbedPane.setSelectedComponent(testPanel);		
 	}
 
 	public void setToMutantPane(){
+		if(mainTabbedPane.indexOfTab("Mutant") == -1){
+			mainTabbedPane.addTab("Mutants", createNavigationIcon("images/mutation.gif"), mutationPanel);
+		}
 		mainTabbedPane.setSelectedComponent(mutationPanel);		
+	}
+	
+	public void setToDebugPane(){
+		if(mainTabbedPane.indexOfTab("Debud") == -1){
+			mainTabbedPane.addTab("Debugging",
+					createNavigationIcon("images/mutation.gif"), debugPanel);
+		}
+		mainTabbedPane.setSelectedComponent(debugPanel);		
 	}
 
 	private void init() throws Exception {
@@ -526,12 +590,13 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	public File getWorkingPolicyFile() {
 		return editorPanel.getWorkingPolicyFile();
 	}
-
+	
 	public String getWorkingPolicyFilePath() {
 		return editorPanel.getWorkingPolicyFile().getAbsolutePath();
+		
 	}
 
-	public PolicySpreadSheetTestSuite getWorkingTestSuite() {
+	public TestSuiteDemo getWorkingTestSuite() {
 		return testPanel.getPolicySpreadSheetTestSuite();
 	}
 
@@ -543,6 +608,9 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		return testPanel.hasTests();
 	}
 	
+	public TestPanel getTestPanel(){
+		return testPanel;
+	}
 	public boolean hasTestFailure(){
 		return testPanel.hasTestFailure();
 	}
@@ -561,6 +629,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	
 	public static void main(String[] args) {
 		//
+		try{
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -580,6 +649,9 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 				
 			}
 		});
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 }

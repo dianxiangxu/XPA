@@ -163,13 +163,13 @@
                         <!--</weaveDependency>-->
                     <!--</weaveDependencies>-->
                 </configuration>
-                <executions>
+                <!--  <executions>
                     <execution>
                         <goals>
-                            <goal>compile</goal>       <!-- use this goal to weave all your main classes -->
+                            <goal>compile</goal>       
                         </goals>
                     </execution>
-                </executions>
+                </executions>-->
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>

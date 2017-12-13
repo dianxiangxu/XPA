@@ -40,19 +40,19 @@ import org.seal.semanticFaultLocalization.SpectrumBasedDiagnosisResults;
 import org.seal.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
 import org.seal.semanticMutation.Mutant;
 import org.seal.semanticRepair.Repairer;
-import org.seal.testGeneration.Demo;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.MutantDiff;
 import org.seal.xacml.utils.PropertiesLoader;
 import org.seal.xacml.utils.XMLUtil;
+import org.seal.xacml.xpa.XPA;
 
 
 public class DebugPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	
-	private Demo xpa;
+	private XPA xpa;
 	private List<JRadioButton> faultLocalizationMethodRadioButtons;
 	private JTextField depthField;
 	private GeneralTablePanel tablePanel;
@@ -77,7 +77,7 @@ public class DebugPanel extends JPanel {
 	private static int xPathCol;
 	private static int suspiciousScoreCol;
 	
-	public DebugPanel(Demo xpa) {
+	public DebugPanel(XPA xpa) {
 		this.xpa = xpa;
 	}
 

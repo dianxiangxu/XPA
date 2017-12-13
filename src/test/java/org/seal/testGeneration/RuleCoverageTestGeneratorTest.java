@@ -10,13 +10,14 @@ import org.seal.xacml.NameDirectory;
 import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.utils.PropertiesLoader;
+import org.seal.xacml.xpa.XPA;
 import org.umu.editorXacml3.PolicyEditorPanelDemo;
 
 public class RuleCoverageTestGeneratorTest {
 
 	@Test
 	public void testGenerateTests() throws Exception {
-		Demo demo = new Demo();
+		XPA demo = new XPA();
 		String[] policies = {"conference3","fedora-rule3","itrust3","kmarket-blue-policy","kmarket-gold-policy","kmarket-sliver-policy","obligation3","pluto3","HL7"};
 		RuleCoverage requestGenerator;
 		for(int l = 0; l < policies.length;l++){
