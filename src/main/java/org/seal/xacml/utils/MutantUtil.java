@@ -17,7 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.seal.semanticMutation.Mutant;
+import org.seal.xacml.semanticMutation.Mutant;
 
 public class MutantUtil {
 	public static Vector<Vector<Object>> getVectorsForMutants(List<Mutant> mutants){

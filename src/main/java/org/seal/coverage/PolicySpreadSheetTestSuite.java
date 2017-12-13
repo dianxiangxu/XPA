@@ -11,7 +11,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.seal.faultlocalization.TestCellResult;
+import org.seal.xacml.faultlocalization.TestCellResult;
 
 public class PolicySpreadSheetTestSuite {
 

@@ -1,7 +1,7 @@
 package org.seal.coverage;
 
-import org.seal.faultlocalization.SpectrumBasedDiagnosisResults;
-import org.seal.faultlocalization.SpectrumBasedFaultLocalizer;
+import org.seal.xacml.faultlocalization.SpectrumBasedDiagnosisResults;
+import org.seal.xacml.faultlocalization.SpectrumBasedFaultLocalizer;
 
 public class CoverageDemoKmarketSpreadsheetTests {
 	public static void main(String[] args) throws Exception{

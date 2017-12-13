@@ -10,13 +10,13 @@ import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.seal.policyUtils.PolicyLoader;
-import org.seal.semanticMutation.Mutant;
-import org.seal.semanticMutation.Mutator;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
 import org.seal.xacml.TaggedRequest;
 import org.seal.xacml.coverage.RuleCoverage;
+import org.seal.xacml.policyUtils.PolicyLoader;
+import org.seal.xacml.semanticMutation.Mutant;
+import org.seal.xacml.semanticMutation.Mutator;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XACMLElementUtil;

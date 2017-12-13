@@ -7,8 +7,8 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.seal.policyUtils.PolicyLoader;
 import org.seal.xacml.helpers.Z3StrExpressionHelper;
+import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.utils.XMLUtil;
 import org.w3c.dom.Document;
 import org.wso2.balana.ParsingException;

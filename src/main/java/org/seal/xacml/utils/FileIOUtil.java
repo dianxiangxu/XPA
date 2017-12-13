@@ -8,7 +8,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.seal.semanticMutation.Mutant;
+import org.seal.xacml.semanticMutation.Mutant;
 
 public class FileIOUtil {
 	static private String encoding;

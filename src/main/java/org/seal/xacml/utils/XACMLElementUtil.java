@@ -3,9 +3,9 @@ package org.seal.xacml.utils;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import org.seal.combiningalgorithms.ReadPolicy;
-import org.seal.semanticCoverage.PolicyCoverageFactory;
 import org.seal.xacml.NameDirectory;
+import org.seal.xacml.combiningalgorithms.ReadPolicy;
+import org.seal.xacml.semanticCoverage.PolicyCoverageFactory;
 import org.w3c.dom.Node;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.DOMHelper;

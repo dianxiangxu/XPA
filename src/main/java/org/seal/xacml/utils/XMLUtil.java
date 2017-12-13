@@ -1,8 +1,8 @@
 package org.seal.xacml.utils;
 
-import static org.seal.policyUtils.XpathSolver.policyPattern;
-import static org.seal.policyUtils.XpathSolver.policysetPattern;
-import static org.seal.policyUtils.XpathSolver.rulePattern;
+import static org.seal.xacml.policyUtils.XpathSolver.policyPattern;
+import static org.seal.xacml.policyUtils.XpathSolver.policysetPattern;
+import static org.seal.xacml.policyUtils.XpathSolver.rulePattern;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -26,8 +26,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
-import org.seal.policyUtils.PolicyLoader;
 import org.seal.xacml.NameDirectory;
+import org.seal.xacml.policyUtils.PolicyLoader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

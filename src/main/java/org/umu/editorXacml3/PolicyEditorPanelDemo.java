@@ -20,7 +20,7 @@
  */
 package org.umu.editorXacml3;
 
-import org.seal.gui.AbstractPolicyEditor;
+import org.seal.xacml.gui.AbstractPolicyEditor;
 import org.xml.sax.SAXException;
 
 import javax.swing.*;

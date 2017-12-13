@@ -15,7 +15,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.seal.xacml.utils.FileIOUtil;
 import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.PropertiesLoader;
-import org.seal.xacml.xpa.utils.TestUtil;
+import org.seal.xacml.utils.TestUtil;
 
 public class TestSuiteDemo {
 

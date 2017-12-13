@@ -7,7 +7,7 @@ import java.util.*;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.seal.gui.MutationDiffFrame;
+import org.seal.xacml.gui.MutationDiffFrame;
 
 import difflib.*;
 

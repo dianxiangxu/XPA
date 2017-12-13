@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.seal.policyUtils.PolicyLoader;
-import org.seal.semanticMutation.Mutant;
-import org.seal.semanticMutation.Mutator;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
+import org.seal.xacml.policyUtils.PolicyLoader;
+import org.seal.xacml.semanticMutation.Mutant;
+import org.seal.xacml.semanticMutation.Mutator;
 import org.seal.xacml.utils.ExceptionUtil;
 
 public class Test {

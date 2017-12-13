@@ -28,11 +28,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
-import org.seal.gui.AbstractPolicyEditor;
-import org.seal.gui.DebugPanel;
-import org.seal.gui.MutationPanel;
-import org.seal.gui.TestPanel;
 import org.seal.xacml.TestSuiteDemo;
+import org.seal.xacml.gui.AbstractPolicyEditor;
+import org.seal.xacml.gui.DebugPanel;
+import org.seal.xacml.gui.MutationPanel;
+import org.seal.xacml.gui.TestPanel;
 import org.umu.editor.VentanaMensajes;
 import org.umu.editorXacml3.PolicyEditorPanel;
 

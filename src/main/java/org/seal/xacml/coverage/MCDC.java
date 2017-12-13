@@ -1,7 +1,7 @@
 package org.seal.xacml.coverage;
-import static org.seal.policyUtils.XpathSolver.policyPattern;
-import static org.seal.policyUtils.XpathSolver.policysetPattern;
-import static org.seal.policyUtils.XpathSolver.rulePattern;
+import static org.seal.xacml.policyUtils.XpathSolver.policyPattern;
+import static org.seal.xacml.policyUtils.XpathSolver.policysetPattern;
+import static org.seal.xacml.policyUtils.XpathSolver.rulePattern;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,10 +11,10 @@ import java.util.Random;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.seal.policyUtils.PolicyLoader;
 import org.seal.xacml.Attr;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
+import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XMLUtil;
 import org.seal.xacml.utils.Z3StrUtil;

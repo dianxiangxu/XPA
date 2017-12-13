@@ -1,10 +1,10 @@
 
 package org.seal.coverage;
 
-import org.seal.combiningalgorithms.LoadPolicyDemo;
-import org.seal.combiningalgorithms.ReadPolicy;
-import org.seal.combiningalgorithms.loadPolicy;
 import org.wso2.balana.ParsingException;
+import org.seal.xacml.combiningalgorithms.LoadPolicyDemo;
+import org.seal.xacml.combiningalgorithms.ReadPolicy;
+import org.seal.xacml.combiningalgorithms.loadPolicy;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ctx.AbstractRequestCtx;
 import org.wso2.balana.ctx.AbstractResult;
