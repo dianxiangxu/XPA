@@ -12,8 +12,8 @@ Z3-str/z3/obj/
 Z3-str/z3/shell.srcs
 
 #ignore temprorary experiment result files
-experiments/
-Experiments/*
+#experiments/
+#Experiments/*
 !Experiments/conference3/
 Experiments/conference3/*
 !Experiments/conference3/conference3.xml
@@ -85,6 +85,10 @@ Experiments/Simpson1/*
 !Experiments/Simpson2/
 Experiments/Simpson2/*
 !Experiments/Simpson2/Simpson2.xml
+
+!Experiments/HL7/
+Experiments/HL7/*
+!Experiments/HL7/HL7.xml
 
 #ignore cpp temporary files
 # Compiled Object files

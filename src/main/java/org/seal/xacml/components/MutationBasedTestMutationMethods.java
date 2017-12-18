@@ -196,6 +196,28 @@ public class MutationBasedTestMutationMethods {
 	public void setBoxSelectAll(JCheckBox boxSelectAll) {
 		this.boxSelectAll = boxSelectAll;
 	}
+	
+	public List<JCheckBox> getAllBoxes() {
+		List<JCheckBox> boxes = new ArrayList<JCheckBox>();
+		boxes.add(boxPTT);
+		boxes.add(boxPTF);
+		boxes.add(boxCRE);
+		boxes.add(boxRER);
+		boxes.add(boxRTT);
+		boxes.add(boxRTF);
+		boxes.add(boxRCT);
+		boxes.add(boxRCF);
+		boxes.add(boxFPR);
+		boxes.add(boxFDR);
+		boxes.add(boxANF);
+		boxes.add(boxRNF);
+		boxes.add(boxCCA);
+		boxes.add(boxRCCF);
+		boxes.add(boxPCCF);
+		//boxes.add(boxRPTE);
+		boxes.add(boxSelectAll);
+		return boxes;
+	}
 
 
 	public MutationBasedTestMutationMethods(){
@@ -214,8 +236,17 @@ public class MutationBasedTestMutationMethods {
 		boxCCA = new JCheckBox("Change Combining Algorithm (CCA)");
 		boxRCCF = new JCheckBox("Rule Change Comparision Function (RCCF)");
 		boxPCCF = new JCheckBox("Policy Change Comparision Function (PCCF)");
-		boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
+		//boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
 		boxSelectAll = new JCheckBox("Select All");
+		boxSelectAll.addActionListener(new ActionListener() {		 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (boxSelectAll.isSelected())
+		        	setAllIndividualBoxes(true);
+		        else
+		        	setAllIndividualBoxes(false);			
+			}
+        });
 		
 	}
 	
@@ -266,13 +297,13 @@ public class MutationBasedTestMutationMethods {
 		if (boxPCCF.isSelected()) {
 			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
 		}
-		if (boxRPTE.isSelected()) {
+		/*if (boxRPTE.isSelected()) {
 			lst.add("createRemoveParallelTargetElementMutants");
-		}
+		}*/
 		return lst;
 	}
 	
-	private void setAllIndividualBoxes(boolean selected) {
+	public void setAllIndividualBoxes(boolean selected) {
 		boxPTT.setSelected(selected);
 		boxPTF.setSelected(selected);
 		boxCRE.setSelected(selected);
@@ -285,7 +316,7 @@ public class MutationBasedTestMutationMethods {
 		boxFDR.setSelected(selected);
 		boxANF.setSelected(selected);
 		boxRNF.setSelected(selected);
-		boxRPTE.setSelected(selected);
+		//boxRPTE.setSelected(selected);
 		boxRCCF.setSelected(selected);
 		boxPCCF.setSelected(selected);
 		
@@ -297,15 +328,6 @@ public class MutationBasedTestMutationMethods {
 		setAllIndividualBoxes(true);
 		
 		boxSelectAll.setSelected(true);
-		boxSelectAll.addActionListener(new ActionListener() {		 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (boxSelectAll.isSelected())
-		        	setAllIndividualBoxes(true);
-		        else
-		        	setAllIndividualBoxes(false);			
-			}
-        });
 		
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(13, 2));
@@ -321,7 +343,7 @@ public class MutationBasedTestMutationMethods {
 		panel.add(boxFDR);
 		panel.add(boxANF);
 		panel.add(boxRNF);
-		panel.add(boxRPTE);
+		//panel.add(boxRPTE);
 		panel.add(boxCCA);
 		panel.add(boxRCCF);
 		panel.add(boxPCCF);

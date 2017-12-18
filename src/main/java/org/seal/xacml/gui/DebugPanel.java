@@ -32,6 +32,7 @@ import javax.swing.table.TableCellRenderer;
 import org.apache.commons.io.IOUtils;
 import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.xacml.TestRecord;
+import org.seal.xacml.components.MutationBasedTestMutationMethods;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.policyUtils.XpathSolver;
 import org.seal.xacml.semanticCoverage.Coverage;
@@ -56,23 +57,7 @@ public class DebugPanel extends JPanel {
 	private List<JRadioButton> faultLocalizationMethodRadioButtons;
 	private JTextField depthField;
 	private GeneralTablePanel tablePanel;
-	private JCheckBox boxPTT = new JCheckBox("Policy Target True (PTT)");
-	private JCheckBox boxPTF = new JCheckBox("Policy Target False (PTF)");
-	private JCheckBox boxCRC = new JCheckBox("Change Rule CombiningAlgorithm (CRC)");
-	private JCheckBox boxCRE = new JCheckBox("Flip Rule Effect (CRE)");
-	private JCheckBox boxRER = new JCheckBox("Remove One Rule (RER)");
-	private JCheckBox boxANR = new JCheckBox("Add a New Rule (ANR)");
-	private JCheckBox boxRTT = new JCheckBox("Rule Target True (RTT)");
-	private JCheckBox boxRTF = new JCheckBox("Rule Target False (RTF)");
-	private JCheckBox boxRCT = new JCheckBox("Rule Condition True (RCT)");
-	private JCheckBox boxRCF = new JCheckBox("Rule Condition False (RCF)");
-	private JCheckBox boxRCCF = new JCheckBox("Rule Change Comparition Function(RCCF)");
-	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
-	private JCheckBox boxFPR = new JCheckBox("First Permit Rules (FPR)");
-	private JCheckBox boxFDR = new JCheckBox("First Deny Rules (FDR)");
-	private JCheckBox boxANF = new JCheckBox("Add Not Function (ANF)");
-	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
-	private JCheckBox boxSelectAll = new JCheckBox("Select All"); // All 13 types of mutation.
+	private MutationBasedTestMutationMethods mutationOperators = new MutationBasedTestMutationMethods();
 	private JTable table;
 	private static int xPathCol;
 	private static int suspiciousScoreCol;
@@ -93,7 +78,8 @@ public class DebugPanel extends JPanel {
 							List<List<Coverage>> coverageMatrix = PolicyCoverageFactory.getCoverageMatrix();
 				            SpectrumBasedFaultLocalizer faultLocalizer = new SpectrumBasedFaultLocalizer(coverageMatrix,PolicyCoverageFactory.getResults());
 				            try{
-					            SpectrumBasedDiagnosisResults diagnosisResults = new SpectrumBasedDiagnosisResults(faultLocalizer.applyFaultLocalizeMethod(method));
+				            	double[] coefficients = faultLocalizer.applyFaultLocalizeMethod(method);
+					            SpectrumBasedDiagnosisResults diagnosisResults = new SpectrumBasedDiagnosisResults(coefficients);
 					            List<Integer> suspicionList = diagnosisResults.getIndexRankedBySuspicion();
 					            List<Double> suspiciousScore = diagnosisResults.getSuspiciousScore();
 					            InputStream stream = IOUtils.toInputStream(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()).encode(), Charset.defaultCharset());
@@ -177,7 +163,7 @@ public class DebugPanel extends JPanel {
 							Repairer repairer = new Repairer();
 							try{
 								Mutant faultyPolicy =  new Mutant(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()),"");
-								List<String> mutationMethods =getMutationOperatorList();
+								List<String> mutationMethods =mutationOperators.getMutationOperatorList();
 								Mutant mutant = repairer.repairWithSelectedMutantMethods(faultyPolicy, testSuite, method, mutationMethods, depth);
 								if(mutant == null){
 									JOptionPane.showMessageDialog(null, "The policy can not be repaired");
@@ -304,35 +290,13 @@ public class DebugPanel extends JPanel {
 			
 			radioPanel.add(blankLbl6);
 			
-			radioPanel.add(boxPTT);
-			radioPanel.add(boxPTF);
-			radioPanel.add(boxCRC);
-			radioPanel.add(boxCRE);
-			radioPanel.add(boxRER);
-			radioPanel.add(boxANR);
-			radioPanel.add(boxRTT);
-			radioPanel.add(boxRTF);
-			radioPanel.add(boxRCT);
-			radioPanel.add(boxRCF);
-			radioPanel.add(boxRCCF);
-			radioPanel.add(boxPCCF);
-			radioPanel.add(boxFPR);
-			radioPanel.add(boxFDR);
-			radioPanel.add(boxANF);
-			radioPanel.add(boxRNF);
-			radioPanel.add(boxSelectAll);
-			setAllIndividualBoxes(true);
+			
+			for(JCheckBox box: mutationOperators.getAllBoxes()) {
+				radioPanel.add(box);
+			}
+			mutationOperators.setAllIndividualBoxes(true);
 		}
 		
-		boxSelectAll.addActionListener(new ActionListener() {		 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (boxSelectAll.isSelected())
-		        	setAllIndividualBoxes(true);
-		        else
-		        	setAllIndividualBoxes(false);			
-			}
-        });
 		
 		return radioPanel;
 	}
@@ -356,20 +320,12 @@ public class DebugPanel extends JPanel {
 			tablePanel = new GeneralTablePanel(data, columnNames, columnNames.length);
 			tablePanel.setMinRows(data.size());
 			
-
-			
-			
 			table = tablePanel.getTable();
 			suspiciousScoreCol = table.getColumn("Suspicious Score").getModelIndex();
 			
 			for(int i = 0; i<suspicions.size();i++){
 				table.getColumnModel().getColumn(suspiciousScoreCol).setCellRenderer(new susPiciousColumnCellRenderer());
 			}
-			
-			
-			
-		
-			
 			JScrollPane scrollpane = new JScrollPane(tablePanel);
 			add(scrollpane, BorderLayout.CENTER);
 			xpa.setToDebugPane();
@@ -378,80 +334,6 @@ public class DebugPanel extends JPanel {
 			e.printStackTrace();
 		}
 	}
-	
-	private void setAllIndividualBoxes(boolean selected) {
-		boxPTT.setSelected(selected);
-		boxPTF.setSelected(selected);
-		boxCRC.setSelected(selected);
-		boxCRE.setSelected(selected);
-		boxRER.setSelected(selected);
-		boxRTT.setSelected(selected);
-		boxRTF.setSelected(selected);
-		boxRCT.setSelected(selected);
-		boxRCF.setSelected(selected);
-		boxRCCF.setSelected(selected);
-		boxPCCF.setSelected(selected);
-		boxFPR.setSelected(selected);
-		boxFDR.setSelected(selected);
-		boxANF.setSelected(selected);
-		boxANR.setSelected(selected);
-		boxRNF.setSelected(selected);
-		boxSelectAll.setSelected(selected);
-	}
-	
-	private List<String> getMutationOperatorList(){
-		List<String> lst = new ArrayList<String>();
-		if (boxPTT.isSelected()) {
-			lst.add("createPolicyTargetTrueMutants");
-		}
-		if (boxPTF.isSelected()) {
-			lst.add("createPolicyTargetFalseMutants");
-		}
-		if (boxCRC.isSelected()) {
-			lst.add("createCombiningAlgorithmMutants");
-		}
-		if (boxCRE.isSelected()) {
-			lst.add("createRuleEffectFlippingMutants");
-		}
-		if (boxRER.isSelected()) {
-			lst.add("createRemoveRuleMutants");
-		}
-		if (boxANR.isSelected()) {
-			lst.add("createAddNewRuleMutants");
-		}
-		if (boxRTT.isSelected()) {
-			lst.add("createRuleTargetTrueMutants");
-		}
-		if (boxRTF.isSelected()) {
-			lst.add("createRuleTargetFalseMutants");
-		}
-		if (boxRCT.isSelected()) {
-			lst.add("createRuleConditionTrueMutants");
-		}
-		if (boxRCF.isSelected()) {
-			lst.add("createRuleConditionFalseMutants");
-		}
-		if (boxRCCF.isSelected()) {
-			lst.add("createRuleChangeComparisonFunctionMutants");
-		}
-		if (boxPCCF.isSelected()) {
-			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
-		}
-		if (boxFPR.isSelected()) {
-			lst.add("createFirstPermitRuleMutants");
-		}
-		if (boxFDR.isSelected()) {
-			lst.add("createFirstDenyRuleMutants");
-		}
-		if (boxANF.isSelected()) {
-			lst.add("createAddNotFunctionMutants");
-		}
-		if (boxRNF.isSelected()) {
-			lst.add("createRemoveNotFunctionMutants");
-		}
-		return lst;
-	}
-	
 	static class XPAthColumnCellRenderer extends DefaultTableCellRenderer {
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
 			Component c = super.getTableCellRendererComponent(table, value,isSelected, hasFocus, row, column);
