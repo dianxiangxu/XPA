@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 
 import javax.swing.JCheckBox;
@@ -27,8 +29,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -42,6 +46,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.components.MutationBasedTestMutationMethods;
+import org.seal.xacml.components.ProgressBarUtil;
 import org.seal.xacml.gui.DebugPanel.XPAthColumnCellRenderer;
 import org.seal.xacml.mutation.PolicySpreadSheetMutantSuiteDemo;
 import org.seal.xacml.policyUtils.PolicyLoader;
@@ -422,6 +427,7 @@ public class MutationPanel extends JPanel {
 		
 		int result = JOptionPane.showConfirmDialog(xpa, panel,"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
 		Map<String,String> mutantOperators = new HashMap<String,String>();
+		Random rand = new Random();
 		if (result == JOptionPane.OK_OPTION) {
 			try {
 				File policyFile = xpa.getWorkingPolicyFile();
@@ -429,10 +435,22 @@ public class MutationPanel extends JPanel {
 		        Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFile)));
 		        List<Mutant> mutants1 = mutator.generateSelectedMutants(mutationOperators1.getMutationOperatorList());
 				List<Mutant> mutants2 = new ArrayList<Mutant>();
-		        for(Mutant mutant:mutants1) {
+				int secondOrderOperatorsLength = mutationOperators2.getMutationOperatorList().size();
+		        int max = mutants1.size() * secondOrderOperatorsLength;
+		        int currentValue = 0;
+		        ProgressBarUtil pb = new ProgressBarUtil();
+				for(Mutant mutant:mutants1) {
 		        	 Mutator secondOrderMutator = new Mutator(new Mutant(mutant.getPolicy(), mutant.getName()));
 				     List<Mutant> mutants = secondOrderMutator.generateSelectedMutants(mutationOperators2.getMutationOperatorList());
-					 mutants2.addAll(mutants);	
+				     for(Mutant m: mutants) {
+				    	 for(int fault:mutant.getFaultLocations()) {
+				    		 m.addFaultLocationAt(fault, 0);
+				    	}
+				    }
+				    currentValue += secondOrderOperatorsLength;
+				        pb.showProgress(currentValue-1, max); 
+
+				    mutants2.addAll(mutants);	
 				}
 		        File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
 		        if(mutantsFolder.exists()){
@@ -446,7 +464,7 @@ public class MutationPanel extends JPanel {
 				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants2,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants2,XACMLElementUtil.getPolicyName(policyFile) + "_mutants.xls");
 				setUpMutantPanel(mutants2);
-				
+				pb.close();
 			
 			} catch (Exception e) {
 				e.printStackTrace();

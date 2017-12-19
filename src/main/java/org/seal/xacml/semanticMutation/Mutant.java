@@ -8,6 +8,7 @@ import org.wso2.balana.ctx.EvaluationCtx;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,16 @@ public class Mutant extends AbstractPolicy {
 
     public List<Integer> getFaultLocations() {
         return faultLocations;
+    }
+    
+    public void addFaultLocationAt(int faultLocation,int index) {
+        List<Integer> faults = new ArrayList<Integer>();
+        faults.add(faultLocation);
+        for(Integer f:faultLocations) {
+        	faults.add(f);
+        }
+        
+    	faultLocations = Collections.unmodifiableList(faults);
     }
 
     public AbstractPolicy getPolicy() {

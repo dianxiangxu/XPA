@@ -129,7 +129,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 				"GenerateMutants", new Integer(KeyEvent.VK_T));
 
 		generateSecondOrderMutantsAction = new GenerateSecondOrderMutantsAction(
-				"Generate Second OrderMutants...", createNavigationIcon("generatemutants"),
+				"Generate Second-Order Mutants...", createNavigationIcon("generatemutants"),
 				"GenerateSecondOrderMutants", new Integer(KeyEvent.VK_B));
 
 		testMutantsAction = new RunMutantsAction("Test Mutants",
