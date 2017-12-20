@@ -452,7 +452,7 @@ public class MutationPanel extends JPanel {
 
 				    mutants2.addAll(mutants);	
 				}
-		        File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
+		        File mutantsFolder = new File(MutantUtil.getSecondOrderMutantsFolderForPolicyFile(policyFile).toString());
 		        if(mutantsFolder.exists()){
 		        	FileUtils.cleanDirectory(mutantsFolder);
 		        } else{

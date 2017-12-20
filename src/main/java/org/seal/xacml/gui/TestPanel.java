@@ -219,11 +219,21 @@ public class TestPanel extends JPanel {
 				}
 			} else if (MCDCRadio.isSelected()) {
 				try{
+					MCDC requestGenerator = new MCDC(policyFilePath,true);
+					List<String> requests = requestGenerator.generateTests();
+					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.MCDC_COVERAGE);
+					testSuite.save();
+					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MCDC_COVERAGE);
+				}catch(Exception e){
+					ExceptionUtil.handleInDefaultLevel(e);
+				}
+			} else if (MCDCRadio_NoError.isSelected()) {
+				try{
 					MCDC requestGenerator = new MCDC(policyFilePath,false);
 					List<String> requests = requestGenerator.generateTests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.DECISION_COVERAGE_NO_ERROR);
+					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.MCDC_COVERAGE_NO_ERROR);
 					testSuite.save();
-					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.DECISION_COVERAGE_NO_ERROR);
+					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MCDC_COVERAGE_NO_ERROR);
 				}catch(Exception e){
 					ExceptionUtil.handleInDefaultLevel(e);
 				}

@@ -72,14 +72,12 @@ public class MCDC extends RequestGeneratorBase{
 			boolean sat = false;
 			ruleTargetExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
 			if(target!=null){
-				z3ExpressionHelper.getMCDCExpssions(target);
+				z3ExpressionHelper.getTrueTargetExpression(target);
 				String falseExpression = preExpression.toString()+z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator() + falsifyPreviousRules;
 				sat = Z3StrUtil.processExpression(falseExpression, z3ExpressionHelper);
-			    if (sat) {
 			    	if (sat) {
 					    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 					}
-			    }
 			    if(error){
 			    	IndTarget(target,preExpression.toString() + falsifyPreviousRules);
 			    }
@@ -90,18 +88,22 @@ public class MCDC extends RequestGeneratorBase{
 			ruleExpression.append(ruleTargetExpression);
 			ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
 			ruleNotConditionExpression.append(z3ExpressionHelper.getFalseConditionExpression(condition));
-			String expresion = preExpression.toString() + ruleExpression + System.lineSeparator() + falsifyPreviousRules;
-			String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
-			
-			sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
-			if (sat){
-				addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+			//String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
+			List<String> ruleExprs = getMCDCExpressions(preExpression.toString() + ruleExpression.toString());
+			List<String> expressions = new ArrayList<String>();
+			for(String e:ruleExprs) {
+				String expresion = (e + falsifyPreviousRules);
+				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
+				if (sat){
+					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+				}
 			}
+			
 			if(condition!=null){
-				sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
+				/*sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
 			    if (sat) {
 			    	addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-			    }
+			    }*/
 			    if(error){
 			    	IndCondition(condition, preExpression.toString() + System.lineSeparator() +ruleTargetExpression + System.lineSeparator() + falsifyPreviousRules);
 			    }
@@ -113,13 +115,19 @@ public class MCDC extends RequestGeneratorBase{
 		    Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
 		    if (targetNode != null) {
 	            target = Target.getInstance(targetNode, policyMetaData);
-	            if(target.getAnyOfSelections().size()>0){
+	            List<AnyOfSelection> anyOfSelections = target.getAnyOfSelections();
+	            if(anyOfSelections.size() > 0){
 	            	StringBuffer expresion = z3ExpressionHelper.getFalseTargetExpression(target);
 	            	expresion.append(preExpression);
-	            	boolean sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
-	            	if (sat){
-	            		addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-	            	}
+	            	List<String> tExprs = getMCDCExpressions(expresion.toString());
+	    			List<String> expressions = new ArrayList<String>();
+	    			boolean sat = false; 
+	    			for(String e:tExprs) {
+	    				sat = Z3StrUtil.processExpression(e, z3ExpressionHelper);
+	    				if (sat){
+	    					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+	    				}
+	    			}
 	            	if(error){
 	            		IndTarget(target,preExpression.toString());
 	            	}
@@ -140,6 +148,66 @@ public class MCDC extends RequestGeneratorBase{
 		    }
 		}
     }
+	
+	public List<String> getMCDCExpressions(String expression){
+		
+		List<String> aExprs = new ArrayList<String>();
+		List<Integer> lIndex = new ArrayList<Integer>();
+		List<Integer> rIndex = new ArrayList<Integer>();
+		
+		int l=0;
+		int s = 0;
+		
+		for(int i = 0; i < expression.length(); i++) {
+			if(expression.charAt(i)=='(') {
+				l = i;
+				s = 1;
+			} else if(expression.charAt(i)=='>' || expression.charAt(i)=='<' || expression.charAt(i)=='=') {
+				if(s == 1) {
+					s = 2;
+				}
+			} else if(expression.charAt(i)==')'){
+				if(s == 2) {
+					s = 0;
+					String aExpr = expression.substring(l, i+1);
+					lIndex.add(l);
+					rIndex.add(i+1);
+					aExprs.add(aExpr);
+				}
+			}
+		}
+		List<String> aNExprs = new ArrayList<String>();
+		for(String e:aExprs) {
+			aNExprs.add("(not " + e + ")");
+		}
+		List<String> expressions = new ArrayList<String>();
+		expressions.add(expression);
+		for(int i = 0; i < aExprs.size();i++) {
+			String expr = expression.substring(0,(int)lIndex.get(i)) + aNExprs.get(i).toString() + expression.substring((int)rIndex.get(i));
+			expressions.add(expr);
+		}
+		String nExpression = expression.substring(0);
+		List<Integer> nlIndex = new ArrayList<Integer>();
+		List<Integer> nrIndex = new ArrayList<Integer>();
+		int offset = 0;
+		for(int i = 0; i < aExprs.size();i++) {
+			 int lF = lIndex.get(i)+offset;
+			 nExpression = nExpression.substring(0,lF) + aNExprs.get(i).toString() + nExpression.substring((int)rIndex.get(i)+offset);
+			 nlIndex.add(lF);
+			 nrIndex.add(lF + aNExprs.get(i).toString().length());
+			 offset += 6;
+				
+		}
+		expressions.add(nExpression);
+		for(int i = 0; i < aExprs.size();i++) {
+			String expr = nExpression.substring(0,(int)nlIndex.get(i))  + aExprs.get(i).toString() +" "+ nExpression.substring((int)nrIndex.get(i));
+			expressions.add(expr);
+		}
+		return expressions;
+		
+	}
+	
+	
 
 	public List<String> generateTests(){
 		StringBuilder preExpression = new StringBuilder();
@@ -350,6 +418,7 @@ public class MCDC extends RequestGeneratorBase{
 			}
 		}
 	}
+	
 	
 	private Node findInChildNodes(Node parent, String localName) {
         List<Node> childNodes = XMLUtil.getChildNodeList(parent);
