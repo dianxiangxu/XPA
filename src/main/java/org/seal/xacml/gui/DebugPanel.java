@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -27,11 +25,9 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
-
 import org.apache.commons.io.IOUtils;
-import org.seal.coverage.PolicySpreadSheetTestRecord;
 import org.seal.xacml.TestRecord;
+import org.seal.xacml.components.JPanelPB;
 import org.seal.xacml.components.MutationBasedTestMutationMethods;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.policyUtils.XpathSolver;
@@ -49,7 +45,7 @@ import org.seal.xacml.utils.XMLUtil;
 import org.seal.xacml.xpa.XPA;
 
 
-public class DebugPanel extends JPanel {
+public class DebugPanel extends JPanelPB {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -65,11 +61,14 @@ public class DebugPanel extends JPanel {
 	public DebugPanel(XPA xpa) {
 		this.xpa = xpa;
 	}
-
+	
+	
 	public void localizeFault(){
 		if(checkInputs()){
 			if (hasFault(getTestSuite())) {
+				
 				int result = JOptionPane.showConfirmDialog(xpa, createPanel(false),"Please Select Fault Localization Method",JOptionPane.OK_CANCEL_OPTION);
+				this.startProgressStatus();
 				if(result == 0){
 					for(JRadioButton button:faultLocalizationMethodRadioButtons){
 						if(button.isSelected()){
@@ -128,6 +127,7 @@ public class DebugPanel extends JPanel {
 							
 
 				}
+				this.stopProgressStatus();
 			} else{
 				JOptionPane.showMessageDialog(xpa, "There is no fault in this policy");
 			}
@@ -148,7 +148,7 @@ public class DebugPanel extends JPanel {
 			if (hasFault(testSuite)) {
 				int result = JOptionPane.showConfirmDialog(xpa, createPanel(true),"Please provide following details",JOptionPane.OK_CANCEL_OPTION);
 				if(result == 0){
-					
+					this.startProgressStatus();
 					for(JRadioButton button:faultLocalizationMethodRadioButtons){
 						if(button.isSelected()){
 							String method = button.getText();
@@ -174,7 +174,9 @@ public class DebugPanel extends JPanel {
 					                		 fileToSave = new File(fileToSave.toString() + ".xml");
 					                	 }
 					                	 FileIOUtil.writeFile(fileToSave, mutant.encode());
+					                	 this.stopProgressStatus();
 					                	 JOptionPane.showMessageDialog(null, "The repaired policy is saved at " + fileName);
+					                	 this.startProgressStatus();
 					                	 String originalFile = xpa.getWorkingPolicyFilePath();
 					                	 String repairedFile = fileName;
 					                	 MutantDiff.show(originalFile, repairedFile);
@@ -186,7 +188,7 @@ public class DebugPanel extends JPanel {
 			                
 				        }
 					}
-					
+					this.stopProgressStatus();
 				}
 			} else{
 				JOptionPane.showMessageDialog(xpa, "There is no fault in this policy");
@@ -212,7 +214,7 @@ public class DebugPanel extends JPanel {
 	private TestSuite getTestSuite(){
 		List<String> requests = new ArrayList<String>();
 		List<String> oracles = new ArrayList<String>();
-		for(TestRecord record: xpa.getTestPanel().getTestSuite().getTestRecords()){
+		for(TestRecord record: xpa.getTestPanel().getPolicyTestSuite().getTestRecords()){
 			requests.add(record.getRequest());
 			oracles.add(record.getOracle());
 		}
@@ -229,7 +231,7 @@ public class DebugPanel extends JPanel {
 			JOptionPane.showMessageDialog(xpa, "There are no tests.");
 			return false;
 		}
-		for(TestRecord record: xpa.getTestPanel().getTestSuite().getTestRecords()){
+		for(TestRecord record: xpa.getTestPanel().getPolicyTestSuite().getTestRecords()){
 			if(record.getOracle().equals("")){
 				JOptionPane.showMessageDialog(xpa, "There are no oracles in Test Suite");
 				return false;

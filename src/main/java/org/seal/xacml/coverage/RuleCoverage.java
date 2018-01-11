@@ -8,9 +8,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
-import org.seal.xacml.helpers.Z3StrExpressionHelper;
-import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.RequestBuilder;
+import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.XMLUtil;
 import org.seal.xacml.utils.Z3StrUtil;
 import org.w3c.dom.Element;

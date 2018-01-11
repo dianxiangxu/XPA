@@ -27,14 +27,17 @@ public class Z3StrUtil {
 			}
 		}
 		Iterator<Map.Entry<String, String>> iter = nameMap.entrySet().iterator();
+		StringBuilder getValueExpr = new StringBuilder("(get-value (");
 		while (iter.hasNext()) {
 			Map.Entry<String,String> entry = (Map.Entry<String,String>) iter.next();
 			String name = entry.getValue().toString();
 			String type = typeMap.get(entry.getValue().toString()).toString();
-			z3input.insert(0, "(declare-variable " + name + " " + type + ")\n");
+			z3input.insert(0, "(declare-const " + name + " " + type + ")\n");
+			getValueExpr.append(" "+name);
 		}
 		z3input.append("(check-sat)" + "\n");
-		z3input.append("(get-model)" + "\n");
+		getValueExpr.append(")) " + System.lineSeparator());
+		z3input.append(getValueExpr.toString());
 		FileIOUtil.writeFile(new File("./Z3_input"),z3input.toString());
 	}
 	
@@ -51,14 +54,20 @@ public class Z3StrUtil {
 			}
 		}
 		Iterator<Map.Entry<String,String>> iter = helper.getNameMap().entrySet().iterator();
+		StringBuilder getValueExpr = new StringBuilder("(get-value (");
+		
 		while (iter.hasNext()) {
 			Map.Entry<String,String> entry = (Map.Entry<String,String>) iter.next();
 			String name = entry.getValue().toString();
 			String type = helper.getTypeMap().get(entry.getValue().toString()).toString();
-			z3input.insert(0, "(declare-variable " + name + " " + type + ")" + System.lineSeparator());
+			z3input.insert(0, "(declare-const " + name + " " + type + ")" + System.lineSeparator());
+			if(input.indexOf(name)!=-1) {
+				getValueExpr.append(" "+name);
+			}
 		}
 		z3input.append("(check-sat)" + System.lineSeparator());
-		z3input.append("(get-model)" + System.lineSeparator());
+		getValueExpr.append("))" + System.lineSeparator());
+		z3input.append(getValueExpr.toString());
 		FileIOUtil.writeFile(new File("./Z3_input"),z3input.toString());
 	}
 	
@@ -73,9 +82,9 @@ public class Z3StrUtil {
 		}
 	}
     
-	public static void buildZ3Output() throws IOException{
+	public static void buildZ3Output() throws IOException{ 
 		Runtime run = Runtime.getRuntime();
-		Process p = run.exec("Z3-str/Z3-str.py -f ./Z3_input");
+		Process p = run.exec("./z3/build/z3 smt.string_solver=z3str3 -smt2 ./Z3_input");
 		BufferedInputStream in = new BufferedInputStream(p.getInputStream());
 		BufferedReader inBr = new BufferedReader(new InputStreamReader(in));
 		StringBuffer tmpTrack = new StringBuffer();
@@ -94,7 +103,7 @@ public class Z3StrUtil {
 		BufferedReader br = new BufferedReader(fr);
 		String s;
 		if ((s = br.readLine()) != null) {
-			if (s.equals("* v-ok")) {
+			if (s.equals("sat")) {
 				fr.close();
 				return true;
 			}

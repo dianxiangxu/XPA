@@ -17,7 +17,7 @@ import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.PropertiesLoader;
 import org.seal.xacml.utils.TestUtil;
 
-public class TestSuiteDemo {
+public class PolicyTestSuite {
 
 	public static final String TEST_KEYWORD = "Test";
 
@@ -25,13 +25,13 @@ public class TestSuiteDemo {
 	private String policyFilePath;
 	private String type;
 
-	public TestSuiteDemo(List<TestRecord> requestRecords, String policyFilePath, String type) {
+	public PolicyTestSuite(List<TestRecord> requestRecords, String policyFilePath, String type) {
 		this.testRecords = requestRecords;
 		this.policyFilePath = policyFilePath;
 		this.type = type;
 	}
 	
-	public TestSuiteDemo(String policyFilePath,List<String> requests, String type) {
+	public PolicyTestSuite(String policyFilePath,List<String> requests, String type) {
 		this.testRecords = new ArrayList<TestRecord>();
 		for(int i = 0; i < requests.size();i++){
 			testRecords.add(new TestRecord(requests.get(i),"",TestUtil.getName(i)));
@@ -40,7 +40,7 @@ public class TestSuiteDemo {
 		this.type = type;
 	}
 	
-	public TestSuiteDemo(String policyFilePath, String type, List<TaggedRequest> requests) {
+	public PolicyTestSuite(String policyFilePath, String type, List<TaggedRequest> requests) {
 		this.testRecords = new ArrayList<TestRecord>();
 		for(int i = 0; i < requests.size();i++){
 			testRecords.add(new TestRecord(requests.get(i).getBody(),"",TestUtil.getName(i) + "-" + requests.get(i).getTitle()));
@@ -49,7 +49,7 @@ public class TestSuiteDemo {
 		this.type = type;
 	}
 
-	public TestSuiteDemo(String testSuiteMetaFilePath, String policyFilePath) throws Exception {
+	public PolicyTestSuite(String testSuiteMetaFilePath, String policyFilePath) throws Exception {
 		this.policyFilePath = policyFilePath;
 		this.testRecords = readTestSuite(testSuiteMetaFilePath);
 	}

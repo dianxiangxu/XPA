@@ -4,18 +4,13 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,57 +20,40 @@ import java.util.Vector;
 
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.seal.xacml.TestRecord;
+import org.seal.xacml.components.JPanelPB;
 import org.seal.xacml.components.MutationBasedTestMutationMethods;
-import org.seal.xacml.components.ProgressBarUtil;
-import org.seal.xacml.gui.DebugPanel.XPAthColumnCellRenderer;
-import org.seal.xacml.mutation.PolicySpreadSheetMutantSuiteDemo;
+import org.seal.xacml.mutation.PolicySpreadSheetMutantSuite;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.semanticCoverage.TestSuite;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.semanticMutation.Mutator;
 import org.seal.xacml.utils.FileIOUtil;
+import org.seal.xacml.utils.MiscUtil;
 import org.seal.xacml.utils.MutantUtil;
 import org.seal.xacml.utils.PropertiesLoader;
 import org.seal.xacml.utils.XACMLElementUtil;
-import org.seal.xacml.utils.XMLUtil;
 import org.seal.xacml.xpa.XPA;
 import org.umu.editor.XMLFileFilter;
-import org.w3c.dom.NodeList;
 import org.wso2.balana.AbstractPolicy;
 
-import sun.security.provider.certpath.Builder;
 
-import com.sun.xml.internal.txw2.Document;
-
-
-
-
-public class MutationPanel extends JPanel {
+public class MutationPanel extends JPanelPB {
 	
 	private static final long serialVersionUID = 1L;
 
 	private XPA xpa;	
-	private PolicySpreadSheetMutantSuiteDemo mutantSuite;
+	private PolicySpreadSheetMutantSuite mutantSuite;
 	private Vector<Vector<Object>> data;
    
 	private GeneralTablePanel tablePanel;
@@ -98,23 +76,17 @@ public class MutationPanel extends JPanel {
 	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
 	 
 	 
-	private JTable table;
-	private static int xPathCol;
 	
 	private JCheckBox boxFPR = new JCheckBox("First Permit Rules (FPR)");
 	private JCheckBox boxFDR = new JCheckBox("First Deny Rules (FDR)");
-	//private JCheckBox boxRTR = new JCheckBox("Rule Type Replaced (RTR) - Not implemented");
-	//private JCheckBox boxFCF = new JCheckBox("Flip Comparison Function (FCF)");
-	
-	//private JCheckBox boxRUF = new JCheckBox("Remove Uniqueness Function (RUF) - Not Implemented"); Turner Lehmbecker
-	
 	private JCheckBox boxANF = new JCheckBox("Add Not Function (ANF)");
 	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
 	//private JCheckBox boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
-	//private JCheckBox boxRPCE = new JCheckBox("Remove Parallel Condition Element (RPCE) - Not implemented");
 	
-	private JCheckBox boxSelectAll = new JCheckBox("Select All"); // All 13 types of mutation.
-	private JCheckBox boxSelectEight = new JCheckBox("Select 8"); // 8 type (PTT, PTF, CRC, CRE, RTT, RTF, RCT, RCF)
+	private JCheckBox boxSelectAll = new JCheckBox("Select All"); 
+	
+	private JTable table;
+	private static int xPathCol;
 	
 	private JPanel createPanel() {
 		setAllIndividualBoxes(true);
@@ -127,16 +99,6 @@ public class MutationPanel extends JPanel {
 		        	setAllIndividualBoxes(true);
 		        else
 		        	setAllIndividualBoxes(false);			
-			}
-        });
-		
-		boxSelectEight.addActionListener(new ActionListener() {		 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (boxSelectEight.isSelected())
-		        	setEightBoxes(true);
-		        else
-		        	setEightBoxes(false);			
 			}
         });
 		
@@ -156,18 +118,11 @@ public class MutationPanel extends JPanel {
 		myPanel.add(boxPCCF);
 		myPanel.add(boxFPR);
 		myPanel.add(boxFDR);
-		//myPanel.add(boxRTR);
-		//myPanel.add(boxFCF);
 		myPanel.add(boxANF);
 		myPanel.add(boxRNF);
 		//myPanel.add(boxRPTE);
-		//myPanel.add(boxRPCE);
-		//myPanel.add(boxRUF);
 		myPanel.add(boxSelectAll);
-		myPanel.add(boxSelectEight);
-		
 		myPanel.setBorder(new TitledBorder(new EtchedBorder(), ""));
-
 		return myPanel;
 	}
 
@@ -178,7 +133,6 @@ public class MutationPanel extends JPanel {
 		boxCRC.setSelected(selected);
 		boxCRE.setSelected(selected);
 		boxRER.setSelected(selected);
-		//boxANR.setSelected(selected); //temporarily not considered.
 		boxRTT.setSelected(selected);
 		boxRTF.setSelected(selected);
 		boxRCT.setSelected(selected);
@@ -187,35 +141,14 @@ public class MutationPanel extends JPanel {
 		boxPCCF.setSelected(selected);
 		boxFPR.setSelected(selected);
 		boxFDR.setSelected(selected);
-		//boxRTR.setSelected(selected); // Not implemented
-		//boxFCF.setSelected(selected); // not applicable in our examples.
 		boxANF.setSelected(selected);
 		boxANR.setSelected(selected);
 		boxRNF.setSelected(selected);
 		//boxRPTE.setSelected(selected);
-		//boxRPCE.setSelected(selected); // Not implemented
 		boxSelectAll.setSelected(selected);
-		boxSelectEight.setSelected(false);
 	}
 	
-	// set Eight type checked boxes. (PTT, PTF, CRC, CRE, RTT, RTF, RCT, RCF)
-	private void setEightBoxes(boolean selected) {
-		
-		setAllIndividualBoxes(false);
-		
-		boxPTT.setSelected(selected);
-		boxPTF.setSelected(selected);
-		boxCRC.setSelected(selected);
-		boxCRE.setSelected(selected);
-		boxRTT.setSelected(selected);
-		boxRTF.setSelected(selected);
-		boxRCT.setSelected(selected);
-		boxRCF.setSelected(selected);
-		
-		boxSelectEight.setSelected(selected);
-	}
-	
-	public void setUpMutantPanel(List<Mutant> mutants){
+	public void setUpMutantPanel(List<Mutant> mutants, String mutantsFolder){
 		removeAll();
 		setLayout(new BorderLayout());
 		String[] columnNames = { "No", "Mutant Name", "Mutant File", "Bug Position", "Test Result" };
@@ -241,6 +174,7 @@ public class MutationPanel extends JPanel {
 			xPathCol = table.getColumn("Mutant File").getModelIndex();
 			
 			table.getColumnModel().getColumn(xPathCol).setCellRenderer(new XPAthColumnCellRenderer());
+			final String folder = mutantsFolder;
 			table.addMouseListener(new java.awt.event.MouseAdapter() {
 			    @Override
 			    public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -252,10 +186,14 @@ public class MutationPanel extends JPanel {
 			            String xPathString = table.getValueAt( row, col).toString();
 			            
 			            String pathString = xpa.getWorkingPolicyFilePath() ;
-			            
-			            String splitString = pathString.substring(0,pathString.lastIndexOf("/"));
-			            
-			            String resultString = splitString  +  File.separator + PropertiesLoader.getProperties("config").getProperty("mutantsFolderName") + File.separator + xPathString ;			            			      
+			            String splitString = null;
+			            String resultString = null;
+			            if(pathString!=null) {
+			            	splitString = pathString.substring(0,pathString.lastIndexOf("/"));
+			            	resultString = splitString  +  File.separator + folder + File.separator + xPathString ;
+			            } else {
+			            	resultString = mutantSuite.getMutantsDirectory() + File.separator + xPathString ;
+			            }
 			            
 			            StringBuilder sb = new StringBuilder();
 			            try (BufferedReader br = new BufferedReader(new FileReader(resultString))) {
@@ -332,6 +270,10 @@ public class MutationPanel extends JPanel {
 		fileChooser.setMultiSelectionEnabled(false);
 		if (xpa.getWorkingPolicyFile()!=null)
 			fileChooser.setCurrentDirectory(xpa.getWorkingPolicyFile().getParentFile());
+		else {
+			fileChooser.setCurrentDirectory((new File(".")));
+		}
+		
 		fileChooser.setFileFilter(new XMLFileFilter("xls"));
 		fileChooser.setDialogTitle("Open Mutants");
 		if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -342,15 +284,22 @@ public class MutationPanel extends JPanel {
 							"Error of Selection",
 							JOptionPane.WARNING_MESSAGE);
 			} else {
+				this.startProgressStatus();
 				try {
 					//mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantSuiteFile.getAbsolutePath(), xpa.getWorkingPolicyFilePath());
-					mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantSuiteFile.getAbsolutePath(), MutantUtil.getPolicyName(mutantSuiteFile.toString()));
-					
-					setUpMutantPanel(mutantSuite.getMutantList());
+					mutantSuite = new PolicySpreadSheetMutantSuite(mutantSuiteFile.getAbsolutePath(), MutantUtil.getPolicyName(mutantSuiteFile.toString()));
+					String folder;
+					if(mutantSuiteFile.getAbsolutePath().indexOf("secondOrderMutants") == -1) {
+						folder = PropertiesLoader.getProperties("config").getProperty("mutantsFolderName");
+					} else {
+						folder = PropertiesLoader.getProperties("config").getProperty("secondOrderMutantsFolderName");
+					}
+					setUpMutantPanel(mutantSuite.getMutantList(), folder);
 				}
 				catch(Exception e){
 					JOptionPane.showMessageDialog(xpa, "Invalid mutant suite.");
 				}
+				this.stopProgressStatus();
 			}
 		}
 	}
@@ -365,10 +314,12 @@ public class MutationPanel extends JPanel {
 		int result = JOptionPane.showConfirmDialog(xpa, mutPanel.createPanel(),"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
 		Map<String,String> mutantOperators = new HashMap<String,String>();
 		if (result == JOptionPane.OK_OPTION) {
+			this.startProgressStatus();
 			try {
 				File policyFile = xpa.getWorkingPolicyFile();
 				AbstractPolicy policy = PolicyLoader.loadPolicy(policyFile);
 		        Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFile)));
+		        
 		        List<Mutant> mutants = mutator.generateSelectedMutants(mutPanel.getMutationOperatorList());
 				
 		        File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
@@ -380,18 +331,21 @@ public class MutationPanel extends JPanel {
 		        for(Mutant mutant: mutants){
 					FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
 				}
-				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
+				mutantSuite = new PolicySpreadSheetMutantSuite(mutantsFolder.toString(),mutants,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants,XACMLElementUtil.getPolicyName(policyFile) + "_mutants.xls");
-				setUpMutantPanel(mutants);
+				setUpMutantPanel(mutants, PropertiesLoader.getProperties("config").getProperty("mutantsFolderName"));
 				
 			
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			this.stopProgressStatus();
 		}
+		
 	}
 	
 	public void generateSecondOrderMutants() {
+		
 		if (!xpa.hasWorkingPolicy()) {
 			JOptionPane.showMessageDialog(xpa, "There is no policy.");
 			return;
@@ -402,6 +356,7 @@ public class MutationPanel extends JPanel {
 		JLabel label = new JLabel("Select First Order Mutation Operators");
 		panel.add(label);
 		panel.add(blankLbl);
+		this.startProgressStatus();
 		MutationBasedTestMutationMethods mutationOperators1 = new MutationBasedTestMutationMethods();
 		for(JCheckBox box: mutationOperators1.getAllBoxes()) {
 			panel.add(box);
@@ -438,8 +393,7 @@ public class MutationPanel extends JPanel {
 				int secondOrderOperatorsLength = mutationOperators2.getMutationOperatorList().size();
 		        int max = mutants1.size() * secondOrderOperatorsLength;
 		        int currentValue = 0;
-		        ProgressBarUtil pb = new ProgressBarUtil();
-				for(Mutant mutant:mutants1) {
+		       for(Mutant mutant:mutants1) {
 		        	 Mutator secondOrderMutator = new Mutator(new Mutant(mutant.getPolicy(), mutant.getName()));
 				     List<Mutant> mutants = secondOrderMutator.generateSelectedMutants(mutationOperators2.getMutationOperatorList());
 				     for(Mutant m: mutants) {
@@ -448,7 +402,6 @@ public class MutationPanel extends JPanel {
 				    	}
 				    }
 				    currentValue += secondOrderOperatorsLength;
-				        pb.showProgress(currentValue-1, max); 
 
 				    mutants2.addAll(mutants);	
 				}
@@ -461,15 +414,15 @@ public class MutationPanel extends JPanel {
 		        for(Mutant mutant: mutants2){
 					FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
 				}
-				mutantSuite = new PolicySpreadSheetMutantSuiteDemo(mutantsFolder.toString(),mutants2,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
+				mutantSuite = new PolicySpreadSheetMutantSuite(mutantsFolder.toString(),mutants2,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants2,XACMLElementUtil.getPolicyName(policyFile) + "_mutants.xls");
-				setUpMutantPanel(mutants2);
-				pb.close();
-			
+				setUpMutantPanel(mutants2, PropertiesLoader.getProperties("config").getProperty("secondOrderMutantsFolderName"));
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		this.stopProgressStatus();
 	}
 	
 	
@@ -490,40 +443,42 @@ public class MutationPanel extends JPanel {
 			return;
 		}		
 		try {
+			this.startProgressStatus();
 			String outputFileName = getMutationTestingResultsFileName();
-			// Time this.
-			final long startTime = System.currentTimeMillis();
-			
 			List<String> requests = new ArrayList<String>();
 			List<String> oracles = new ArrayList<String>();
-			for(TestRecord record: xpa.getTestPanel().getTestSuite().getTestRecords()){
+			for(TestRecord record: xpa.getTestPanel().getPolicyTestSuite().getTestRecords()){
 				requests.add(record.getRequest());
 				oracles.add(record.getOracle());
 			}
 			TestSuite testSuite = new TestSuite(null,requests, oracles);
-			
-						
-			final long endTime = System.currentTimeMillis();
-			System.out.println("Mutants testing time: " + (endTime - startTime)/1000.00 );
-			mutantSuite.updateMutantTestResult(data,testSuite);
+			int killedCount = mutantSuite.updateMutantTestResult(data,testSuite);
 			mutantSuite.writeDetectionInfoToExcelFile(outputFileName, testSuite);
-			
+			this.stopProgressStatus();
 			xpa.setToMutantPane();
 			xpa.updateMainTabbedPane();
-			JOptionPane.showMessageDialog(xpa, "Mutation testing results are saved into file: \n" + outputFileName);
-			
-			
-			
-			
+			int total = mutantSuite.getMutantList().size();
+			int liveCount = total - killedCount;
+			double ratio = killedCount / (double)total;
+			String message = "Number of killed mutants : " + killedCount + System.lineSeparator();
+			message += "Number of live mutants : " + liveCount + System.lineSeparator();
+			message += "Mutant Killing Ratio : " + MiscUtil.roundNumberToTwoDecimalPlaces(ratio) + System.lineSeparator()  + System.lineSeparator();
+			message += "Mutation testing results are saved into file: \n" + outputFileName;
+			JOptionPane.showMessageDialog(xpa, message, "Test Result" , JOptionPane.INFORMATION_MESSAGE);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	
 	static class XPAthColumnCellRenderer extends DefaultTableCellRenderer {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,int row,int column) {
 			Component c = super.getTableCellRendererComponent(table, value,isSelected, hasFocus, row, column);
 			if (column == xPathCol) {
-			
 				c.setForeground(Color.blue);
 			}
 			return c;

@@ -218,19 +218,19 @@ public class DecisionCoverage extends RequestGeneratorBase{
 				return false;
 			}
 			temp.add(invalidAttr());
-			mergeAttribute(temp, z3ExpressionHelper.getAttributeList());
+			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
 			temp.remove(unique);
 			sb.append(prefix);
 		} else {
 			sb.append(True_Target(target, temp) + "\n");
 			temp.add(invalidAttr());
-			mergeAttribute(temp, z3ExpressionHelper.getAttributeList());
+			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
 			temp.remove(0);
 			sb.append(prefix);
 		}
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {
-			String request = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
 			addRequest(request);
 			return true;
 		}
@@ -247,19 +247,19 @@ public class DecisionCoverage extends RequestGeneratorBase{
 				return false;
 			}
 			temp.add(invalidAttr());
-			mergeAttribute(temp, z3ExpressionHelper.getAttributeList());
+			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
 			temp.remove(unique);
 			sb.append(prefix);
 		} else {
 			sb.append(True_Condition(condition, temp) + "\n");
 			temp.add(invalidAttr());
-			mergeAttribute(temp, z3ExpressionHelper.getAttributeList());
+			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
 			temp.remove(0);
 			sb.append(prefix);
 		}
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {
-			String request = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
 			addRequest(request);
 			return true;
 		}

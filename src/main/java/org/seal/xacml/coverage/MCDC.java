@@ -67,8 +67,6 @@ public class MCDC extends RequestGeneratorBase{
 		    	falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule)+ System.lineSeparator());
 		    }
 			StringBuffer ruleTargetExpression = new StringBuffer();
-			StringBuffer ruleNotConditionExpression = new StringBuffer();
-			StringBuffer errorConditionExpression = new StringBuffer();
 			boolean sat = false;
 			ruleTargetExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
 			if(target!=null){
@@ -81,16 +79,12 @@ public class MCDC extends RequestGeneratorBase{
 			    if(error){
 			    	IndTarget(target,preExpression.toString() + falsifyPreviousRules);
 			    }
-				ruleNotConditionExpression.append(z3ExpressionHelper.getTrueTargetExpression(target));
-				errorConditionExpression.append(z3ExpressionHelper.getTrueTargetExpression(target));
 			}
 			StringBuffer ruleExpression = new StringBuffer();
 			ruleExpression.append(ruleTargetExpression);
 			ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
-			ruleNotConditionExpression.append(z3ExpressionHelper.getFalseConditionExpression(condition));
 			//String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
 			List<String> ruleExprs = getMCDCExpressions(preExpression.toString() + ruleExpression.toString());
-			List<String> expressions = new ArrayList<String>();
 			for(String e:ruleExprs) {
 				String expresion = (e + falsifyPreviousRules);
 				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
@@ -299,7 +293,7 @@ public class MCDC extends RequestGeneratorBase{
 		}
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {
-			String request = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
 			addRequest(request);
 			return true;
 		}
@@ -328,7 +322,7 @@ public class MCDC extends RequestGeneratorBase{
 		}
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {
-			String request = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
 			addRequest(request);
 			return true;
 		}

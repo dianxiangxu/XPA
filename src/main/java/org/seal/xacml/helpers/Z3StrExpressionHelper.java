@@ -109,6 +109,92 @@ public class Z3StrExpressionHelper {
 		return expr.append(System.lineSeparator());
 	}
 	
+	/*public List<StringBuffer> getTargetMCDCExpressions(Target target){
+		StringBuffer expr = new StringBuffer();
+		if (target != null) {
+			List<String> anyList = new ArrayList<String>();
+			
+			for (AnyOfSelection anyofselection : target.getAnyOfSelections()) {
+				StringBuilder orBuilder = new StringBuilder();
+				List<String> allList = new ArrayList<String>();
+				for (AllOfSelection allof : anyofselection.getAllOfSelections()) {
+					StringBuilder allBuilder = new StringBuilder();
+					for (TargetMatch match : allof.getMatches()) {
+						if (match.getEval() instanceof AttributeDesignator) {
+							AttributeDesignator attribute = (AttributeDesignator) match.getEval();
+							if(attribute.getType().toString().contains("boolean")){
+								allBuilder.append(getName(attribute));
+							}else{
+								allBuilder.append(" (" + getOperator(match.getMatchFunction().encode()) + " " + getName(attribute) + " ");
+							}
+							if (attribute.getType().toString().contains("string")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value = value.trim();
+								allBuilder.append("\"" + value + "\")");
+							}
+							if (attribute.getType().toString().contains("integer")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value.trim();
+								value = value.trim();
+								allBuilder.append(value + ")");
+							}
+							getType(attribute);
+							Attr myattr = new Attr(attribute);
+							if (!collector.contains(myattr)) {
+								collector.add(myattr);
+							}
+						}
+					}
+					allList.add(allBuilder.toString());
+					String[] tokens = allBuilder.toString().split("\\)\\s+\\(");
+					for(int i = 0; i < tokens.length -1;i++) {
+						tokens[i] = tokens[i] + ")";
+					}
+					tokens[tokens.length -1] = "(" + tokens[tokens.length -1]; 
+					allBuilder.insert(0, " (and ");
+					allBuilder.append(")");
+					for(int i = 0; i <  tokens.length; i++) {
+						StringBuilder sb = new StringBuilder();
+						for(int j = 0; j <  tokens.length; j++) {
+							if(i == j) {
+								sb.append("(not " + tokens[j] + ")");
+							}else {
+								sb.append(" " + tokens[j]);
+							}
+						}
+						allList.add(sb.insert(0," (and ").append(")").toString());
+					}
+					if(anyList.size()==0) {
+						anyList.addAll(allList);
+					} else {
+						List<String> list = new ArrayList<String>();
+						list.add(anyList.get(0) + " " + allList.get(0));
+						list.add(anyList.get(1) + " " + allList.get(0));
+						list.add(anyList.get(2) + " " + allList.get(0));
+						list.add(anyList.get(3) + " " + allList.get(0));
+						
+						list.add(anyList.get(3) + " " + allList.get(3));
+						list.add(anyList.get(0) + " " + allList.get(1));
+						list.add(anyList.get(0) + " " + allList.get(2));
+						list.add(anyList.get(0) + " " + allList.get(3));
+					}
+					//orBuilder.append(allBuilder);
+				}
+				orBuilder.insert(0, " (or ");
+				orBuilder.append(")");
+				expr.append(orBuilder);
+			}
+			expr = new StringBuffer(expr.toString().trim());
+			if(!expr.toString().trim().equals("")){
+				expr.insert(0, "(and ");
+				expr.append(")");
+			}
+		}
+		return expr.append(System.lineSeparator());
+	}
+*/
 	public StringBuffer getFalseTargetExpression(Target target){
 		String[] lines = getTrueTargetExpression(target).toString().split("\n");
 		StringBuffer expr = new StringBuffer();
@@ -429,6 +515,59 @@ public class Z3StrExpressionHelper {
 	        String s;
 	        List<String> currentNameMap = new ArrayList<String>();
 	        currentRequestCollector = new ArrayList<Attr>();
+	        br.readLine();
+	        while ((s = br.readLine()) != null) {
+	            String[] data = s.trim().split(" \"");
+	            if(s.indexOf("true")!=-1 || s.indexOf("false")!=-1){
+	            	data = s.trim().split("\\s+");
+	            }
+	            if(data.length< 2 || data[1].trim().isEmpty()) {
+	            	continue;
+	            }
+	            String cleaned = data[1].trim().replaceAll("\"", "");
+	            if(cleaned.isEmpty() || cleaned.replaceAll("\\)","").isEmpty()) {
+	            	continue;
+	            }
+                Iterator<Map.Entry<String, String>> iter = nameMap.entrySet().iterator();
+                String key = data[0].trim().replaceAll("\\(", "");
+                
+                while (iter.hasNext()) {
+                    Map.Entry<String,String> entry = (Map.Entry<String,String>) iter.next();
+                    if (key.equals(entry.getValue())) {
+                    	currentNameMap.add(key);
+                    	for (Attr attr : collector) {
+                            if (attr.getName().equals(entry.getKey())) {
+                                String value = data[1].trim().replaceAll("\"", "").replaceAll("\\)","");
+                                attr.setDomain(value);
+                                tempRequestCollector.add(attr);
+                            }
+                        }
+                    }
+                }
+	        }
+	        fr.close();
+		} catch(Exception e){
+			ExceptionUtil.handleInDefaultLevel(e);
+		}
+        // value should be added after checking type
+        for (Attr attr : collector) {
+        		if (attr.getDomain().isEmpty()) {
+        			attr.addValue("0");
+        		}
+        		if(tempRequestCollector.contains(attr)){
+        			currentRequestCollector.add(attr);
+        		}
+        }
+    }
+	/*
+	public void updateColletor() {
+	    List<Attr> tempRequestCollector = new ArrayList<Attr>();
+	    try{
+	        FileReader fr = new FileReader("./Z3_output");
+	        BufferedReader br = new BufferedReader(fr);
+	        String s;
+	        List<String> currentNameMap = new ArrayList<String>();
+	        currentRequestCollector = new ArrayList<Attr>();
 	        while ((s = br.readLine()) != null) {
 	            String[] data = s.split(" ");
 	            int preValueIndex = 0;
@@ -472,7 +611,7 @@ public class Z3StrExpressionHelper {
         		}
         }
     }
-	
+	*/
 	/*
 	public List<ExpressionWithTruthValue> getMCDCExpssions(Target target){
 		List<ExpressionWithTruthValue> expressions = new ArrayList<ExpressionWithTruthValue>();

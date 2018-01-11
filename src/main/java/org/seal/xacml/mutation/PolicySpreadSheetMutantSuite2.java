@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
 import java.util.Vector;
 
@@ -18,36 +17,31 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.seal.coverage.PolicySpreadSheetTestSuite;
 import org.seal.xacml.faultlocalization.TestCellResult;
-import org.seal.xacml.policyUtils.PolicyLoader;
-import org.seal.xacml.semanticCoverage.TestSuite;
-import org.seal.xacml.semanticMutation.Mutant;
-import org.seal.xacml.utils.MutantUtil;
-import org.wso2.balana.AbstractPolicy;
 
-public class PolicySpreadSheetMutantSuiteDemo {
+public class PolicySpreadSheetMutantSuite2 {
 
 	public static final String MUTANT_KEYWORD = "MUTANT";
 
-	private List<Mutant> policyMutantSuite;
+	private ArrayList<PolicyMutant> policyMutantSuite;
 	private String mutantsDirectory;
 	
 	private String policy;
 	
-	public PolicySpreadSheetMutantSuiteDemo(String directory,
-			List<Mutant> mutantRecords, String policy) {
+	public PolicySpreadSheetMutantSuite2(String directory,
+			ArrayList<PolicyMutant> mutantRecords, String policy) {
 		this.mutantsDirectory = directory;
 		this.policyMutantSuite = mutantRecords;
 		this.policy = policy;
 	}
 	
-	public PolicySpreadSheetMutantSuiteDemo(String mutantSuiteSpreadSheetFile, String policy) throws Exception {
+	public PolicySpreadSheetMutantSuite2(String mutantSuiteSpreadSheetFile, String policy) throws Exception {
 		this(new File(mutantSuiteSpreadSheetFile).getParent(), readMutantSuite(mutantSuiteSpreadSheetFile), policy);
 		//System.out.println(mutantSuiteSpreadSheetFile);
 	}
 
-	public static ArrayList<Mutant> readMutantSuite(
+	public static ArrayList<PolicyMutant> readMutantSuite(
 			String mutantSuiteSpreadSheetFile) throws IOException {
-		ArrayList<Mutant> mutantSuite = new ArrayList<Mutant>();
+		ArrayList<PolicyMutant> mutantSuite = new ArrayList<PolicyMutant>();
 		FileInputStream inputStream = new FileInputStream(
 				mutantSuiteSpreadSheetFile);
 		HSSFWorkbook workBook = new HSSFWorkbook(inputStream);
@@ -59,49 +53,41 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		return mutantSuite;
 	}
 
-	private static void loadMutantRow(ArrayList<Mutant> mutantSuite, File mutantFolder, Row row) {
+	private static void loadMutantRow(ArrayList<PolicyMutant> mutantSuite, File mutantFolder, Row row) {
 		if (row.getCell(0) == null || row.getCell(1) == null)
 			return;
 		String keyword = row.getCell(0).toString().trim();
 		if (keyword.equals("")
-				|| keyword.startsWith("//"))
-				//|| !keyword.substring(0, MUTANT_KEYWORD.length())
-					//	.equalsIgnoreCase(MUTANT_KEYWORD))
+				|| keyword.startsWith("//")
+				|| !keyword.substring(0, MUTANT_KEYWORD.length())
+						.equalsIgnoreCase(MUTANT_KEYWORD))
 			return;
 		String mutantFileName = row.getCell(1) != null ? row.getCell(1).toString() : "";
 		// use absolute path. 11/17/14
-		String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + mutantFileName;
-		List<Integer> bugPositions = fromString(row.getCell(2).toString());
-		AbstractPolicy policy = null;
-		try{
-			policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
-		}
-		
-		catch(Exception e){
-			e.printStackTrace();
-		}
-		mutantSuite.add(new Mutant( policy, bugPositions,mutantFileName.split("\\.")[0]));
+		mutantFileName = mutantFolder.getAbsolutePath() + File.separator + mutantFileName;
+		int[] bugPositions = fromString(row.getCell(2).toString());
+		mutantSuite.add(new PolicyMutant(keyword, mutantFileName, bugPositions));
 	}
 	
-	public static List<Integer> fromString(String str) {
+	public static int[] fromString(String str) {
 		String[] strs = str.replace("[", "").replace("]", "").split(",");
-		List<Integer> results = new ArrayList<Integer>();
+		int results[] = new int[strs.length];
 		for (int i = 0; i < strs.length; i++) {
-			results.add( Integer.parseInt(strs[i].trim()));
+			results[i] = Integer.parseInt(strs[i].trim());
 		}
 		return results;
 	}
-	public void writePolicyMutantsSpreadSheet(List<Mutant> mutantList, String mutantSpreadSheetFileName){
+	public static void writePolicyMutantsSpreadSheet(ArrayList<PolicyMutant> mutantList, String mutantSpreadSheetFileName){
 		HSSFWorkbook workBook = new HSSFWorkbook();
 		workBook.createSheet("mutation list");
 		Sheet sheet = workBook.getSheetAt(0);
 		Row row = sheet.createRow(0);
 		for (int mutantIndex =0; mutantIndex<mutantList.size(); mutantIndex++){
 			row = sheet.createRow(mutantIndex+1);
-			writeMutantRow(mutantIndex+1,row, mutantList.get(mutantIndex)); 
+			writeMutantRow(row, mutantList.get(mutantIndex)); 
 		}
 		try {
-			FileOutputStream out = new FileOutputStream(this.mutantsDirectory + File.separator + mutantSpreadSheetFileName);
+			FileOutputStream out = new FileOutputStream(mutantSpreadSheetFileName);
 			workBook.write(out);
 			out.close();
 		}
@@ -110,20 +96,20 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		}
 	}
 
-	private void writeMutantRow(int number,Row row, Mutant mutant){
+	private static void writeMutantRow(Row row, PolicyMutant mutant){
 		Cell idCell = row.createCell(0);
-		idCell.setCellValue(number);
+		idCell.setCellValue(mutant.getNumber());
 		Cell pathCell = row.createCell(1);
-		pathCell.setCellValue(MutantUtil.getMutantFileName(mutant));
+		pathCell.setCellValue(mutant.getMutantFilePath());
 		Cell faultLocationCell = row.createCell(2);
-		faultLocationCell.setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
+		faultLocationCell.setCellValue(Arrays.toString(mutant.getFaultLocation()));
 	}
 
 	public Vector<Vector<Object>> getMutantData() {
 		int index = 1;
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-		for (Mutant mutant : policyMutantSuite) {
-			Vector<Object> vector = MutantUtil.getVector(mutant, policy, ".xml");
+		for (PolicyMutant mutant : policyMutantSuite) {
+			Vector<Object> vector = mutant.getMutantVector();
 			vector.set(0, index + "");
 			data.add(vector);
 			index++;
@@ -131,14 +117,11 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		return data;
 	}
 
-	public void updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite){
+	public void updateMutantTestResult(Vector<Vector<Object>> data){
 		int mutantIndex=0;
-		for (Mutant mutant : policyMutantSuite) {
+		for (PolicyMutant mutant : policyMutantSuite) {
 			Vector<Object> vector = data.get(mutantIndex);
-			//vector.set(vector.size()-1, TestSuite.runTests(mutant.getTestResult());
-			
-			// TO BE DONE
-			vector.set(vector.size()-1, testSuite.runTests(mutant));
+			vector.set(vector.size()-1, mutant.getTestResult());
 			mutantIndex++;
 		}
 	}
@@ -147,18 +130,18 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		PolicySpreadSheetTestSuite tests = null;
 		try {
 			tests =	new PolicySpreadSheetTestSuite(testSuiteSpreadSheet, policy);
-			//writeDetectionInfoToExcelFile(fileName, tests);
+			runAndWriteDetectionInfoToExcelFile(fileName, tests);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void writeDetectionInfoToExcelFile(String fileName, TestSuite suite) throws Exception {
+	public void runAndWriteDetectionInfoToExcelFile(String fileName, PolicySpreadSheetTestSuite tests) throws Exception {
 		//System.gc();
 		HSSFWorkbook workBook = new HSSFWorkbook();
 		workBook.createSheet("fault-detection-info");
 		Sheet sheet = workBook.getSheetAt(0);
-		int numTests = suite.getSize();
+		int numTests = tests.getNumberOfTests();
 		// An integer array to store counts of how many mutants that a test can detect,
 		// plus the last cell is the count of detection for the whole test suite. 
 		int[] detectionCount = new int[numTests+1];
@@ -171,10 +154,8 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		if (numTests+3 > 255) {
 			writeSimpleDetectionTitleRow(sheet, 0, numTests);
 			int rowIndex = 1;
-			for(int i = 0; i< policyMutantSuite.size();i++){
-				
-			//for (Mutant mutant : policyMutantSuite) {
-				writeSimpleDetectionInfoRow(sheet, rowIndex++, policyMutantSuite.get(i), suite, detectionCount);
+			for (PolicyMutant mutant : policyMutantSuite) {
+				writeSimpleDetectionInfoRow(sheet, rowIndex++, mutant, tests, detectionCount);
 			}
 			writeSimpleDetectionCountRow(sheet, rowIndex++, detectionCount);
 			writeSimpleDetectionRateRow(sheet, rowIndex++, detectionCount, policyMutantSuite.size());
@@ -185,9 +166,8 @@ public class PolicySpreadSheetMutantSuiteDemo {
 				writeDetectionTitleRow(sheet, 0, numTests);
 			
 			int rowIndex = 1;
-			for(int i = 0; i< policyMutantSuite.size();i++){
-			//for (Mutant mutant : policyMutantSuite) {
-				writeDetectionInfoRow(sheet, rowIndex++, policyMutantSuite.get(i), suite, detectionCount,i+1);
+			for (PolicyMutant mutant : policyMutantSuite) {
+				writeDetectionInfoRow(sheet, rowIndex++, mutant, tests, detectionCount);
 			}
 			
 			// 10/26/14: Add statistics: a row of fault detection count/rate for each single test.
@@ -222,7 +202,7 @@ public class PolicySpreadSheetMutantSuiteDemo {
 	}
 	// 01/27/15 simple result for large sheet. - detect info
 	private void writeSimpleDetectionInfoRow(Sheet sheet, int rowIndex, 
-			Mutant mutant, TestSuite suite, int[] detectionCount) throws Exception {
+			PolicyMutant mutant, PolicySpreadSheetTestSuite tests, int[] detectionCount) throws Exception {
 		Row mutantRow = sheet.createRow(rowIndex);
 		Cell[] mutantCells = new Cell[3];
 		boolean killed = false; // fault detected?
@@ -230,16 +210,16 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		for (int i = 0; i < 3; i++) {
 			mutantCells[i] = mutantRow.createCell(i);
 		}
-		//mutantCells[0].setCellValue(mutant.getNumber());
-		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
-		//PolicySpreadSheetTestSuite mutantTestSuite = 
-		//		new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
+		mutantCells[0].setCellValue(mutant.getNumber());
+		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocation()));
+		PolicySpreadSheetTestSuite mutantTestSuite = 
+				new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
 		//boolean[] testResult = mutantTestSuite.runAllTestsOnMutant();
-		//TestCellResult[] rowResult;	
-		//rowResult = mutantTestSuite.runAllTestsOnMutant();
-		List<Boolean> results = suite.runTests(mutant);
-		for (int j = 0; j < results.size(); j++) {
-			if(results.get(j)) {
+		TestCellResult[] rowResult;	
+		rowResult = mutantTestSuite.runAllTestsOnMutant();
+				
+		for (int j = 0; j < rowResult.length; j++) {
+			if(rowResult[j].getVerdict()) {
 				// idle
 			} else {
 				// just count
@@ -249,12 +229,10 @@ public class PolicySpreadSheetMutantSuiteDemo {
 			}
 		}
 		mutantCells[2].setCellValue(killed ? "Yes" : "No");
-		//mutant.setTestResult(killed ? "Yes" : "No");
-		
+		mutant.setTestResult(killed ? "Yes" : "No");
 		if (killed)
-			detectionCount[suite.getSize()]++;
+			detectionCount[tests.getNumberOfTests()]++;
 	}
-	
 	// 01/27/15 simple result for large sheet. - detect count
 	private void writeSimpleDetectionCountRow(Sheet sheet, int rowIndex, int[] detectionCount) {
 		Row mutantRow = sheet.createRow(rowIndex);
@@ -316,47 +294,41 @@ public class PolicySpreadSheetMutantSuiteDemo {
 	}
 	
 	private void writeDetectionInfoRow(Sheet sheet, int rowIndex,
-			Mutant mutant, TestSuite suite, int[] detectionCount, int number) throws Exception {
+			PolicyMutant mutant, PolicySpreadSheetTestSuite tests, int[] detectionCount) throws Exception {
 
 		// initialize
 		Row mutantRow = sheet.createRow(rowIndex);
-		Cell[] mutantCells = new Cell[suite.getSize()+3];
+		Cell[] mutantCells = new Cell[tests.getNumberOfTests()+3];
 		boolean killed = false; // fault detected?
 		// create cells.
-		for (int i = 0; i < suite.getSize()+3; i++) {
+		for (int i = 0; i < tests.getNumberOfTests()+3; i++) {
 			mutantCells[i] = mutantRow.createCell(i);
 		}
 		// set values.
-		mutantCells[0].setCellValue(number);
-		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
-		//PolicySpreadSheetTestSuite mutantTestSuite = 
-		//		new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
+		mutantCells[0].setCellValue(mutant.getNumber());
+		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocation()));
+		PolicySpreadSheetTestSuite mutantTestSuite = 
+				new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
 		
 		// 11/1/15 fix test result return
 		//boolean[] testResult = mutantTestSuite.runAllTestsOnMutant();
-		//TestCellResult[] rowResult;	
-		//rowResult = mutantTestSuite.runAllTestsOnMutant();
-		List<Boolean> results = suite.runTests(mutant);
-		for (int j = 0; j<results.size();j++) {
-			//if(rowResult[j].getVerdict()) {
-			Boolean b = results.get(j);
-			if(b) {
-				
-			//mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
-				mutantCells[j+2].setCellValue(b);
-				
-		} else {
+		TestCellResult[] rowResult;	
+		rowResult = mutantTestSuite.runAllTestsOnMutant();
+		
+		for (int j = 0; j < rowResult.length; j++) {
+			if(rowResult[j].getVerdict()) {
+				mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
+			} else {
 				// just count
-				//mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
-			mutantCells[j+2].setCellValue(b);
+				mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
 				detectionCount[j]++;
 				killed = true;
 			}
 		}
-		//mutantCells[tests.getNumberOfTests()+2].setCellValue(killed ? "Yes" : "No");
-		//mutant.setTestResult(killed ? "Yes" : "No");
+		mutantCells[tests.getNumberOfTests()+2].setCellValue(killed ? "Yes" : "No");
+		mutant.setTestResult(killed ? "Yes" : "No");
 		if (killed)
-			detectionCount[suite.getSize()]++;
+			detectionCount[tests.getNumberOfTests()]++;
 	}
 	
 	private void writeDetectionCountRow(Sheet sheet, int rowIndex, int[] detectionCount) {
@@ -401,8 +373,8 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		//String testSuite = "RuleLevel";
 		String testSuite = "ByDenyPermit";
 		
-		PolicySpreadSheetMutantSuiteDemo mutantSuite = 
-				new PolicySpreadSheetMutantSuiteDemo("Experiments//" + policy + "//mutation//" + policy + "_mutants.xls",
+		PolicySpreadSheetMutantSuite2 mutantSuite = 
+				new PolicySpreadSheetMutantSuite2("Experiments//" + policy + "//mutation//" + policy + "_mutants.xls",
 						"Experiments//" + policy + "//" + policy + ".xml");
 		mutantSuite.runAndWriteDetectionInfoToExcelFile("Experiments//" + policy + "//test_suites//"
 				+ policy + "_detection_info_" + testSuite + ".xls", 
@@ -420,7 +392,7 @@ public class PolicySpreadSheetMutantSuiteDemo {
 		
 	}
 	
-	public List<Mutant> getMutantList()
+	public ArrayList<PolicyMutant> getMutantList()
 	{
 		return this.policyMutantSuite;
 	}

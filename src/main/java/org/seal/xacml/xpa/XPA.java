@@ -2,7 +2,6 @@ package org.seal.xacml.xpa;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,12 +11,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -25,16 +24,15 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
-import org.seal.xacml.TestSuiteDemo;
+import org.seal.xacml.PolicyTestSuite;
 import org.seal.xacml.gui.AbstractPolicyEditor;
 import org.seal.xacml.gui.DebugPanel;
 import org.seal.xacml.gui.MutationPanel;
 import org.seal.xacml.gui.TestPanel;
 import org.umu.editor.VentanaMensajes;
-import org.umu.editorXacml3.PolicyEditorPanel;
+import org.umu.editorXacml3.PolicyEditorPanelDemo;
 
 public class XPA extends JFrame implements ItemListener, ActionListener {
 	
@@ -42,7 +40,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	public int totalheight;
 
 	protected Action newAction, openAction, saveAction, saveAsAction, checkSchemaAction;
-	protected Action openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, runTestsAction;
+	protected Action openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, runTestsAction, evaluateCoverageAction;
 	protected Action openMutantsAction, generateMutantsAction, generateSecondOrderMutantsAction, testMutantsAction;
 	protected Action localizeFaultAction, fixFaultAction;
 	protected JCheckBoxMenuItem[] items;
@@ -119,6 +117,9 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		runTestsAction = new RunTestsAction("Run Tests",
 				createNavigationIcon("runtests"), "RunTests", new Integer(
 						KeyEvent.VK_R));
+		evaluateCoverageAction = new EvaluateCoverageAction("Evaluate Coverage",
+				createNavigationIcon("evaluateCoverage"), "EvaluateCoverage", new Integer(
+						KeyEvent.VK_R));
 
 		openMutantsAction = new OpenMutantsAction(
 				"Open Mutants...", createNavigationIcon("openmutants"),
@@ -190,8 +191,10 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	protected JMenu createPolicyMenu() {
 		JMenuItem menuItem = null;
 		JMenu fileMenu = new JMenu("Policy");
-		Action[] actions = { openAction, saveAction, saveAsAction,
-				checkSchemaAction };
+		/*Action[] actions = { openAction, saveAction, saveAsAction,
+				checkSchemaAction };*/
+		Action[] actions = { openAction };
+		
 		for (int i = 0; i < actions.length; i++) {
 			menuItem = new JMenuItem(actions[i]);
 			menuItem.setIcon(null); // arbitrarily chose not to use icon
@@ -229,15 +232,13 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 
 	protected JMenu createTestMenu() {
 		JMenu testMenu = new JMenu("Test");
-		Action[] actions = { openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, runTestsAction, saveOracleValuesAction };
+		Action[] actions = { openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, runTestsAction, saveOracleValuesAction, evaluateCoverageAction};
 		for (int i = 0; i < actions.length; i++) {
 			JMenuItem menuItem = new JMenuItem(actions[i]);
 			menuItem.setIcon(null); // arbitrarily chose not to use icon
 			testMenu.add(menuItem);
 		}
 
-		JMenuItem coverageItem = new JMenuItem("Evaluate Coverage");
-		testMenu.add(coverageItem);
 		return testMenu;
 	}
 
@@ -306,7 +307,6 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 
 		public void actionPerformed(ActionEvent e) {
 			editorPanel.openFile();
-//			System.out.print("dkjfdkjfdfjk");
 			
 			switch(mainTabbedPane.getTabCount()) {
 			case 2:
@@ -418,6 +418,19 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		}
 	}
 
+	public class EvaluateCoverageAction extends AbstractAction {
+		public EvaluateCoverageAction(String text, ImageIcon icon, String desc,
+				Integer mnemonic) {
+			super(text, icon);
+			putValue(SHORT_DESCRIPTION, desc);
+			putValue(MNEMONIC_KEY, mnemonic);
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			testPanel.evaluateCoverage();
+		}
+	}
+
 	public class OpenMutantsAction extends AbstractAction {
 		public OpenMutantsAction(String text, ImageIcon icon, String desc,Integer mnemonic) {
 			super(text, icon);
@@ -515,7 +528,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		this.editorPanel =   editorPanel;
 	}
 	private void createMainTabbedPane() {
-		editorPanel = new PolicyEditorPanel();
+		editorPanel = new PolicyEditorPanelDemo();
 //		editorPanel = new EditorPanel(this);
 
 		testPanel = new TestPanel(this);
@@ -608,11 +621,17 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	}
 	
 	public String getWorkingPolicyFilePath() {
-		return editorPanel.getWorkingPolicyFile().getAbsolutePath();
-		
+		String path = null;
+		if(editorPanel!=null) {
+			File file = editorPanel.getWorkingPolicyFile();
+			if(file!=null) {
+				path = file.getAbsolutePath();
+			} 
+		}
+		return path;
 	}
 
-	public TestSuiteDemo getWorkingTestSuite() {
+	public PolicyTestSuite getWorkingTestSuite() {
 		return testPanel.getPolicySpreadSheetTestSuite();
 	}
 
@@ -642,6 +661,33 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		this.dispose();
 	}
 	
+	public static String getResourcesPath() {
+		String path = null;
+		try {
+			path = (new File(".")).getCanonicalPath() + File.separator + "resources";
+		
+		} catch (IOException e) {
+			System.err.println("Can not locate policy repository");
+			e.printStackTrace();
+		}
+		return path;
+
+	}
+	
+	public static String getRootPath() {
+		File rootDir = new File(".");
+		String rootPath = null;
+		try {
+			rootPath = rootDir.getCanonicalPath();
+		} catch (Exception e) {
+			XPA.log(e);
+		}
+		return rootPath;
+	}
+	
+	public static void log(Exception e) {
+		e.printStackTrace();
+	}
 	
 	public static void main(String[] args) {
 		//

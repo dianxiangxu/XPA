@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -22,18 +23,21 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.seal.xacml.NameDirectory;
+import org.seal.xacml.PolicyTestSuite;
 import org.seal.xacml.TaggedRequest;
 import org.seal.xacml.TestRecord;
-import org.seal.xacml.TestSuiteDemo;
 import org.seal.xacml.combiningalgorithms.LoadPolicyDemo;
-import org.seal.xacml.combiningalgorithms.PolicyX;
+import org.seal.xacml.components.JPanelPB;
 import org.seal.xacml.components.MutationBasedTestMutationMethods;
+import org.seal.xacml.coverage.CoverageHelper;
 import org.seal.xacml.coverage.DecisionCoverage;
 import org.seal.xacml.coverage.MCDC;
 import org.seal.xacml.coverage.RuleCoverage;
-import org.seal.xacml.gui.DebugPanel.susPiciousColumnCellRenderer;
+import org.seal.xacml.coverage.RulePairCoverage;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
 import org.seal.xacml.policyUtils.PolicyLoader;
+import org.seal.xacml.semanticCoverage.Coverage;
+import org.seal.xacml.semanticCoverage.PolicyCoverageFactory;
 import org.seal.xacml.semanticCoverage.TestSuite;
 import org.seal.xacml.utils.ExceptionUtil;
 import org.seal.xacml.utils.TestUtil;
@@ -41,35 +45,31 @@ import org.seal.xacml.xpa.XPA;
 import org.umu.editor.XMLFileFilter;
 import org.wso2.balana.AbstractPolicy;
 
-public class TestPanel extends JPanel {
-	private XPA demo;
-
+public class TestPanel extends JPanelPB {
+	private XPA xpa;
 	private String workingTestSuiteFileName;
-	private TestSuiteDemo testSuite;
-
+	private PolicyTestSuite testSuite;
 	private Vector<Vector<Object>> data;
 	private TestTablePanel requestTablePanel;
 	private JPanel requestPanel;
 	private String type;
-
 	private boolean hasFailure;
 
-	private static int verdictCol;
 	
-	public TestPanel(XPA demo) {
-		this.demo = demo;
+	public TestPanel(XPA xpa) {
+		this.xpa = xpa;
 	}
 
 	public XPA getDemo() {
-		return this.demo;
+		return this.xpa;
 	}
 	
 
-	public TestSuiteDemo getPolicySpreadSheetTestSuite() {
+	public PolicyTestSuite getPolicySpreadSheetTestSuite() {
 		return testSuite;
 	}
 	
-	public void setTestSuite(TestSuiteDemo p)
+	public void setTestSuite(PolicyTestSuite p)
 	{
 		this.testSuite = p;
 	}
@@ -86,7 +86,7 @@ public class TestPanel extends JPanel {
 		data = TestUtil.getTestRecordsVector(testSuite.getTestRecords());
 		
 		if (data.size() == 0) {
-			JOptionPane.showMessageDialog(demo, "There is no test!");
+			JOptionPane.showMessageDialog(xpa, "There is no test!");
 			return;
 		}
 		Vector<Object> selected = data.get(0);
@@ -108,48 +108,54 @@ public class TestPanel extends JPanel {
 		jSplitPane.setResizeWeight(0.7);
 
 		add(jSplitPane, BorderLayout.CENTER);
-		demo.setToTestPane();
-		demo.updateMainTabbedPane();
+		xpa.setToTestPane();
+		xpa.updateMainTabbedPane();
 	}
 
 	public void openTests() {
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setMultiSelectionEnabled(false);
-		File workingPolicy = demo.getWorkingPolicyFile();
+		File workingPolicy = xpa.getWorkingPolicyFile();
 		if ( workingPolicy!= null){
-			fileChooser.setCurrentDirectory(demo.getWorkingPolicyFile().getParentFile());
+			fileChooser.setCurrentDirectory(xpa.getWorkingPolicyFile().getParentFile());
+		} else {
+			fileChooser.setCurrentDirectory((new File(".")));
 		}
 		fileChooser.setFileFilter(new XMLFileFilter("xls"));
 		fileChooser.setDialogTitle("Open Test Suite");
 		if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
 			File testSuiteFile = fileChooser.getSelectedFile();
 			if (!testSuiteFile.toString().endsWith(".xls")) {
-				JOptionPane.showMessageDialog(demo,
+				JOptionPane.showMessageDialog(xpa,
 						"The open File is not a test suite *.xls",
 						"Error of Selection", JOptionPane.WARNING_MESSAGE);
 			} else {
 				try {
 					workingTestSuiteFileName = testSuiteFile.getAbsolutePath();
+					this.startProgressStatus();
 					if(workingPolicy!=null){
-						testSuite = new TestSuiteDemo(workingTestSuiteFileName, workingPolicy.toString());
+						testSuite = new PolicyTestSuite(workingTestSuiteFileName, workingPolicy.toString());
 					}else{
-						testSuite = new TestSuiteDemo(workingTestSuiteFileName,	"");
+						testSuite = new PolicyTestSuite(workingTestSuiteFileName,	"");
 					}
 					setUpTestPanel();
+					this.stopProgressStatus();
 				} catch (Exception e) {
-					JOptionPane.showMessageDialog(demo, "Invalid test suite file");
+					JOptionPane.showMessageDialog(xpa, "Invalid test suite file");
 				}
 			}
 		}
 	}
 
-	private JRadioButton exclusiveRuleCoverageRadio = new JRadioButton("Exclusive rule coverage");
+	private JRadioButton exclusiveRuleCoverageRadio = new JRadioButton("Rule coverage");
 	private JRadioButton DecisionCoverageRadio = new JRadioButton("Decision coverage");
 	
 	
 	private JRadioButton MCDCRadio = new JRadioButton("MC\\DC ");
 	private JRadioButton MCDCRadio_NoError = new JRadioButton("MC\\DC_NoError");
 	private JRadioButton DecisionCoverageRadio_NoError = new JRadioButton("Decision coverage_NoError");
+	private JRadioButton rulePairCoverage = new JRadioButton("Rule-Pair Coverage");
+	private JRadioButton permitDenyRulePairCoverage = new JRadioButton("Permit/Deny Rule-Pair Coverage");
 	
 	private JPanel createPanel() {
 		JPanel myPanel = new JPanel();
@@ -161,37 +167,39 @@ public class TestPanel extends JPanel {
 		group.add(MCDCRadio);
 		group.add(MCDCRadio_NoError);
 		group.add(DecisionCoverageRadio_NoError);
-		
+		group.add(rulePairCoverage);
+		group.add(permitDenyRulePairCoverage);
 		myPanel.setLayout(new GridLayout(3, 3));
 		myPanel.add(exclusiveRuleCoverageRadio);
 		myPanel.add(DecisionCoverageRadio);
 		myPanel.add(DecisionCoverageRadio_NoError);
 		myPanel.add(MCDCRadio);
 		myPanel.add(MCDCRadio_NoError);
+		myPanel.add(rulePairCoverage);
+		myPanel.add(permitDenyRulePairCoverage);
 		myPanel.setBorder(new TitledBorder(new EtchedBorder(), ""));
 
 		return myPanel;
 	}
 
 	public void generateCoverageBasedTests() {
-		if (!demo.hasWorkingPolicy()) {
-			JOptionPane.showMessageDialog(demo, "There is no policy!");
+		if (!xpa.hasWorkingPolicy()) {
+			JOptionPane.showMessageDialog(xpa, "There is no policy!");
 			return;
 		}
-		int result = JOptionPane.showConfirmDialog(demo, createPanel(), "Please Select Test Generation Strategy", JOptionPane.OK_CANCEL_OPTION);
+		int result = JOptionPane.showConfirmDialog(xpa, createPanel(), "Please Select Test Generation Strategy", JOptionPane.OK_CANCEL_OPTION);
 		
 		if (result == JOptionPane.OK_OPTION) {
 			LoadPolicyDemo lp = new LoadPolicyDemo();
-			AbstractPolicy policy = lp.getPolicy(demo.getWorkingPolicyFilePath());
-			PolicyX policyx = new PolicyX(policy);
-			policyx.initBalana(this.demo);
-			String policyFilePath = demo.getWorkingPolicyFilePath();
+			AbstractPolicy policy = lp.getPolicy(xpa.getWorkingPolicyFilePath());
+			String policyFilePath = xpa.getWorkingPolicyFilePath();
+			this.startProgressStatus();
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				try{
 					this.type = NameDirectory.RULE_COVERAGE;
 					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
 					List<String> requests = requestGenerator.generateRequests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.RULE_COVERAGE);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.RULE_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_COVERAGE);
 				}catch(Exception e){
@@ -201,7 +209,7 @@ public class TestPanel extends JPanel {
 				try{
 					DecisionCoverage requestGenerator = new DecisionCoverage(policyFilePath,true);
 					List<String> requests = requestGenerator.generateTests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.DECISION_COVERAGE);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.DECISION_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.DECISION_COVERAGE);
 				}catch(Exception e){
@@ -211,7 +219,7 @@ public class TestPanel extends JPanel {
 				try{
 					DecisionCoverage requestGenerator = new DecisionCoverage(policyFilePath,false);
 					List<String> requests = requestGenerator.generateTests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.DECISION_COVERAGE_NO_ERROR);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.DECISION_COVERAGE_NO_ERROR);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.DECISION_COVERAGE_NO_ERROR);
 				}catch(Exception e){
@@ -221,7 +229,7 @@ public class TestPanel extends JPanel {
 				try{
 					MCDC requestGenerator = new MCDC(policyFilePath,true);
 					List<String> requests = requestGenerator.generateTests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.MCDC_COVERAGE);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.MCDC_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MCDC_COVERAGE);
 				}catch(Exception e){
@@ -231,69 +239,153 @@ public class TestPanel extends JPanel {
 				try{
 					MCDC requestGenerator = new MCDC(policyFilePath,false);
 					List<String> requests = requestGenerator.generateTests();
-					testSuite = new TestSuiteDemo(policyFilePath,requests,NameDirectory.MCDC_COVERAGE_NO_ERROR);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.MCDC_COVERAGE_NO_ERROR);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MCDC_COVERAGE_NO_ERROR);
+				}catch(Exception e){
+					ExceptionUtil.handleInDefaultLevel(e);
+				}
+			} else if (rulePairCoverage.isSelected()) {
+				try{
+					RulePairCoverage requestGenerator = new RulePairCoverage(policyFilePath);
+					List<String> requests = requestGenerator.generateRequests(false);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.RULE_PAIR_COVERAGE);
+					testSuite.save();
+					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_PAIR_COVERAGE);
+				}catch(Exception e){
+					ExceptionUtil.handleInDefaultLevel(e);
+				}
+			} else if (permitDenyRulePairCoverage.isSelected()) {
+				try{
+					RulePairCoverage requestGenerator = new RulePairCoverage(policyFilePath);
+					List<String> requests = requestGenerator.generateRequests(true);
+					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.PERMIT_DENY_RULE_PAIR_COVERAGE);
+					testSuite.save();
+					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.PERMIT_DENY_RULE_PAIR_COVERAGE);
 				}catch(Exception e){
 					ExceptionUtil.handleInDefaultLevel(e);
 				}
 			}
 			
 			
-			String dir = demo.getWorkingPolicyFile().getParent();
+			String dir = xpa.getWorkingPolicyFile().getParent();
 			Runtime run = Runtime.getRuntime();
 			try {
-				testSuite = new TestSuiteDemo(workingTestSuiteFileName, demo.getWorkingPolicyFilePath());
+				testSuite = new PolicyTestSuite(workingTestSuiteFileName, xpa.getWorkingPolicyFilePath());
 				setUpTestPanel();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			this.stopProgressStatus();
 		}
 
 	}
 
 	public void generateMutationBasedTests() {
-		if (!demo.hasWorkingPolicy()) {
-			JOptionPane.showMessageDialog(demo, "There is no policy!");
+		if (!xpa.hasWorkingPolicy()) {
+			JOptionPane.showMessageDialog(xpa, "There is no policy!");
 			return;
 		}
 		MutationBasedTestGenerator testGenerator;
 		List<TaggedRequest> taggedRequests;
 		try{
-			testGenerator = new MutationBasedTestGenerator(demo.getWorkingPolicyFilePath());
+			testGenerator = new MutationBasedTestGenerator(xpa.getWorkingPolicyFilePath());
 			MutationBasedTestMutationMethods mbtMethods = new MutationBasedTestMutationMethods();
-			int result = JOptionPane.showConfirmDialog(demo, mbtMethods.createPanel(),"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
-			String policyFilePath = demo.getWorkingPolicyFilePath();
+			int result = JOptionPane.showConfirmDialog(xpa, mbtMethods.createPanel(),"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
+			String policyFilePath = xpa.getWorkingPolicyFilePath();
 			this.type = NameDirectory.MUTATION_BASED_TEST;
 			if (result == JOptionPane.OK_OPTION) {
+				this.startProgressStatus();
 				List<String> mutationMethods = mbtMethods.getMutationOperatorList();
 				taggedRequests = testGenerator.generateRequests(mutationMethods);
-				TestSuiteDemo suite = new TestSuiteDemo(policyFilePath, this.type, taggedRequests);
+				PolicyTestSuite suite = new PolicyTestSuite(policyFilePath, this.type, taggedRequests);
 				suite.save();
 				this.testSuite = suite;
 				this.workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MUTATION_BASED_TEST);
 				setUpTestPanel();
+				this.stopProgressStatus();
 			}
 		}catch(Exception e){
 			ExceptionUtil.handleInDefaultLevel(e);
 		}
 	}
 	
+	public void evaluateCoverage(){
+		if(checkInputs()){
+			TestSuite testSuite = getTestSuite();
+			try {
+				List<Boolean> results = testSuite.runTests(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()));
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			this.startProgressStatus();
+			List<List<Coverage>> coverageMatrix = PolicyCoverageFactory.getCoverageMatrix();
+			float ruleCoverage = CoverageHelper.getRuleCoverage(coverageMatrix);
+            this.stopProgressStatus();
+        	DecimalFormat df = new DecimalFormat("###.##");
+            JOptionPane.showMessageDialog(null, "Rule Coverage : " + df.format(ruleCoverage) + " %", "Test Suite Coverages", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+	
+
+
+	private boolean checkInputs(){
+		if (!xpa.hasWorkingPolicy()) {
+			JOptionPane.showMessageDialog(xpa, "There is no policy!");
+			return false;
+		}
+		if (!xpa.hasTests()){
+			JOptionPane.showMessageDialog(xpa, "There are no tests.");
+			return false;
+		}
+		for(TestRecord record: xpa.getTestPanel().getPolicyTestSuite().getTestRecords()){
+			if(record.getOracle().equals("")){
+				JOptionPane.showMessageDialog(xpa, "There are no oracles in Test Suite");
+				return false;
+			}
+		}
+		return true;
+	}
+	private boolean hasFault(TestSuite testSuite) {
+		try{
+			List<Boolean> results = testSuite.runTests(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()));
+			for(Boolean b:results){
+				if(!b){
+					return true;
+				}
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	private TestSuite getTestSuite(){
+		List<String> requests = new ArrayList<String>();
+		List<String> oracles = new ArrayList<String>();
+		for(TestRecord record: xpa.getTestPanel().getPolicyTestSuite().getTestRecords()){
+			requests.add(record.getRequest());
+			oracles.add(record.getOracle());
+		}
+		return new TestSuite(null,requests, oracles);
+		
+	}
 	public void runTests() {
 		hasFailure = false; 
-		if (!demo.hasWorkingPolicy()) {
-			JOptionPane.showMessageDialog(demo, "There is no policy!");
+		if (!xpa.hasWorkingPolicy()) {
+			JOptionPane.showMessageDialog(xpa, "There is no policy!");
 			return;
 		}
 		if (!hasTests()) {
-			JOptionPane.showMessageDialog(demo, "There are no tests.");
+			JOptionPane.showMessageDialog(xpa, "There are no tests.");
 			return; 
 		}
 
 		try {
 			/*PolicyRunner runner = new PolicyRunner(
 					demo.getWorkingPolicyFilePath());*/
-			AbstractPolicy policy = PolicyLoader.loadPolicy(demo.getWorkingPolicyFile());
+			AbstractPolicy policy = PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile());
+			this.startProgressStatus();
 			for (Vector<Object> child : data) {
 				int result = TestSuite.runTestWithoutOracle(policy, child.get(6).toString());
 				// System.out.println(result);
@@ -313,8 +405,9 @@ public class TestPanel extends JPanel {
 						hasFailure = true;
 					}
 				}
-				demo.setToTestPane();
+				xpa.setToTestPane();
 			}
+			this.stopProgressStatus();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -345,10 +438,10 @@ public class TestPanel extends JPanel {
 	}
 	public void saveActualResponsesAsOracleValues() {
 		if (!hasTests()) {
-			JOptionPane.showMessageDialog(demo, "There are no tests.");
+			JOptionPane.showMessageDialog(xpa, "There are no tests.");
 			return;
 		}
-
+		this.startProgressStatus();
 		boolean hasOracleValue = false;
 		for (Vector<Object> child : data) {
 			if (!child.get(3).toString().equals("")) {
@@ -360,20 +453,21 @@ public class TestPanel extends JPanel {
 			for (Vector<Object> child : data) {
 				recordList.add(TestUtil.getTestRecord(child));
 			}
-			TestSuiteDemo testSuite = new TestSuiteDemo(recordList, "GenTests/",this.type);
+			PolicyTestSuite testSuite = new PolicyTestSuite(recordList, "GenTests/",this.type);
 			testSuite.writeMetaFile(workingTestSuiteFileName);
 			System.out.println(workingTestSuiteFileName + " saved.");
 			requestTablePanel.validate();
 			requestTablePanel.updateUI();
 			this.testSuite = testSuite;
 		} else {
-			JOptionPane.showMessageDialog(demo, "Oracle values already exist!");
+			JOptionPane.showMessageDialog(xpa, "Oracle values already exist!");
 			return;
 		}
+		this.stopProgressStatus();
 	}
 
 	public String getTestsuiteXLSfileName(String testMethod) {
-		File file = demo.getWorkingPolicyFile();
+		File file = xpa.getWorkingPolicyFile();
 		String path = file.getParentFile().getAbsolutePath();
 		String name = file.getName();
 		name = name.substring(0, name.length() - 4);
@@ -383,7 +477,7 @@ public class TestPanel extends JPanel {
 
 	public String getTestOutputDestination(String testMethod) {
 
-		File file = demo.getWorkingPolicyFile();
+		File file = xpa.getWorkingPolicyFile();
 		String path = file.getParentFile().getAbsolutePath();
 		String name = file.getName();
 		name = name.substring(0, name.length() - 4);
@@ -399,7 +493,7 @@ public class TestPanel extends JPanel {
 	public boolean hasTests() {
 		return data != null && data.size() > 0;
 	}
-	public TestSuiteDemo getTestSuite(){
+	public PolicyTestSuite getPolicyTestSuite(){
 		return testSuite;
 	}
 	public boolean hasTestFailure(){

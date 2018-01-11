@@ -54,7 +54,7 @@ public class RuleCoverage extends Coverage {
         TRUE, FALSE, ERROR, EMPTY, NOT_EVALUATED
     }
 
-    enum CombinedCoverage {
+    public enum CombinedCoverage {
         BOTH_TRUE, FALSE_TARGET, FALSE_CONDITION, ERROR_TARGET, ERROR_CONDITION
     }
 
