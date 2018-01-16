@@ -518,11 +518,11 @@ public class Z3StrExpressionHelper {
 	        br.readLine();
 	        while ((s = br.readLine()) != null) {
 	            String[] data = s.trim().split(" \"");
-	            if(s.indexOf("true")!=-1 || s.indexOf("false")!=-1){
-	            	data = s.trim().split("\\s+");
-	            }
 	            if(data.length< 2 || data[1].trim().isEmpty()) {
-	            	continue;
+	            	data = s.trim().split("\\s+");
+	 	            if(data.length < 2) {
+	 	            	continue;
+	 	            }
 	            }
 	            String cleaned = data[1].trim().replaceAll("\"", "");
 	            if(cleaned.isEmpty() || cleaned.replaceAll("\\)","").isEmpty()) {

@@ -81,6 +81,8 @@ public class MutationPanel extends JPanelPB {
 	private JCheckBox boxFDR = new JCheckBox("First Deny Rules (FDR)");
 	private JCheckBox boxANF = new JCheckBox("Add Not Function (ANF)");
 	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
+	private JCheckBox boxSelectM8 = new JCheckBox("Select Eight(M8)");
+	
 	//private JCheckBox boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
 	
 	private JCheckBox boxSelectAll = new JCheckBox("Select All"); 
@@ -99,6 +101,16 @@ public class MutationPanel extends JPanelPB {
 		        	setAllIndividualBoxes(true);
 		        else
 		        	setAllIndividualBoxes(false);			
+			}
+        });
+		
+		boxSelectM8.addActionListener(new ActionListener() {		 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (boxSelectM8.isSelected())
+		        	setM8Boxes(true);
+		        else
+		        	setM8Boxes(false);			
 			}
         });
 		
@@ -121,6 +133,8 @@ public class MutationPanel extends JPanelPB {
 		myPanel.add(boxANF);
 		myPanel.add(boxRNF);
 		//myPanel.add(boxRPTE);
+		myPanel.add(boxSelectM8);
+		
 		myPanel.add(boxSelectAll);
 		myPanel.setBorder(new TitledBorder(new EtchedBorder(), ""));
 		return myPanel;
@@ -148,6 +162,19 @@ public class MutationPanel extends JPanelPB {
 		boxSelectAll.setSelected(selected);
 	}
 	
+		private void setM8Boxes(boolean selected) {
+			
+			boxSelectAll.setSelected(false);
+			boxPTT.setSelected(selected);
+			boxPTF.setSelected(selected);
+			boxCRC.setSelected(selected);
+			boxCRE.setSelected(selected);
+			boxRTT.setSelected(selected);
+			boxRTF.setSelected(selected);
+			boxRCT.setSelected(selected);
+			boxRCF.setSelected(selected);
+			
+		}
 	public void setUpMutantPanel(List<Mutant> mutants, String mutantsFolder){
 		removeAll();
 		setLayout(new BorderLayout());
@@ -239,9 +266,9 @@ public class MutationPanel extends JPanelPB {
         	}
 
         }
-
       return sb.toString();
-}
+	}
+	
 	public void setUpMutantPanel(){
 		removeAll();
 		setLayout(new BorderLayout());

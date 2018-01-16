@@ -31,6 +31,7 @@ public class MutationBasedTestMutationMethods {
 	private JCheckBox boxCCA;
 	private JCheckBox boxRCCF;
 	private JCheckBox boxPCCF;
+	private JCheckBox boxSelectM8;
 	private JCheckBox boxSelectAll;
 	
 	
@@ -201,20 +202,21 @@ public class MutationBasedTestMutationMethods {
 		List<JCheckBox> boxes = new ArrayList<JCheckBox>();
 		boxes.add(boxPTT);
 		boxes.add(boxPTF);
+		boxes.add(boxCCA);
 		boxes.add(boxCRE);
-		boxes.add(boxRER);
 		boxes.add(boxRTT);
 		boxes.add(boxRTF);
 		boxes.add(boxRCT);
 		boxes.add(boxRCF);
+		boxes.add(boxRER);
 		boxes.add(boxFPR);
 		boxes.add(boxFDR);
 		boxes.add(boxANF);
 		boxes.add(boxRNF);
-		boxes.add(boxCCA);
 		boxes.add(boxRCCF);
 		boxes.add(boxPCCF);
 		//boxes.add(boxRPTE);
+		boxes.add(boxSelectM8);
 		boxes.add(boxSelectAll);
 		return boxes;
 	}
@@ -223,21 +225,22 @@ public class MutationBasedTestMutationMethods {
 	public MutationBasedTestMutationMethods(){
 		boxPTT = new JCheckBox("Policy Target True (PTT)");
 		boxPTF = new JCheckBox("Policy Target False (PTF)");
+		boxCCA = new JCheckBox("Change Combining Algorithm (CCA)");
 		boxCRE = new JCheckBox("Flip Rule Effect (CRE)");
-		boxRER = new JCheckBox("Remove One Rule (RER)");
 		boxRTT = new JCheckBox("Rule Target True (RTT)");
 		boxRTF = new JCheckBox("Rule Target False (RTF)");
 		boxRCT = new JCheckBox("Rule Condition True (RCT)");
 		boxRCF = new JCheckBox("Rule Condition False (RCF)");
+		boxRER = new JCheckBox("Remove One Rule (RER)");
 		boxFPR = new JCheckBox("First Permit Rules (FPR)");
 		boxFDR = new JCheckBox("First Deny Rules (FDR)");
 		boxANF = new JCheckBox("Add Not Function (ANF)");
 		boxRNF = new JCheckBox("Remove Not Function (RNF)");
-		boxCCA = new JCheckBox("Change Combining Algorithm (CCA)");
 		boxRCCF = new JCheckBox("Rule Change Comparision Function (RCCF)");
 		boxPCCF = new JCheckBox("Policy Change Comparision Function (PCCF)");
 		//boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
 		boxSelectAll = new JCheckBox("Select All");
+		boxSelectM8 = new JCheckBox("Select Eight(M8)");
 		boxSelectAll.addActionListener(new ActionListener() {		 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -247,6 +250,17 @@ public class MutationBasedTestMutationMethods {
 		        	setAllIndividualBoxes(false);			
 			}
         });
+		
+		boxSelectM8.addActionListener(new ActionListener() {		 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (boxSelectM8.isSelected())
+		        	setM8Boxes(true);
+		        else
+		        	setM8Boxes(false);			
+			}
+        });
+		
 		
 	}
 	
@@ -306,12 +320,14 @@ public class MutationBasedTestMutationMethods {
 	public void setAllIndividualBoxes(boolean selected) {
 		boxPTT.setSelected(selected);
 		boxPTF.setSelected(selected);
+		boxCCA.setSelected(selected);
 		boxCRE.setSelected(selected);
-		boxRER.setSelected(selected);
 		boxRTT.setSelected(selected);
 		boxRTF.setSelected(selected);
 		boxRCT.setSelected(selected);
 		boxRCF.setSelected(selected);
+		boxRER.setSelected(selected);
+		
 		boxFPR.setSelected(selected);
 		boxFDR.setSelected(selected);
 		boxANF.setSelected(selected);
@@ -320,9 +336,24 @@ public class MutationBasedTestMutationMethods {
 		boxRCCF.setSelected(selected);
 		boxPCCF.setSelected(selected);
 		
-		boxCCA.setSelected(selected);
 		boxSelectAll.setSelected(selected);
 	}
+	
+	public void setM8Boxes(boolean selected) {
+		setAllIndividualBoxes(false);
+		boxPTT.setSelected(selected);
+		boxPTF.setSelected(selected);
+		boxCCA.setSelected(selected);
+		boxCRE.setSelected(selected);
+		boxRTT.setSelected(selected);
+		boxRTF.setSelected(selected);
+		boxRCT.setSelected(selected);
+		boxRCF.setSelected(selected);
+		
+		
+	}
+	
+
 	
 	public JPanel createPanel() {
 		setAllIndividualBoxes(true);
@@ -347,6 +378,7 @@ public class MutationBasedTestMutationMethods {
 		panel.add(boxCCA);
 		panel.add(boxRCCF);
 		panel.add(boxPCCF);
+		panel.add(boxSelectM8);
 		panel.add(boxSelectAll);
 		panel.setBorder(new TitledBorder(new EtchedBorder(), ""));
 		return panel;
