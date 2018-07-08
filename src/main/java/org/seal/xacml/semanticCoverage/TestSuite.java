@@ -5,7 +5,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.seal.xacml.semanticMutation.Mutant;
+import org.seal.xacml.utils.XACMLElementUtil;
 import org.wso2.balana.AbstractPolicy;
+import org.wso2.balana.ParsingException;
 import org.wso2.balana.ctx.AbstractResult;
 
 import java.io.File;
@@ -58,6 +60,14 @@ public class TestSuite {
     private static boolean runTest(AbstractPolicy policy, String request, String oracleString) {
         int oracle = balanaFinalDecision(oracleString);
         int response = PolicyRunner.evaluate(policy, request);
+//        System.out.println(oracleString + ", " + decisionToString(response));
+        return response == oracle;
+    }
+    
+    private static boolean isKilledBy(AbstractPolicy policy, String request, String oracleString) throws ParsingException{
+        int oracle = balanaFinalDecision(oracleString);
+        int response = XACMLElementUtil.evaluateRequestForPolicy(policy, request);
+        
 //        System.out.println(oracleString + ", " + decisionToString(response));
         return response == oracle;
     }
@@ -115,6 +125,17 @@ public class TestSuite {
             results.add(runTest(policy, requests.get(i), oracles.get(i)));
         }
         return results;
+    }
+    
+    public boolean isKilled(AbstractPolicy policy) throws ParsingException {
+        boolean flag = false;
+    	for (int i = 0; i < requests.size(); i++) {
+            if(!isKilledBy(policy, requests.get(i), oracles.get(i))) {
+            	flag = true;
+            	break;
+            }
+        }
+        return flag;
     }
 
     public List<Boolean> runTests(Mutant mutant) {

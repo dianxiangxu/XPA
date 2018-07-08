@@ -163,7 +163,7 @@ public class DebugPanel extends JPanelPB {
 							Repairer repairer = new Repairer();
 							try{
 								Mutant faultyPolicy =  new Mutant(PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile()),"");
-								List<String> mutationMethods =mutationOperators.getMutationOperatorList();
+								List<String> mutationMethods =mutationOperators.getMutationOperatorList(false);
 								Mutant mutant = repairer.repairWithSelectedMutantMethods(faultyPolicy, testSuite, method, mutationMethods, depth);
 								if(mutant == null){
 									JOptionPane.showMessageDialog(null, "The policy can not be repaired");

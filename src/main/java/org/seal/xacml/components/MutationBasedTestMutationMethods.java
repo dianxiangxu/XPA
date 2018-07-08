@@ -29,8 +29,8 @@ public class MutationBasedTestMutationMethods {
 	private JCheckBox boxRNF;
 	private JCheckBox boxRPTE;
 	private JCheckBox boxCCA;
-	private JCheckBox boxRCCF;
-	private JCheckBox boxPCCF;
+	//private JCheckBox boxRCCF;
+	//private JCheckBox boxPCCF;
 	private JCheckBox boxSelectM8;
 	private JCheckBox boxSelectAll;
 	
@@ -172,22 +172,22 @@ public class MutationBasedTestMutationMethods {
 		this.boxCCA = boxCCA;
 	}
 
-	public JCheckBox getBoxRCCF() {
-		return boxRCCF;
-	}
-
-
-	public void setBoxRCCF(JCheckBox boxRCCF) {
-		this.boxRCCF = boxRCCF;
-	}
-
-	public JCheckBox getBoxPCCF() {
-		return boxPCCF;
-	}
-
-	public void setBoxPCCF(JCheckBox boxPCCF) {
-		this.boxPCCF = boxPCCF;
-	}
+//	public JCheckBox getBoxRCCF() {
+//		return boxRCCF;
+//	}
+//
+//
+//	public void setBoxRCCF(JCheckBox boxRCCF) {
+//		this.boxRCCF = boxRCCF;
+//	}
+//
+//	public JCheckBox getBoxPCCF() {
+//		return boxPCCF;
+//	}
+//
+//	public void setBoxPCCF(JCheckBox boxPCCF) {
+//		this.boxPCCF = boxPCCF;
+//	}
 	
 	public JCheckBox getBoxSelectAll() {
 		return boxSelectAll;
@@ -213,9 +213,9 @@ public class MutationBasedTestMutationMethods {
 		boxes.add(boxFDR);
 		boxes.add(boxANF);
 		boxes.add(boxRNF);
-		boxes.add(boxRCCF);
-		boxes.add(boxPCCF);
-		//boxes.add(boxRPTE);
+//		boxes.add(boxRCCF);
+//		boxes.add(boxPCCF);
+		boxes.add(boxRPTE);
 		boxes.add(boxSelectM8);
 		boxes.add(boxSelectAll);
 		return boxes;
@@ -236,9 +236,9 @@ public class MutationBasedTestMutationMethods {
 		boxFDR = new JCheckBox("First Deny Rules (FDR)");
 		boxANF = new JCheckBox("Add Not Function (ANF)");
 		boxRNF = new JCheckBox("Remove Not Function (RNF)");
-		boxRCCF = new JCheckBox("Rule Change Comparision Function (RCCF)");
-		boxPCCF = new JCheckBox("Policy Change Comparision Function (PCCF)");
-		//boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
+//		boxRCCF = new JCheckBox("Rule Change Comparision Function (RCCF)");
+//		boxPCCF = new JCheckBox("Policy Change Comparision Function (PCCF)");
+		boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
 		boxSelectAll = new JCheckBox("Select All");
 		boxSelectM8 = new JCheckBox("Select Eight(M8)");
 		boxSelectAll.addActionListener(new ActionListener() {		 
@@ -264,31 +264,39 @@ public class MutationBasedTestMutationMethods {
 		
 	}
 	
-	public List<String> getMutationOperatorList(){
+	public List<String> getMutationOperatorList(boolean filter){
+		boolean flag = false;
 		List<String> lst = new ArrayList<String>();
-		if (boxPTT.isSelected()) {
-			lst.add("createPolicyTargetTrueMutants");
-		}
-		if (boxPTF.isSelected()) {
-			lst.add("createPolicyTargetFalseMutants");
-		}
 		if (boxCRE.isSelected()) {
+			if(!filter||!flag)
 			lst.add("createRuleEffectFlippingMutants");
+			flag = true;
 		}
 		if (boxRER.isSelected()) {
+			if(!filter||!flag)
 			lst.add("createRemoveRuleMutants");
+			flag = true;
+
 		}
 		if (boxRTT.isSelected()) {
 			lst.add("createRuleTargetTrueMutants");
 		}
 		if (boxRTF.isSelected()) {
+			
+			if(!filter||!flag)
+				
 			lst.add("createRuleTargetFalseMutants");
+			flag = true;
 		}
 		if (boxRCT.isSelected()) {
 			lst.add("createRuleConditionTrueMutants");
 		}
 		if (boxRCF.isSelected()) {
+			if(!filter||!flag)
+				
 			lst.add("createRuleConditionFalseMutants");
+			flag = true;
+
 		}
 		if (boxFPR.isSelected()) {
 			lst.add("createFirstPermitRuleMutants");
@@ -297,23 +305,38 @@ public class MutationBasedTestMutationMethods {
 			lst.add("createFirstDenyRuleMutants");
 		}
 		if (boxANF.isSelected()) {
+			if(!filter||!flag)
+				
 			lst.add("createAddNotFunctionMutants");
+			flag = true;
+
 		}
 		if (boxRNF.isSelected()) {
+			if(!filter||!flag)
+				
 			lst.add("createRemoveNotFunctionMutants");
+			flag = true;
+
 		}
 		if (boxCCA.isSelected()) {
 			lst.add("createCombiningAlgorithmMutants");
 		}
-		if (boxRCCF.isSelected()) {
-			lst.add("createRuleChangeComparisonFunctionMutants");
-		}
-		if (boxPCCF.isSelected()) {
-			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
-		}
-		/*if (boxRPTE.isSelected()) {
+//		if (boxRCCF.isSelected()) {
+//			lst.add("createRuleChangeComparisonFunctionMutants");
+//		}
+//		if (boxPCCF.isSelected()) {
+//			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
+//		}
+		if (boxRPTE.isSelected()) {
 			lst.add("createRemoveParallelTargetElementMutants");
-		}*/
+		}
+		if (boxPTT.isSelected()) {
+			lst.add("createPolicyTargetTrueMutants");
+		}
+		if (boxPTF.isSelected()) {
+			lst.add("createPolicyTargetFalseMutants");
+		}
+		
 		return lst;
 	}
 	
@@ -332,9 +355,9 @@ public class MutationBasedTestMutationMethods {
 		boxFDR.setSelected(selected);
 		boxANF.setSelected(selected);
 		boxRNF.setSelected(selected);
-		//boxRPTE.setSelected(selected);
-		boxRCCF.setSelected(selected);
-		boxPCCF.setSelected(selected);
+		boxRPTE.setSelected(selected);
+//		boxRCCF.setSelected(selected);
+//		boxPCCF.setSelected(selected);
 		
 		boxSelectAll.setSelected(selected);
 	}
@@ -374,10 +397,10 @@ public class MutationBasedTestMutationMethods {
 		panel.add(boxFDR);
 		panel.add(boxANF);
 		panel.add(boxRNF);
-		//panel.add(boxRPTE);
+		panel.add(boxRPTE);
 		panel.add(boxCCA);
-		panel.add(boxRCCF);
-		panel.add(boxPCCF);
+//		panel.add(boxRCCF);
+//		panel.add(boxPCCF);
 		panel.add(boxSelectM8);
 		panel.add(boxSelectAll);
 		panel.setBorder(new TitledBorder(new EtchedBorder(), ""));

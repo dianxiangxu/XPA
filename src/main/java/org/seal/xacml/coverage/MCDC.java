@@ -68,30 +68,24 @@ public class MCDC extends RequestGeneratorBase{
 		    }
 			StringBuffer ruleTargetExpression = new StringBuffer();
 			boolean sat = false;
-			ruleTargetExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
+			ruleTargetExpression.append(z3ExpressionHelper.getNegatedOrTargetExpression(target) + System.lineSeparator());
+			List<String> ruleTargetMCDC = new ArrayList<String>();
 			if(target!=null){
 				z3ExpressionHelper.getTrueTargetExpression(target);
 				String falseExpression = preExpression.toString()+z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator() + falsifyPreviousRules;
 				sat = Z3StrUtil.processExpression(falseExpression, z3ExpressionHelper);
-			    	if (sat) {
-					    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-					}
+//			    	if (sat) {
+//					    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+//					}
 			    if(error){
 			    	IndTarget(target,preExpression.toString() + falsifyPreviousRules);
 			    }
+			    ruleTargetMCDC = getMCDCExpressions(ruleTargetExpression.toString());
 			}
-			StringBuffer ruleExpression = new StringBuffer();
-			ruleExpression.append(ruleTargetExpression);
-			ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
-			//String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
-			List<String> ruleExprs = getMCDCExpressions(preExpression.toString() + ruleExpression.toString());
-			for(String e:ruleExprs) {
-				String expresion = (e + falsifyPreviousRules);
-				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
-				if (sat){
-					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-				}
-			}
+			 
+			
+			List<String> ruleConditionMCDC = new ArrayList<String>();
+			StringBuffer ruleConditionExpression = new StringBuffer();
 			
 			if(condition!=null){
 				/*sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
@@ -99,8 +93,30 @@ public class MCDC extends RequestGeneratorBase{
 			    	addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 			    }*/
 			    if(error){
-			    	IndCondition(condition, preExpression.toString() + System.lineSeparator() +ruleTargetExpression + System.lineSeparator() + falsifyPreviousRules);
+			    	IndCondition(condition, preExpression.toString() + System.lineSeparator() +z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator() + falsifyPreviousRules);
 			    }
+			    ruleConditionExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition));
+			    ruleConditionMCDC = getMCDCExpressions(ruleConditionExpression.toString());
+				
+			}
+			List<String> ruleExprs = new ArrayList<String>();
+			if(condition == null && target !=null) {
+				ruleExprs = ruleTargetMCDC;
+			} else if(condition != null && target ==null) {
+				ruleExprs = ruleConditionMCDC;
+			} else if(condition != null && target !=null) {
+				ruleExprs = ruleTargetMCDC;
+					for(String c:ruleConditionMCDC) {
+						ruleExprs.add( z3ExpressionHelper.getTrueTargetExpression(target) +  System.lineSeparator() + c +  System.lineSeparator());
+					}
+			}
+			
+			for(String e:ruleExprs) {
+				String expresion = (preExpression + e + falsifyPreviousRules);
+				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
+				if (sat){
+					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+				}
 			}
 			previousRules.add(Rule.getInstance(node, policyMetaData, null));
 			return;
@@ -180,6 +196,7 @@ public class MCDC extends RequestGeneratorBase{
 			String expr = expression.substring(0,(int)lIndex.get(i)) + aNExprs.get(i).toString() + expression.substring((int)rIndex.get(i));
 			expressions.add(expr);
 		}
+		/*
 		String nExpression = expression.substring(0);
 		List<Integer> nlIndex = new ArrayList<Integer>();
 		List<Integer> nrIndex = new ArrayList<Integer>();
@@ -196,7 +213,7 @@ public class MCDC extends RequestGeneratorBase{
 		for(int i = 0; i < aExprs.size();i++) {
 			String expr = nExpression.substring(0,(int)nlIndex.get(i))  + aExprs.get(i).toString() +" "+ nExpression.substring((int)nrIndex.get(i));
 			expressions.add(expr);
-		}
+		}*/
 		return expressions;
 		
 	}

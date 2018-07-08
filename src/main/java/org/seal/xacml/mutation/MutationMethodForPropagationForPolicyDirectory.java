@@ -11,9 +11,9 @@ public class MutationMethodForPropagationForPolicyDirectory {
 		 map.put("createPolicyTargetFalseMutants", "SELF");
 		 map.put("createCombiningAlgorithmMutants", "SELF");
 		 map.put("createRuleEffectFlippingMutants", "SELF");
-		 map.put("createRuleTargetTrueMutants", "createRemoveDefaultRulesMutant");
+		 map.put("createRuleTargetTrueMutants", "SELF");
 		 map.put("createRuleTargetFalseMutants", "SELF");
-		 map.put("createRuleConditionTrueMutants", "createRemoveDefaultRulesMutant");
+		 map.put("createRuleConditionTrueMutants", "SELF");
 		 map.put("createRuleConditionFalseMutants", "SELF");
 		 map.put("createAddNotFunctionMutants", "SELF");
 		 map.put("createRemoveNotFunctionMutants", "SELF");
@@ -22,7 +22,7 @@ public class MutationMethodForPropagationForPolicyDirectory {
 		 map.put("createRemoveRuleMutants", "SELF");
 		 map.put("createRuleChangeComparisonFunctionMutants", "SELF");
 		 map.put("createPolicyTargetChangeComparisonFunctionMutants", "SELF");
-		 map.put("createAddNewRuleMutants", "createRemoveDefaultRulesMutant");
+		 map.put("createAddNewRuleMutants", "SELF");
 		 map.put("createRemoveDefaultRulesMutant", "SELF");
 		 map.put("createRemoveParallelTargetElementMutants", "SELF");
 		 map.put("createCombiningAlgorithmMutants", "SELF");

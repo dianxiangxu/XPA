@@ -56,7 +56,63 @@ public class Z3StrExpressionHelper {
 	public List<Attr> getAttributeList(){
 		return currentRequestCollector;
 	}
-	
+
+	public StringBuffer getFalseTargetExpression2(Target target) {
+		StringBuffer expr = new StringBuffer();
+		if (target != null) {
+			for (AnyOfSelection anyofselection : target.getAnyOfSelections()) {
+				StringBuilder orBuilder = new StringBuilder();
+				for (AllOfSelection allof : anyofselection.getAllOfSelections()) {
+					StringBuilder allBuilder = new StringBuilder();
+					for (TargetMatch match : allof.getMatches()) {
+						if (match.getEval() instanceof AttributeDesignator) {
+							AttributeDesignator attribute = (AttributeDesignator) match.getEval();
+							if(attribute.getType().toString().contains("boolean")){
+								allBuilder.append(getName(attribute));
+							}else{
+								allBuilder.append(" (" + getOperator(match.getMatchFunction().encode()) + " " + getName(attribute) + " ");
+							}
+							if (attribute.getType().toString().contains("string")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value = value.trim();
+								allBuilder.append("\"" + value + "\")");
+							}
+							if (attribute.getType().toString().contains("integer")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value.trim();
+								value = value.trim();
+								allBuilder.append(value + ")");
+							}
+							getType(attribute);
+							Attr myattr = new Attr(attribute);
+							if (!collector.contains(myattr)) {
+								collector.add(myattr);
+							}
+						}
+					}
+					allBuilder.insert(0, " (and ");
+					allBuilder.append(")");
+					allBuilder.insert(0, " (not ");
+					allBuilder.append(")");
+					orBuilder.append(allBuilder);
+				}
+				orBuilder.insert(0, " (or ");
+				orBuilder.append(")");
+				expr.append(orBuilder);
+			}
+			expr = new StringBuffer(expr.toString().trim());
+			if(!expr.toString().trim().equals("")){
+				expr.insert(0, "(and ");
+				expr.append(")");
+			}
+		}
+		
+		
+		
+		return expr.append(System.lineSeparator());
+	}
 	public StringBuffer getTrueTargetExpression(Target target) {
 		StringBuffer expr = new StringBuffer();
 		if (target != null) {
@@ -94,6 +150,119 @@ public class Z3StrExpressionHelper {
 					}
 					allBuilder.insert(0, " (and ");
 					allBuilder.append(")");
+					orBuilder.append(allBuilder);
+				}
+				orBuilder.insert(0, " (or ");
+				orBuilder.append(")");
+				expr.append(orBuilder);
+			}
+			expr = new StringBuffer(expr.toString().trim());
+			if(!expr.toString().trim().equals("")){
+				expr.insert(0, "(and ");
+				expr.append(")");
+			}
+		}
+		
+		
+		
+		return expr.append(System.lineSeparator());
+	}
+	public StringBuffer getTrueTargetExpression(Target target,List<Attr> attrs) {
+		StringBuffer expr = new StringBuffer();
+		if (target != null) {
+			for (AnyOfSelection anyofselection : target.getAnyOfSelections()) {
+				StringBuilder orBuilder = new StringBuilder();
+				for (AllOfSelection allof : anyofselection.getAllOfSelections()) {
+					StringBuilder allBuilder = new StringBuilder();
+					for (TargetMatch match : allof.getMatches()) {
+						if (match.getEval() instanceof AttributeDesignator) {
+							AttributeDesignator attribute = (AttributeDesignator) match.getEval();
+							if(attribute.getType().toString().contains("boolean")){
+								allBuilder.append(getName(attribute));
+							}else{
+								allBuilder.append(" (" + getOperator(match.getMatchFunction().encode()) + " " + getName(attribute) + " ");
+							}
+							if (attribute.getType().toString().contains("string")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value = value.trim();
+								allBuilder.append("\"" + value + "\")");
+							}
+							if (attribute.getType().toString().contains("integer")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value.trim();
+								value = value.trim();
+								allBuilder.append(value + ")");
+							}
+							getType(attribute);
+							Attr myattr = new Attr(attribute);
+							attrs.add(myattr);
+							if (!collector.contains(myattr)) {
+								collector.add(myattr);
+							}
+						}
+					}
+					allBuilder.insert(0, " (and ");
+					allBuilder.append(")");
+					orBuilder.append(allBuilder);
+				}
+				orBuilder.insert(0, " (or ");
+				orBuilder.append(")");
+				expr.append(orBuilder);
+			}
+			expr = new StringBuffer(expr.toString().trim());
+			if(!expr.toString().trim().equals("")){
+				expr.insert(0, "(and ");
+				expr.append(")");
+			}
+		}
+		
+		
+		
+		return expr.append(System.lineSeparator());
+	}
+	public StringBuffer getNegatedOrTargetExpression(Target target) {
+		StringBuffer expr = new StringBuffer();
+		if (target != null) {
+			for (AnyOfSelection anyofselection : target.getAnyOfSelections()) {
+				StringBuilder orBuilder = new StringBuilder();
+				for (AllOfSelection allof : anyofselection.getAllOfSelections()) {
+					StringBuilder allBuilder = new StringBuilder();
+					for (TargetMatch match : allof.getMatches()) {
+						if (match.getEval() instanceof AttributeDesignator) {
+							AttributeDesignator attribute = (AttributeDesignator) match.getEval();
+							if(attribute.getType().toString().contains("boolean")){
+								allBuilder.append(getName(attribute));
+							}else{
+								allBuilder.append(" (" + getOperator(match.getMatchFunction().encode()) + " " + getName(attribute) + " ");
+							}
+							if (attribute.getType().toString().contains("string")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value = value.trim();
+								allBuilder.append("\"" + value + "\")");
+							}
+							if (attribute.getType().toString().contains("integer")) {
+								String value = match.getAttrValue().encode();
+								value = value.replaceAll(System.lineSeparator(), "");
+								value.trim();
+								value = value.trim();
+								allBuilder.append(value + ")");
+							}
+							getType(attribute);
+							Attr myattr = new Attr(attribute);
+							if (!collector.contains(myattr)) {
+								collector.add(myattr);
+							}
+						}
+					}
+					allBuilder.insert(0, " (and ");
+					allBuilder.append(")");
+					if(anyofselection.getAllOfSelections().size()>1) {
+						allBuilder.insert(0, " (not ");
+						allBuilder.append(")");
+					}
 					orBuilder.append(allBuilder);
 				}
 				orBuilder.insert(0, " (or ");
@@ -211,7 +380,36 @@ public class Z3StrExpressionHelper {
 		}
 		return expr;
 	}
+	
+	public StringBuffer getFalseTargetExpression(Target target,List<Attr> attrs){
+		String[] lines = getTrueTargetExpression(target,attrs).toString().split("\n");
+		StringBuffer expr = new StringBuffer();
+		for (String s : lines) {
+			if (s.isEmpty()) {
+				continue;
+			} else {
+				StringBuffer subExpr = new StringBuffer();
+				subExpr.append("(not ");
+				subExpr.append(s);
+				subExpr.append(")");
+				expr.append(subExpr);
+			}
+		}
+		return expr;
+	}
     
+	public StringBuffer getTrueConditionExpression(Condition condition,List<Attr> attrs) {
+		StringBuffer expr = new StringBuffer("");
+		if (condition != null) {
+			Expression expression = condition.getExpression();
+			if (expression instanceof Apply) {
+				Apply apply = (Apply) expression;
+				expr = ApplyStatements(apply, "", expr,attrs);
+			}
+		}
+		return expr.append(System.lineSeparator());
+	}
+	
 	public StringBuffer getTrueConditionExpression(Condition condition) {
 		StringBuffer expr = new StringBuffer("");
 		if (condition != null) {
@@ -226,6 +424,23 @@ public class Z3StrExpressionHelper {
 	
 	public StringBuffer getFalseConditionExpression(Condition condition){
 		String[] lines = getTrueConditionExpression(condition).toString().split("\n");
+		StringBuffer expr = new StringBuffer();
+		for (String s : lines) {
+			if (s.trim().isEmpty()) {
+				continue;
+			} else {
+				StringBuffer subExpr = new StringBuffer();
+				subExpr.append("(not ");
+				subExpr.append(s);
+				subExpr.append(")");
+				expr.append(subExpr);
+			}
+		}
+		return expr;
+	}
+	
+	public StringBuffer getFalseConditionExpression(Condition condition,List<Attr> attrs){
+		String[] lines = getTrueConditionExpression(condition,attrs).toString().split("\n");
 		StringBuffer expr = new StringBuffer();
 		for (String s : lines) {
 			if (s.trim().isEmpty()) {
@@ -261,6 +476,37 @@ public class Z3StrExpressionHelper {
 		sb.append("))");
 		return sb;
 	}
+	
+	/*public StringBuffer getFalseTargetFalseConditionExpression2(Rule rule) {
+		StringBuffer targetsb = new StringBuffer();
+		StringBuffer conditionsb = new StringBuffer();
+		StringBuffer sb = new StringBuffer();
+		Target target = (Target) rule.getTarget();
+		Condition condition = (Condition) rule.getCondition();
+		if(target == null && condition == null){
+			return sb;
+		}
+		targetsb.append(getTrueTargetExpression(target).toString().trim());
+		conditionsb.append(getTrueConditionExpression(condition).toString().trim());
+		if(targetsb.length() == 0 && conditionsb.length()==0){
+			return sb;
+		}
+		if(condition==null) {
+		sb.append("(not (and ");
+		sb.append(targetsb);
+		
+		sb.append("))");
+		} else {
+			sb.append("(and ");
+			sb.append(targetsb);
+			sb.append("(not ");
+			
+			sb.append(conditionsb);	
+			sb.append("))");
+			
+		}
+		return sb;
+	}*/
 	
 	public StringBuffer getTrueTargetTrueConditionExpression(Rule rule) {
 		StringBuffer targetsb = new StringBuffer();
@@ -348,6 +594,135 @@ public class Z3StrExpressionHelper {
 		} else {
 			return "=";
 		}
+	}
+	public StringBuffer ApplyStatements(Apply apply, String function, StringBuffer sb,List<Attr> attrs) {
+		if (apply.getFunction().encode().contains("urn:oasis:names:tc:xacml:1.0:function:and")) {
+			StringBuffer newsb = new StringBuffer();
+			for (Object element : apply.getList()) {
+				if (element instanceof Apply) {
+					Apply childApply = (Apply) element;
+					ApplyStatements(childApply, apply.getFunction().toString(),newsb,attrs);
+				}
+			}
+			newsb.insert(0, "(and ");
+			newsb.append(")");
+			sb.append(newsb);
+			return sb;
+		} else if (apply.getFunction().encode().contains("urn:oasis:names:tc:xacml:1.0:function:or")) {
+			StringBuffer newsb = new StringBuffer();
+			for (Object element : apply.getList()) {
+				if (element instanceof Apply) {
+					Apply childApply = (Apply) element;
+					ApplyStatements(childApply, apply.getFunction().toString(),newsb,attrs);
+				}
+			}
+			newsb.insert(0, "(or ");
+			newsb.append(")");
+			sb.append(newsb);
+			return sb;
+		} else if (apply.getFunction().encode().contains("urn:oasis:names:tc:xacml:1.0:function:not")) {
+			StringBuffer newsb = new StringBuffer();
+			for (Object element : apply.getList()) {
+				if (element instanceof Apply) {
+					Apply childApply = (Apply) element;
+					ApplyStatements(childApply, apply.getFunction().toString(),newsb,attrs);
+				}
+			}
+			newsb.insert(0, "(not ");
+			newsb.append(")");
+			sb.append(newsb);
+			return sb;
+		} else if (apply.getFunction().encode().contains("string-is-in")) {
+			String value = "";
+			value = getAttrValue(apply);
+			String functionName = getOperator(apply.getFunction().encode());
+			sb = buildAttrDesignator(sb, apply, value, functionName,attrs);
+			return sb;
+		} else if (apply.getFunction().encode().contains("string-at-least-one-member-of")) {
+			String value = "";
+			String functionName = getOperator(apply.getFunction().encode());
+			for (Object element : apply.getList()) {
+				if (element instanceof Apply) {
+					Apply childApply = (Apply) element;
+					value = getAttrValue(childApply);
+				}
+			}
+			sb = buildAttrDesignator(sb, apply, value, functionName,attrs);
+			return sb;
+		} else {
+			int consecutiveAttrDs = 0;
+			boolean first = true;
+			String postPart="";
+			for (Object element : apply.getList()) {
+				String value = null;
+				if(element instanceof Function){
+					function = ((Function)element).encode();
+				}else if (element instanceof IntegerAttribute) {
+					IntegerAttribute intValue = (IntegerAttribute) element;
+					value = intValue.getValue() + "";
+					if(first){
+						postPart =  value + ")";
+						first = false;
+					} else{
+						sb.append(value + ")");
+					}
+					sb.append(value + ")");
+					consecutiveAttrDs--;
+				}else if (element instanceof StringAttribute) {
+					StringAttribute stringValue = (StringAttribute) element;
+					value = stringValue.getValue() + "";
+					if(first){
+						postPart =  "\"" + value + "\")";
+						first = false;
+					} else{
+						sb.append("\"" + value + "\")");
+					}
+					consecutiveAttrDs--;
+				}else if (element instanceof BooleanAttribute) {
+					BooleanAttribute booleanValue = (BooleanAttribute) element;
+					value = booleanValue.getValue() + "";
+					if(first){
+						if(value.equals("false")){
+							sb.append("not ");
+						}
+						first = false;
+					} else{
+						sb = new StringBuffer("not " + sb);
+					}
+					consecutiveAttrDs--;
+				}else if (element instanceof Apply) {
+					Apply childApply = (Apply) element;
+					ApplyStatements(childApply, apply.getFunction().encode(),sb,attrs);
+					consecutiveAttrDs--;
+				}else if (element instanceof AttributeDesignator) {
+					consecutiveAttrDs++;
+					AttributeDesignator attribute = (AttributeDesignator) element;
+					if(consecutiveAttrDs == 2){
+						consecutiveAttrDs = 0;
+						sb.append(" " + getName(attribute) + ") ");
+					} else{
+						if(function.contains("boolean")){
+							sb.append(" " + getName(attribute));
+						} else {
+							sb.append(" (" + getOperator(function) + " " + getName(attribute) + " ");
+							if(!first){
+								sb.append(postPart);
+								first = true;
+							}
+						}
+					}
+					getType(attribute);
+					Attr attr = new Attr(attribute);
+					if(!attrs.contains(attr)) {
+						attrs.add(attr);
+					}
+					if (!collector.contains(attr)) {
+						collector.add(attr);
+					}
+				}
+			}
+		}
+		return sb;
 	}
 	
 	public StringBuffer ApplyStatements(Apply apply, String function, StringBuffer sb) {
@@ -507,13 +882,30 @@ public class Z3StrExpressionHelper {
 		return sb;
 	}
 	
+	private StringBuffer buildAttrDesignator(StringBuffer sb, Apply apply, String value, String function,List<Attr> attrs) {
+		for (Object element : apply.getList()) {
+			if (element instanceof AttributeDesignator) {
+				AttributeDesignator attribute = (AttributeDesignator) element;
+				sb.append(" (" + function + " " + getName(attribute) + " " + value);
+				getType(attribute);
+				Attr attr = new Attr(attribute);
+				if(!attrs.contains(attr)) {
+					attrs.add(attr);
+				}
+				if (!collector.contains(attr)) {
+					collector.add(attr);
+				}
+			}
+		}
+		return sb;
+	}
+	
 	public void updateColletor() {
 	    List<Attr> tempRequestCollector = new ArrayList<Attr>();
 	    try{
 	        FileReader fr = new FileReader("./Z3_output");
 	        BufferedReader br = new BufferedReader(fr);
 	        String s;
-	        List<String> currentNameMap = new ArrayList<String>();
 	        currentRequestCollector = new ArrayList<Attr>();
 	        br.readLine();
 	        while ((s = br.readLine()) != null) {
@@ -525,19 +917,22 @@ public class Z3StrExpressionHelper {
 	 	            }
 	            }
 	            String cleaned = data[1].trim().replaceAll("\"", "");
-	            if(cleaned.isEmpty() || cleaned.replaceAll("\\)","").isEmpty()) {
-	            	continue;
-	            }
+//	            if(cleaned.isEmpty() || cleaned.replaceAll("\\)","").isEmpty()) {
+//	            	continue;
+//	            }
                 Iterator<Map.Entry<String, String>> iter = nameMap.entrySet().iterator();
                 String key = data[0].trim().replaceAll("\\(", "");
                 
                 while (iter.hasNext()) {
                     Map.Entry<String,String> entry = (Map.Entry<String,String>) iter.next();
                     if (key.equals(entry.getValue())) {
-                    	currentNameMap.add(key);
+                    	//currentNameMap.add(key);
                     	for (Attr attr : collector) {
                             if (attr.getName().equals(entry.getKey())) {
                                 String value = data[1].trim().replaceAll("\"", "").replaceAll("\\)","");
+                                if(value.isEmpty()) {
+                                	value="aaaaaaaaaaaF";
+                                }
                                 attr.setDomain(value);
                                 tempRequestCollector.add(attr);
                             }

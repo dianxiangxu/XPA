@@ -72,9 +72,9 @@ public class MutationPanel extends JPanelPB {
 	private JCheckBox boxRTF = new JCheckBox("Rule Target False (RTF)");
 	private JCheckBox boxRCT = new JCheckBox("Rule Condition True (RCT)");
 	private JCheckBox boxRCF = new JCheckBox("Rule Condition False (RCF)");
-	private JCheckBox boxRCCF = new JCheckBox("Rule Change Comparition Function(RCCF)");
-	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
-	 
+//	private JCheckBox boxRCCF = new JCheckBox("Rule Change Comparition Function(RCCF)");
+//	private JCheckBox boxPCCF = new JCheckBox("Policy Target Change Comparition Function(PCCF)");
+//	 
 	 
 	
 	private JCheckBox boxFPR = new JCheckBox("First Permit Rules (FPR)");
@@ -83,7 +83,7 @@ public class MutationPanel extends JPanelPB {
 	private JCheckBox boxRNF = new JCheckBox("Remove Not Function (RNF)");
 	private JCheckBox boxSelectM8 = new JCheckBox("Select Eight(M8)");
 	
-	//private JCheckBox boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
+	private JCheckBox boxRPTE = new JCheckBox("Remove Parallel Target Element (RPTE)");
 	
 	private JCheckBox boxSelectAll = new JCheckBox("Select All"); 
 	
@@ -126,13 +126,13 @@ public class MutationPanel extends JPanelPB {
 		myPanel.add(boxRTF);
 		myPanel.add(boxRCT);
 		myPanel.add(boxRCF);
-		myPanel.add(boxRCCF);
-		myPanel.add(boxPCCF);
+//		myPanel.add(boxRCCF);
+//		myPanel.add(boxPCCF);
 		myPanel.add(boxFPR);
 		myPanel.add(boxFDR);
 		myPanel.add(boxANF);
 		myPanel.add(boxRNF);
-		//myPanel.add(boxRPTE);
+		myPanel.add(boxRPTE);
 		myPanel.add(boxSelectM8);
 		
 		myPanel.add(boxSelectAll);
@@ -151,14 +151,14 @@ public class MutationPanel extends JPanelPB {
 		boxRTF.setSelected(selected);
 		boxRCT.setSelected(selected);
 		boxRCF.setSelected(selected);
-		boxRCCF.setSelected(selected);
-		boxPCCF.setSelected(selected);
+//		boxRCCF.setSelected(selected);
+//		boxPCCF.setSelected(selected);
 		boxFPR.setSelected(selected);
 		boxFDR.setSelected(selected);
 		boxANF.setSelected(selected);
 		boxANR.setSelected(selected);
 		boxRNF.setSelected(selected);
-		//boxRPTE.setSelected(selected);
+		boxRPTE.setSelected(selected);
 		boxSelectAll.setSelected(selected);
 	}
 	
@@ -345,23 +345,30 @@ public class MutationPanel extends JPanelPB {
 			try {
 				File policyFile = xpa.getWorkingPolicyFile();
 				AbstractPolicy policy = PolicyLoader.loadPolicy(policyFile);
+				List<Mutant> mutants = new ArrayList<Mutant>();
 		        Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFile)));
-		        
-		        List<Mutant> mutants = mutator.generateSelectedMutants(mutPanel.getMutationOperatorList());
-				
 		        File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
 		        if(mutantsFolder.exists()){
 		        	FileUtils.cleanDirectory(mutantsFolder);
 		        } else{
 		        	mutantsFolder.mkdir();
 		        }
-		        for(Mutant mutant: mutants){
-					FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
-				}
+		       
+		        for(String method:mutPanel.getMutationOperatorList(false)) {
+		        	List<String> methods = new ArrayList<String>();
+		        	methods.add(method);
+			        List<Mutant> muts = mutator.generateSelectedMutants(methods);
+			        
+			        for(Mutant mutant: muts){
+						FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
+						mutant.setPolicy(null);
+					}
+			        mutants.addAll(muts);
+		        }
 				mutantSuite = new PolicySpreadSheetMutantSuite(mutantsFolder.toString(),mutants,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
 				mutantSuite.writePolicyMutantsSpreadSheet(mutants,XACMLElementUtil.getPolicyName(policyFile) + "_mutants.xls");
 				setUpMutantPanel(mutants, PropertiesLoader.getProperties("config").getProperty("mutantsFolderName"));
-				
+		        
 			
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -415,14 +422,14 @@ public class MutationPanel extends JPanelPB {
 				File policyFile = xpa.getWorkingPolicyFile();
 				AbstractPolicy policy = PolicyLoader.loadPolicy(policyFile);
 		        Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFile)));
-		        List<Mutant> mutants1 = mutator.generateSelectedMutants(mutationOperators1.getMutationOperatorList());
+		        List<Mutant> mutants1 = mutator.generateSelectedMutants(mutationOperators1.getMutationOperatorList(false));
 				List<Mutant> mutants2 = new ArrayList<Mutant>();
-				int secondOrderOperatorsLength = mutationOperators2.getMutationOperatorList().size();
+				int secondOrderOperatorsLength = mutationOperators2.getMutationOperatorList(false).size();
 		        int max = mutants1.size() * secondOrderOperatorsLength;
 		        int currentValue = 0;
 		       for(Mutant mutant:mutants1) {
 		        	 Mutator secondOrderMutator = new Mutator(new Mutant(mutant.getPolicy(), mutant.getName()));
-				     List<Mutant> mutants = secondOrderMutator.generateSelectedMutants(mutationOperators2.getMutationOperatorList());
+				     List<Mutant> mutants = secondOrderMutator.generateSelectedMutants(mutationOperators2.getMutationOperatorList(false));
 				     for(Mutant m: mutants) {
 				    	 for(int fault:mutant.getFaultLocations()) {
 				    		 m.addFaultLocationAt(fault, 0);
@@ -479,8 +486,12 @@ public class MutationPanel extends JPanelPB {
 				oracles.add(record.getOracle());
 			}
 			TestSuite testSuite = new TestSuite(null,requests, oracles);
-			int killedCount = mutantSuite.updateMutantTestResult(data,testSuite);
-			mutantSuite.writeDetectionInfoToExcelFile(outputFileName, testSuite);
+			File policyFile = xpa.getWorkingPolicyFile();
+			
+			File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(policyFile).toString());
+		      
+			int killedCount = mutantSuite.updateMutantTestResult(data,testSuite,mutantsFolder);
+			mutantSuite.writeDetectionInfoToExcelFile(outputFileName, testSuite,mutantsFolder);
 			this.stopProgressStatus();
 			xpa.setToMutantPane();
 			xpa.updateMainTabbedPane();
@@ -489,7 +500,7 @@ public class MutationPanel extends JPanelPB {
 			double ratio = killedCount / (double)total;
 			String message = "Number of killed mutants : " + killedCount + System.lineSeparator();
 			message += "Number of live mutants : " + liveCount + System.lineSeparator();
-			message += "Mutant Killing Ratio : " + MiscUtil.roundNumberToTwoDecimalPlaces(ratio) + System.lineSeparator()  + System.lineSeparator();
+			message += "Mutation Score : " + (MiscUtil.roundNumberToTwoDecimalPlaces(ratio*100))+ "%" + System.lineSeparator()  + System.lineSeparator();
 			message += "Mutation testing results are saved into file: \n" + outputFileName;
 			JOptionPane.showMessageDialog(xpa, message, "Test Result" , JOptionPane.INFORMATION_MESSAGE);
 		} catch (Exception e) {

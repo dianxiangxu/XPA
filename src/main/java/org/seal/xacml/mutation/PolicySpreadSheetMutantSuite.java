@@ -22,6 +22,7 @@ import org.seal.xacml.semanticCoverage.TestSuite;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.utils.MutantUtil;
 import org.wso2.balana.AbstractPolicy;
+import org.wso2.balana.ParsingException;
 
 public class PolicySpreadSheetMutantSuite {
 
@@ -77,7 +78,7 @@ public class PolicySpreadSheetMutantSuite {
 		List<Integer> bugPositions = fromString(row.getCell(2).toString());
 		AbstractPolicy policy = null;
 		try{
-			policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
+			//policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
 		}
 		
 		catch(Exception e){
@@ -134,7 +135,7 @@ public class PolicySpreadSheetMutantSuite {
 		return data;
 	}
 
-	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite){
+	/*public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite) throws ParsingException{
 		int mutantIndex=0;
 		int killedCount = 0;
 		for (Mutant mutant : policyMutantSuite) {
@@ -142,7 +143,38 @@ public class PolicySpreadSheetMutantSuite {
 			//vector.set(vector.size()-1, TestSuite.runTests(mutant.getTestResult());
 			
 			// TO BE DONE
+			boolean result = testSuite.isKilled(mutant.getPolicy());
+			String col = null;
+			if(result) {
+				col = "Killed";
+				killedCount++;
+			} else {
+				col = "Live";
+			}
+			vector.set(vector.size()-1, col);
+			mutantIndex++;
+		}
+		return killedCount;
+	}*/
+	
+	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder){
+		int mutantIndex=0;
+		int killedCount = 0;
+		for (Mutant mutant : policyMutantSuite) {
+			Vector<Object> vector = data.get(mutantIndex);
+			//vector.set(vector.size()-1, TestSuite.runTests(mutant.getTestResult());
+			
+			// TO BE DONE
+			String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + mutant.getName() + ".xml";
+			AbstractPolicy policy = null;
+			try{
+				policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			mutant.setPolicy(policy);
 			List<Boolean> results = testSuite.runTests(mutant);
+			mutant.setPolicy(null);
 			int countFailed = 0;
 			for(Boolean b:results) {
 				if(!b) {
@@ -160,6 +192,9 @@ public class PolicySpreadSheetMutantSuite {
 			}
 			vector.set(vector.size()-1, col);
 			mutantIndex++;
+			if(mutantIndex%100==0) {
+				System.out.println("------"+mutantIndex+"-kc-"+killedCount);
+			}
 		}
 		return killedCount;
 	}
@@ -174,7 +209,7 @@ public class PolicySpreadSheetMutantSuite {
 		}
 	}
 
-	public void writeDetectionInfoToExcelFile(String fileName, TestSuite suite) throws Exception {
+	public void writeDetectionInfoToExcelFile(String fileName, TestSuite suite, File mutantFolder) throws Exception {
 		//System.gc();
 		HSSFWorkbook workBook = new HSSFWorkbook();
 		workBook.createSheet("fault-detection-info");
@@ -193,9 +228,18 @@ public class PolicySpreadSheetMutantSuite {
 			writeSimpleDetectionTitleRow(sheet, 0, numTests);
 			int rowIndex = 1;
 			for(int i = 0; i< policyMutantSuite.size();i++){
-				
+				Mutant m = policyMutantSuite.get(i);
+				String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + m.getName() + ".xml";
+				AbstractPolicy policy = null;
+				try{
+					policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				m.setPolicy(policy);
 			//for (Mutant mutant : policyMutantSuite) {
-				writeSimpleDetectionInfoRow(sheet, rowIndex++, policyMutantSuite.get(i), suite, detectionCount);
+				writeSimpleDetectionInfoRow(sheet, rowIndex++, m, suite, detectionCount);
+				m.setPolicy(null);
 			}
 			writeSimpleDetectionCountRow(sheet, rowIndex++, detectionCount);
 			writeSimpleDetectionRateRow(sheet, rowIndex++, detectionCount, policyMutantSuite.size());
@@ -208,7 +252,17 @@ public class PolicySpreadSheetMutantSuite {
 			int rowIndex = 1;
 			for(int i = 0; i< policyMutantSuite.size();i++){
 			//for (Mutant mutant : policyMutantSuite) {
-				writeDetectionInfoRow(sheet, rowIndex++, policyMutantSuite.get(i), suite, detectionCount,i+1);
+				Mutant m = policyMutantSuite.get(i);
+				String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + m.getName() + ".xml";
+				AbstractPolicy policy = null;
+				try{
+					policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				m.setPolicy(policy);
+				writeDetectionInfoRow(sheet, rowIndex++, m, suite, detectionCount,i+1);
+				m.setPolicy(null);
 			}
 			
 			// 10/26/14: Add statistics: a row of fault detection count/rate for each single test.

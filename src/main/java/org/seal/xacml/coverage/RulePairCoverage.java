@@ -100,7 +100,7 @@ public class RulePairCoverage extends RequestGeneratorBase {
 						continue;
 					}
 				}
-			    StringBuilder pairExpressions = new StringBuilder();
+			    StringBuilder pairExpressions = new StringBuilder(preExpression);
 			    pairExpressions.append(getRuleExpression(n1)).append(System.lineSeparator());
 			    pairExpressions.append(getRuleExpression(n2)).append(System.lineSeparator());
 				for(int k = 0 ; k < N; k++){

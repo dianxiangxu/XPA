@@ -21,6 +21,8 @@ public class RequestGeneratorBase {
 	protected PolicyMetaData policyMetaData;
 	private List<String> requests;
 	protected Z3StrExpressionHelper z3ExpressionHelper;
+	protected short falsifyRulesFlag; // 0 - all
+									  // 1 - permit // 2 - deny
 	
     protected  void init(String path) throws IOException, SAXException, ParserConfigurationException, ParsingException{
 		policyFilePath = path;
@@ -34,6 +36,7 @@ public class RequestGeneratorBase {
        	policyMetaData = new PolicyMetaData(policyMetaDataTmp.getXACMLVersion(), xpathVersion);
 	    requests = new ArrayList<String>();
 		z3ExpressionHelper = new Z3StrExpressionHelper();
+		falsifyRulesFlag = 0;
     }
     
     public void setRequests(List<String> reqs){

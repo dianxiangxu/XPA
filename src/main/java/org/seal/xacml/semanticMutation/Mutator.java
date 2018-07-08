@@ -469,7 +469,14 @@ public class Mutator {
      */
     private List<Mutant> createTargetFalseMutants(String matchXpathString, int faultLocation, String mutantName) throws XPathExpressionException, ParsingException {
         List<Mutant> list = new ArrayList<>();
-        NodeList nodes = (NodeList) xPath.evaluate(matchXpathString, doc.getDocumentElement(), XPathConstants.NODESET);
+        String allOfXpathString = matchXpathString.substring(0, matchXpathString.length()-37);//+ "/*[local-name()='Target' and 1]/*[local-name()='AnyOf' and 1]/*[local-name()='AllOf' and 1]/*[local-name()='Match' and 1]";
+        NodeList allOfNodes = (NodeList) xPath.evaluate(allOfXpathString+"]", doc.getDocumentElement(), XPathConstants.NODESET);
+        Document d = (Document) doc.cloneNode(true);
+        
+        for(int i = 0; i < allOfNodes.getLength();i++) {
+        	String mxpath = allOfXpathString + "and position()=" + (i+1) +"]/*[local-name()='Match' and 1]";
+        NodeList nodes = (NodeList) xPath.evaluate(mxpath, d, XPathConstants.NODESET);
+       
         Node matchNode = nodes.item(0);
         if (matchNode != null && !isEmptyNode(matchNode)) {
             //change doc
@@ -490,14 +497,18 @@ public class Mutator {
                 matchNode.getParentNode().appendChild(cloned);
             }
 //            System.out.println(XpathSolver.nodeToString(matchNode.getParentNode(), false, true));
-            AbstractPolicy newPolicy = PolicyLoader.loadPolicy(doc);
-            list.add(new Mutant(newPolicy, Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
             //restore doc by removing the two conflicting Match nodes from parent
-            for (Node cloned : clonedNodes) {
-                matchNode.getParentNode().removeChild(cloned);
-            }
+           // for (Node cloned : clonedNodes) {
+           //     matchNode.getParentNode().removeChild(cloned);
+           // }
+            
 //            System.out.println(XpathSolver.nodeToString(matchNode.getParentNode(), false, true));
         }
+        }
+        if(allOfNodes.getLength()>0) {
+        list.add(new Mutant(PolicyLoader.loadPolicy(d), Collections.singletonList(faultLocation), (baseMutantName.equals("") ? "" : baseMutantName + "_") + mutantName + faultLocation));
+        }
+        
         return list;
     }
 

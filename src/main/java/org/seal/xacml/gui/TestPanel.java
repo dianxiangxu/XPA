@@ -296,7 +296,7 @@ public class TestPanel extends JPanelPB {
 			this.type = NameDirectory.MUTATION_BASED_TEST;
 			if (result == JOptionPane.OK_OPTION) {
 				this.startProgressStatus();
-				List<String> mutationMethods = mbtMethods.getMutationOperatorList();
+				List<String> mutationMethods = mbtMethods.getMutationOperatorList(true);
 				taggedRequests = testGenerator.generateRequests(mutationMethods);
 				PolicyTestSuite suite = new PolicyTestSuite(policyFilePath, this.type, taggedRequests);
 				suite.save();

@@ -56,6 +56,10 @@ public class Mutant extends AbstractPolicy {
     public AbstractPolicy getPolicy() {
         return policy;
     }
+    
+    public void setPolicy(AbstractPolicy p) {
+        policy=p;
+    }
 
     @Override
     public String encode() {
