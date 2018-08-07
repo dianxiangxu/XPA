@@ -33,6 +33,7 @@ import org.wso2.balana.PolicyMetaData;
 import org.wso2.balana.Rule;
 import org.wso2.balana.cond.Condition;
 import org.wso2.balana.ctx.AbstractResult;
+import org.wso2.balana.xacml3.AllOfSelection;
 import org.wso2.balana.xacml3.Target;
 import org.xml.sax.SAXException;
 
@@ -762,6 +763,7 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	    		if (sat == true) {
 	    			addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 	    		}
+	    		
 	    	}
 		    previousRules.add(Rule.getInstance(node, policyMetaData, null));
 		    return;
@@ -850,30 +852,69 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
             					allOfCount++;
             				}
             			}
-            			if(allOfCount > 1){
+            			if(allOfCount > 0){
             				for(int i = 0; i < childrenAllOf.size(); i++){
             					Node childAllOf = childrenAllOf.get(i);
             					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
             						child.removeChild(childAllOf);
             						Node nextChild = childAllOf.getNextSibling();
-            						Target target = Target.getInstance(targetNode, policyMetaData);
             						StringBuilder currentPreExpression = new StringBuilder(preExpression.toString());
-            						currentPreExpression.append(z3ExpressionHelper.getFalseTargetExpression(target));
+            						if(allOfCount>1) {
+            							Target target = Target.getInstance(targetNode, policyMetaData);
+                						
+            							currentPreExpression.append(z3ExpressionHelper.getFalseTargetExpression(target) +  System.lineSeparator());
+            						}
+            						StringBuilder currentPreExpressionMRoot = new StringBuilder(currentPreExpression.toString());
             						List<Node> childrenAllOfCopy = new ArrayList<Node>();
             						childrenAllOfCopy.addAll(XMLUtil.getChildNodeList(child));
             						
             						for(Node c:childrenAllOfCopy){
             							child.removeChild(c);
             						}
+            						
             						child.appendChild(childAllOf);
             						Target targetTrue = Target.getInstance(targetNode, policyMetaData);
             						currentPreExpression.append(System.lineSeparator()).append(z3ExpressionHelper.getTrueTargetExpression(targetTrue));
+            						List<Node> childrenMatchOf = XMLUtil.getChildNodeList(childAllOf);
+	        	            		
+            						if( AllOfSelection.getInstance(childAllOf,policyMetaData).getMatches().size() > 1) {
+	            						for(int si = 0; si < childrenMatchOf.size(); si++){
+	            							Node childMatchOf = childrenMatchOf.get(si);
+	    	            					
+	    	            					if(childMatchOf.getLocalName() !=null && childMatchOf.getLocalName().equals("Match")){
+	    	            						childAllOf.removeChild(childMatchOf);
+	    	            						Node nextChildMatchOf = childMatchOf.getNextSibling();
+	    	            						Target targetM = Target.getInstance(targetNode, policyMetaData);
+	    	            						StringBuilder currentPreExpressionM = new StringBuilder(currentPreExpressionMRoot.toString());
+	    	            						currentPreExpressionM.append(z3ExpressionHelper.getTrueTargetExpression(targetM)+  System.lineSeparator());
+	    	            						List<Node> childrenMatchOfCopyM = new ArrayList<Node>();
+	    	            						childrenMatchOfCopyM.addAll(XMLUtil.getChildNodeList(childAllOf));
+	    	            						
+	    	            						for(Node c:childrenMatchOfCopyM){
+	    	            							childAllOf.removeChild(c);
+	    	            						}
+	    	            						childAllOf.appendChild(childMatchOf);
+	    	            						Target targetTrueM = Target.getInstance(targetNode, policyMetaData);
+	    	            						currentPreExpressionM.append(System.lineSeparator()).append(z3ExpressionHelper.getFalseTargetExpression(targetTrueM)+  System.lineSeparator());
+	    	            						childAllOf.removeChild(childMatchOf);
+	    	            						for(Node c:childrenMatchOfCopyM){ 
+	    	            							childAllOf.appendChild(c);
+	    	            						}
+	    	            						childAllOf.insertBefore(childMatchOf, nextChildMatchOf);
+	    	            						ruleExpressions.add(new StringBuffer(currentPreExpressionM));
+	    	            						
+	    	            					}
+	    	            					
+	    	            				}		
+	            					}
             						child.removeChild(childAllOf);
             						for(Node c:childrenAllOfCopy){ 
             							child.appendChild(c);
             						}
             						child.insertBefore(childAllOf, nextChild);
-            						ruleExpressions.add(new StringBuffer(currentPreExpression));
+            						if(allOfCount > 1) {
+            							ruleExpressions.add(new StringBuffer(currentPreExpression));
+            						}
             						flag = true;
             					}
             				}

@@ -32,6 +32,7 @@ import org.seal.xacml.components.MutationBasedTestMutationMethods;
 import org.seal.xacml.coverage.CoverageHelper;
 import org.seal.xacml.coverage.DecisionCoverage;
 import org.seal.xacml.coverage.MCDC;
+import org.seal.xacml.coverage.MCDC2;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.coverage.RulePairCoverage;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
@@ -227,7 +228,7 @@ public class TestPanel extends JPanelPB {
 				}
 			} else if (MCDCRadio.isSelected()) {
 				try{
-					MCDC requestGenerator = new MCDC(policyFilePath,true);
+					MCDC2 requestGenerator = new MCDC2(policyFilePath,true);
 					List<String> requests = requestGenerator.generateTests();
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.MCDC_COVERAGE);
 					testSuite.save();
@@ -237,7 +238,7 @@ public class TestPanel extends JPanelPB {
 				}
 			} else if (MCDCRadio_NoError.isSelected()) {
 				try{
-					MCDC requestGenerator = new MCDC(policyFilePath,false);
+					MCDC2 requestGenerator = new MCDC2(policyFilePath,false);
 					List<String> requests = requestGenerator.generateTests();
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.MCDC_COVERAGE_NO_ERROR);
 					testSuite.save();

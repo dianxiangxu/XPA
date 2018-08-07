@@ -50,4 +50,7 @@ public class RequestGeneratorBase {
     public List<String> getRequests(){
     	return requests;
     }
+    public void removeLastRequest(){
+    	 requests.set(requests.size()-1, null);
+    }
 }

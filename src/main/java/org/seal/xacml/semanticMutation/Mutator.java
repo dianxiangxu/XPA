@@ -40,6 +40,8 @@ import org.w3c.dom.NodeList;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.PolicyMetaData;
+import org.wso2.balana.TargetMatch;
+import org.wso2.balana.xacml3.AllOfSelection;
 import org.wso2.balana.xacml3.AnyOfSelection;
 import org.xml.sax.SAXException;
 
@@ -977,6 +979,7 @@ public class Mutator {
     	List<Mutant> list = new ArrayList<>();
         NodeList nodes = (NodeList) xPath.evaluate(targetXpathString, doc.getDocumentElement(), XPathConstants.NODESET);
         Node node = nodes.item(0);
+        PolicyMetaData md = PolicyLoader.loadPolicy(doc).getMetaData();
         if (node != null && !isEmptyNode(node)) {
             //change doc
             List<Node> children = getChildNodeList(node);
@@ -989,6 +992,23 @@ public class Mutator {
 	            			for(Node childAllOf:childrenAllOf){
 	            				if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
 	            					allOfCount++;
+	            					List<Node> childrenMatchOf = getChildNodeList(childAllOf);
+	        	            					
+	            					if( AllOfSelection.getInstance(childAllOf,md).getMatches().size() > 1) {
+	            						for(int i = 0; i < childrenMatchOf.size(); i++){
+	            							Node childMatchOf = childrenMatchOf.get(i);
+	    	            					
+	    	            					if(childMatchOf.getLocalName() !=null && childMatchOf.getLocalName().equals("Match")){
+	    	            						childAllOf.removeChild(childMatchOf);
+	    	            						Node nextChild = childMatchOf.getNextSibling();
+	    	            						Mutant mutant = new Mutant(PolicyLoader.loadPolicy(doc),(baseMutantName.equals("") ? "" : baseMutantName + "_") +MutationMethodAbbrDirectory.getAbbr("createRemoveParallelTargetElementMutants")+ "_" + faultLocation + "_" + 1 + "_" + i+"_"+i );
+	    	            				        list.add(mutant);
+	    	            				        childAllOf.insertBefore(childMatchOf, nextChild);  
+	    	            					}
+	    	            					
+	    	            				}		
+	            					}
+	            					
 	            				}
 	            			}
 	            			if(allOfCount > 1){

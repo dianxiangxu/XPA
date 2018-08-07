@@ -57,6 +57,10 @@ public class Z3StrExpressionHelper {
 		return currentRequestCollector;
 	}
 
+	public void setAttributeList(){
+		currentRequestCollector = new ArrayList<Attr>();
+	}
+	
 	public StringBuffer getFalseTargetExpression2(Target target) {
 		StringBuffer expr = new StringBuffer();
 		if (target != null) {

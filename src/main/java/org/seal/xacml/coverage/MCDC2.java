@@ -40,7 +40,7 @@ import org.wso2.balana.xacml3.AnyOfSelection;
 import org.wso2.balana.xacml3.Target;
 import org.xml.sax.SAXException;
 
-public class DecisionCoverage extends RequestGeneratorBase{
+public class MCDC2 extends RequestGeneratorBase{
 	private AbstractPolicy policy;
 	private boolean error;
 	private boolean[][][] currentPolicyRulesCoverage;
@@ -48,15 +48,17 @@ public class DecisionCoverage extends RequestGeneratorBase{
 	private int currentPolicyRuleIndex;
 	private String currentPolicyCA;
 	private Map<String,List<Attr>> ruleAttrMap;
+	private List<String> covered;
 	
-	public DecisionCoverage(String policyFilePath,boolean error) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+	public MCDC2(String policyFilePath,boolean error) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		init(policyFilePath);
 		this.policy = PolicyLoader.loadPolicy(new File(policyFilePath));
 		this.error = error;
 		ruleAttrMap = new HashMap<String,List<Attr>>();
+		covered = new ArrayList<String>();
 	}
 	
-	private void traverse(Element node, StringBuilder preExpression,List<Rule> previousRules) throws IOException, ParsingException {
+	private void traverse(Element node, StringBuilder preExpression,List<Rule> previousRules) throws IOException, ParsingException, ParserConfigurationException, SAXException {
 		String name = DOMHelper.getLocalName(node);
 		Target target = null;
 		Condition condition = null;
@@ -132,24 +134,9 @@ public class DecisionCoverage extends RequestGeneratorBase{
 								rev = true;
 							}
 							
-							if(rev) {
-//								falsifyPreviousRules = new StringBuffer();
-//							    for(Rule rule:previousRules){
-////							    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
-////							    		continue;
-////							    	}
-//							    	
-//							    	if(ruleAttrMap.get(rule.getId().toString()).containsAll(ruleAttrMap.get(r.getId().toString()))){
-//										falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
-//
-//							    	}
-////							    	if(trueRuleExpr.contains(ruleExpression)) {
-////										falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
-//						//
-////							    	}
-//								}                
+				       
 
-							}
+							
 						}
 					}
 				}
@@ -163,8 +150,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			    	}
 			    	boolean sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + allTarget.toString(), z3ExpressionHelper);
 	    			if (sat == true) {
-	    				
-	    				// addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+	    				 //addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 		    				
 //	    				if(error) {
 //	    					for(StringBuilder req:RequestBuilder.buildAllIDRequest2(z3ExpressionHelper.getAttributeList())) {
@@ -191,9 +177,8 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			    }
 	    	}
 	    	 if((target == null)&& (condition == null)) {
-	    			boolean sat = false;
-			    	
-			    	sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + allTarget.toString(), z3ExpressionHelper);
+	    		boolean sat = false;
+	    		 sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + allTarget.toString(), z3ExpressionHelper);
 	    			if (sat == true) {
 	    				
 	    				addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
@@ -213,10 +198,8 @@ public class DecisionCoverage extends RequestGeneratorBase{
 					sat = Z3StrUtil.processExpression(falseExpression , z3ExpressionHelper);
 				    if (sat) {
 				    	    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-				    	    
-				    	    
 				    }
-				} else if ( node.getNextSibling().getNextSibling()==null) {
+				}else if ( node.getNextSibling().getNextSibling()==null) {
 					allTarget.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());
 		    		
 			    	
@@ -237,12 +220,31 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			String expresion = preExpression.toString() + ruleExpression + System.lineSeparator() + falsifyPreviousRules;
 			String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
 			
-			sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
-			if (sat){
-				addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+			List<String> mcdcExps = getRuleMCDCExpression(node);
+			if(mcdcExps.size()<=1) {
+				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
 				
+				if (sat){
+					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+					
+				}
+			} else {
+				List<String> expressions = new ArrayList<String>();
+				for(String exp:mcdcExps) {
+					String e = exp.replaceAll(System.lineSeparator(), "");
+					String expression = e + System.lineSeparator() + z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator();
+					expression += preExpression.toString() + System.lineSeparator() +  falsifyPreviousRules;
+					sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
+					
+					if (sat){
+						addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+						String req = getRequests().get(getRequests().size()-1);
+						
+					}
+				}
 			}
 			if(target!=null) {
+						
 				if(error){
 					if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][0][2]) {
 						IndTarget(target, preExpression.toString() + System.lineSeparator() + falsifyPreviousRules + System.lineSeparator() );
@@ -340,7 +342,313 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return getRequests();
 	}
 	 
-	
+	public List<String> getMCDCExpressions(String expression, boolean coveredFlag){
+		
+		List<String> aExprs = new ArrayList<String>();
+		List<Integer> lIndex = new ArrayList<Integer>();
+		List<Integer> rIndex = new ArrayList<Integer>();
+		
+		int l=0;
+		int s = 0;
+		
+		for(int i = 0; i < expression.length(); i++) {
+			if(expression.charAt(i)=='(') {
+				l = i;
+				s = 1;
+			} else if(expression.charAt(i)=='>' || expression.charAt(i)=='<' || expression.charAt(i)=='=') {
+				if(s == 1) {
+					s = 2;
+				}
+			} else if(expression.charAt(i)==')'){
+				if(s == 2) {
+					s = 0;
+					String aExpr = expression.substring(l, i+1);
+					lIndex.add(l);
+					rIndex.add(i+1);
+					aExprs.add(aExpr);
+				}
+			}
+		}
+		List<String> aNExprs = new ArrayList<String>();
+		for(String e:aExprs) {
+			aNExprs.add("(not " + e + ")");
+		}
+		List<String> expressions = new ArrayList<String>();
+		expressions.add(expression);
+		for(int i = 0; i < aExprs.size();i++) {
+			String expr = expression.substring(0,(int)lIndex.get(i)) + aNExprs.get(i).toString() + expression.substring((int)rIndex.get(i));
+			if(coveredFlag) {
+				String cExpr = expression.substring(0,(int)lIndex.get(i)) +  expression.substring((int)rIndex.get(i));
+				boolean cvrd = false;
+				for(String c:covered) {
+					if(c.equals(cExpr)) {
+						cvrd = true;
+						break;
+					}
+				}
+				if(!cvrd) {
+				covered.add(cExpr);
+				expressions.add(expr);
+				}
+			} else {
+				expressions.add(expr);
+			}
+		}
+		/*
+		String nExpression = expression.substring(0);
+		List<Integer> nlIndex = new ArrayList<Integer>();
+		List<Integer> nrIndex = new ArrayList<Integer>();
+		int offset = 0;
+		for(int i = 0; i < aExprs.size();i++) {
+			 int lF = lIndex.get(i)+offset;
+			 nExpression = nExpression.substring(0,lF) + aNExprs.get(i).toString() + nExpression.substring((int)rIndex.get(i)+offset);
+			 nlIndex.add(lF);
+			 nrIndex.add(lF + aNExprs.get(i).toString().length());
+			 offset += 6;
+				
+		}
+		expressions.add(nExpression);
+		for(int i = 0; i < aExprs.size();i++) {
+			String expr = nExpression.substring(0,(int)nlIndex.get(i))  + aExprs.get(i).toString() +" "+ nExpression.substring((int)nrIndex.get(i));
+			expressions.add(expr);
+		}*/
+		for(String expr:expressions) {
+			expr = expr.replaceAll(System.lineSeparator(), "");
+			
+		}
+		return expressions;
+		
+	}
+
+	public List<String> getRuleMCDCExpression(Element node) throws IOException, ParsingException, ParserConfigurationException, SAXException{
+		List<Rule> postRules = new ArrayList<Rule>();
+		Node sibling = null;
+		Node n = node;
+		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
+		Condition condition = XMLUtil.getCondition(node, policyMetaData);
+	    
+	    boolean flag = false;
+	    List<String> expressions = new ArrayList<String>();
+	    
+	    if (targetNode != null) {
+	        List<Node> children = XMLUtil.getChildNodeList(targetNode);
+	        int allOfCount = 0;
+	        if(children.size()>1){
+	            for (Node child : children) {
+	            	if(child!=null && child.getLocalName() !=null && child.getLocalName().equals("AnyOf")){
+	            		List<Node> childrenAllOf = XMLUtil.getChildNodeList(child);
+	            		if(childrenAllOf.size() > 2){
+	            			for(Node childAllOf:childrenAllOf){
+	            				if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+	            					allOfCount++;
+	            				}
+	            			}
+	            			if(allOfCount > 0){
+	            				if(allOfCount>1) {
+	            					for(int i = 0; i < childrenAllOf.size(); i++){
+		            					Node childAllOf = childrenAllOf.get(i);
+		            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+		            						child.removeChild(childAllOf);
+		            						
+		            					}
+	            					}
+	            					List<List<String>> allOfExpressions = new ArrayList<List<String>>();
+	            					for(int i = 0; i < childrenAllOf.size(); i++){
+		            					Node childAllOf = childrenAllOf.get(i);
+		            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+		            						child.appendChild(childAllOf);
+		            						Target t = Target.getInstance(targetNode, policyMetaData);
+		            						String tExpression = z3ExpressionHelper.getTrueTargetExpression(t).toString();
+		            						allOfExpressions.add(getMCDCExpressions(tExpression, false));	
+		            						child.removeChild(childAllOf);
+		            					}
+	            					}
+	            					for(int i = 0; i < childrenAllOf.size(); i++){
+		            					Node childAllOf = childrenAllOf.get(i);
+		            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+		            						child.appendChild(childAllOf);
+		            						
+		            					}
+	            					}
+	            					if(allOfExpressions.get(0).size()==2) {
+	            						List<String> dAttrs = getDistinctAttrs(allOfExpressions);
+	            						String e2 = null;
+	            						String e3 = null;
+	            						if(dAttrs.size()==1) {
+	            							e2 = allOfExpressions.get(0).get(0); 
+		            						e3 = allOfExpressions.get(1).get(0); 
+		            					    
+	            						}else {
+	            							e2 = "(or " + allOfExpressions.get(0).get(0) + " " + allOfExpressions.get(1).get(1) +")";
+		            						e3 = "(or " + allOfExpressions.get(0).get(1) + " " + allOfExpressions.get(1).get(0) +")";
+		            					    	
+	            						}
+	            							
+	            						expressions.add(e2);
+	            					    expressions.add(e3);
+	            					} else {
+	            						for(int i = 0; i < allOfExpressions.size();i++) {
+	            									for(int j = 0; j< allOfExpressions.size();j++) {
+	            										if(j!=i) {
+	            											
+	            	            							for(int k = 0 ; k< allOfExpressions.get(j).size()-1;k++ ) {
+	            	            								String e = "(and " + allOfExpressions.get(i).get(1) + " " + allOfExpressions.get(j).get(k) +")";
+	            			            						expressions.add(e);
+	            	            							}
+	            										}
+	            									}
+	            						}
+	            							
+	            					}
+        						}else {
+        							Target target = Target.getInstance(targetNode, policyMetaData);
+        							String expression = z3ExpressionHelper.getTrueTargetExpression(target).toString();
+        							if(target.getAnyOfSelections().get(0).getAllOfSelections().get(0).getMatches().size() > 1) {
+        								expressions = getMCDCExpressions(expression,true);
+        							} else
+        							{
+        								expressions.add(expression);
+        							}
+        						}
+	            				
+	            			}
+	            		}
+	            	}
+	            }
+	        }
+	    } 
+		
+
+		return expressions;
+	}
+
+//	public List<String> getRuleMCDCExpression(Element node) throws IOException, ParsingException, ParserConfigurationException, SAXException{
+//		List<Rule> postRules = new ArrayList<Rule>();
+//		Node sibling = null;
+//		Node n = node;
+//		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
+//		Condition condition = XMLUtil.getCondition(node, policyMetaData);
+//	    
+//	    boolean flag = false;
+//	    List<StringBuffer> ruleExpressions = new ArrayList<StringBuffer>();
+//	    
+//	    if (targetNode != null) {
+//	        List<Node> children = XMLUtil.getChildNodeList(targetNode);
+//	        int allOfCount = 0;
+//	        if(children.size()>1){
+//	            for (Node child : children) {
+//	            	if(child!=null && child.getLocalName() !=null && child.getLocalName().equals("AnyOf")){
+//	            		List<Node> childrenAllOf = XMLUtil.getChildNodeList(child);
+//	            		if(childrenAllOf.size() > 2){
+//	            			for(Node childAllOf:childrenAllOf){
+//	            				if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+//	            					allOfCount++;
+//	            				}
+//	            			}
+//	            			if(allOfCount > 0){
+//	            				for(int i = 0; i < childrenAllOf.size(); i++){
+//	            					Node childAllOf = childrenAllOf.get(i);
+//	            					if(childAllOf.getLocalName() !=null && childAllOf.getLocalName().equals("AllOf")){
+//	            						child.removeChild(childAllOf);
+//	            						Node nextChild = childAllOf.getNextSibling();
+//	            						StringBuilder currentPreExpression = new StringBuilder();
+//	            						if(allOfCount>1) {
+//	            							Target target = Target.getInstance(targetNode, policyMetaData);
+//	                						
+//	            							currentPreExpression.append(z3ExpressionHelper.getFalseTargetExpression(target) +  System.lineSeparator());
+//	            						}
+//	            						StringBuilder currentPreExpressionMRoot = new StringBuilder(currentPreExpression.toString());
+//	            						List<Node> childrenAllOfCopy = new ArrayList<Node>();
+//	            						childrenAllOfCopy.addAll(XMLUtil.getChildNodeList(child));
+//	            						
+//	            						for(Node c:childrenAllOfCopy){
+//	            							child.removeChild(c);
+//	            						}
+//	            						
+//	            						child.appendChild(childAllOf);
+//	            						Target targetTrue = Target.getInstance(targetNode, policyMetaData);
+//	            						currentPreExpression.append(System.lineSeparator()).append(z3ExpressionHelper.getTrueTargetExpression(targetTrue));
+//	            						List<Node> childrenMatchOf = XMLUtil.getChildNodeList(childAllOf);
+//		        	            		
+//	            						if( AllOfSelection.getInstance(childAllOf,policyMetaData).getMatches().size() > 1) {
+//		            						for(int si = 0; si < childrenMatchOf.size(); si++){
+//		            							Node childMatchOf = childrenMatchOf.get(si);
+//		    	            					
+//		    	            					if(childMatchOf.getLocalName() !=null && childMatchOf.getLocalName().equals("Match")){
+//		    	            						childAllOf.removeChild(childMatchOf);
+//		    	            						Node nextChildMatchOf = childMatchOf.getNextSibling();
+//		    	            						Target targetM = Target.getInstance(targetNode, policyMetaData);
+//		    	            						StringBuilder currentPreExpressionM = new StringBuilder(currentPreExpressionMRoot.toString());
+//		    	            						currentPreExpressionM.append(z3ExpressionHelper.getTrueTargetExpression(targetM)+  System.lineSeparator());
+//		    	            						List<Node> childrenMatchOfCopyM = new ArrayList<Node>();
+//		    	            						childrenMatchOfCopyM.addAll(XMLUtil.getChildNodeList(childAllOf));
+//		    	            						
+//		    	            						for(Node c:childrenMatchOfCopyM){
+//		    	            							childAllOf.removeChild(c);
+//		    	            						}
+//		    	            						childAllOf.appendChild(childMatchOf);
+//		    	            						Target targetTrueM = Target.getInstance(targetNode, policyMetaData);
+//		    	            						currentPreExpressionM.append(System.lineSeparator()).append(z3ExpressionHelper.getFalseTargetExpression(targetTrueM)+  System.lineSeparator());
+//		    	            						childAllOf.removeChild(childMatchOf);
+//		    	            						for(Node c:childrenMatchOfCopyM){ 
+//		    	            							childAllOf.appendChild(c);
+//		    	            						}
+//		    	            						childAllOf.insertBefore(childMatchOf, nextChildMatchOf);
+//		    	            						ruleExpressions.add(new StringBuffer(currentPreExpressionM));
+//		    	            						
+//		    	            					}
+//		    	            					
+//		    	            				}		
+//		            					}
+//	            						child.removeChild(childAllOf);
+//	            						for(Node c:childrenAllOfCopy){ 
+//	            							child.appendChild(c);
+//	            						}
+//	            						child.insertBefore(childAllOf, nextChild);
+//	            						if(allOfCount > 1) {
+//	            							ruleExpressions.add(new StringBuffer(currentPreExpression));
+//	            						}
+//	            						flag = true;
+//	            					}
+//	            				}
+//	            			}
+//	            		}
+//	            	}
+//	            }
+//	        }
+//	    } 
+//		
+//		if(!flag){
+//			return new ArrayList<String>();
+//		}
+//
+//		if(condition != null){
+//			for(StringBuffer ruleExpression:ruleExpressions){
+//				ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
+//			}
+//		}
+//	   
+//		while(true){
+//			sibling = n.getNextSibling();
+//			if(sibling == null){
+//				break;
+//			} else{
+//				if(sibling.getNodeType() == Node.ELEMENT_NODE){
+//					if(XACMLElementUtil.isRule(sibling)){
+//						postRules.add(Rule.getInstance(sibling, policyMetaData, null));
+//					}
+//				} 
+//			}
+//			n = sibling;
+//		}
+//		
+//	    List<String> lst = new ArrayList<String>();
+//	    for(StringBuffer expression:ruleExpressions){
+//	    	lst.add(expression.toString());
+//	    }
+//		return lst;
+//	}
+
 	public String getTargetAttribute(Target target, ArrayList<Attr> collector) {
 		StringBuffer sb = new StringBuffer();
 		if (target != null) {
@@ -574,5 +882,24 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		} else{
 			return false;
 		}
+	}
+	
+	private List<String> getDistinctAttrs(List<List<String>> allOf){
+		List<String> lst = new ArrayList<String>();
+		for(List<String> l: allOf ) {
+			for(String line:l) {
+				line = line.replaceAll(System.lineSeparator(), "");
+				String[] tokens = line.split(" ");
+				for(int i = 0;i < tokens.length;i++) {
+					String t = tokens[i];
+					if(t.indexOf("=")>0) {
+						if(!lst.contains(tokens[i+1])) {
+							lst.add(tokens[i+1]);
+						}
+					}
+				}
+			}
+		}
+		return lst;
 	}
 }
