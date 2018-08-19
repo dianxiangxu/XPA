@@ -165,7 +165,7 @@ public class MCDC2 extends RequestGeneratorBase{
 			String expresion = preExpression.toString() + ruleExpression + System.lineSeparator() + falsifyPreviousRules;
 			String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
 			
-			List<String> mcdcExps = getRuleMCDCExpression(node);
+			List<String> mcdcExps = getMCDCExpression(node);
 			if(mcdcExps.size()<=1) {
 				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
 				if (sat){
@@ -216,11 +216,12 @@ public class MCDC2 extends RequestGeneratorBase{
 								int res = XACMLElementUtil.TargetEvaluate(t, req);
 								if(res==0) {
 									Condition c = (Condition)currentPolicyRules.get(i).getCondition();
-									
+									if(c!=null) {
 									int resC = XACMLElementUtil.ConditionEvaluate(c, req);
 									if(resC==1) {
 										
 										currentPolicyRulesCoverage[i][1][1]	= true;
+									}
 									}
 								}
 							}
@@ -267,10 +268,29 @@ public class MCDC2 extends RequestGeneratorBase{
 	            if(target.getAnyOfSelections().size()>0){
 	            	StringBuffer expresion = z3ExpressionHelper.getFalseTargetExpression(target);
 	            	expresion.append(preExpression);
-	            	boolean sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
-	            	if (sat){
-	            		addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-	            	}
+	            	//boolean sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
+	            	boolean sat = false;
+	            	List<String> mcdcExps = getMCDCExpression(node);
+	    			if(mcdcExps.size()<=1) {
+	    				sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
+	    				if (sat){
+	    					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+	    				}
+	    			} else {
+	    				for(String exp:mcdcExps) {
+	    					String e = exp.replaceAll(System.lineSeparator(), "");
+	    					String expression = e + System.lineSeparator() + z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator();
+	    					expression += preExpression.toString() + System.lineSeparator() ;
+	    					sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
+	    					
+	    					if (sat){
+	    						addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+	    						
+	    					}
+	    				}
+	    			}
+	    			
+	            	
 	            	if(error){
 	            		IndTarget(target,preExpression.toString());
 	            	}
@@ -387,15 +407,9 @@ public class MCDC2 extends RequestGeneratorBase{
 		
 	}
 
-	public List<String> getRuleMCDCExpression(Element node) throws IOException, ParsingException, ParserConfigurationException, SAXException{
-		List<Rule> postRules = new ArrayList<Rule>();
-		Node sibling = null;
-		Node n = node;
+	public List<String> getMCDCExpression(Element node) throws IOException, ParsingException, ParserConfigurationException, SAXException{
 		Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
-		Condition condition = XMLUtil.getCondition(node, policyMetaData);
-	    
-	    boolean flag = false;
-	    List<String> expressions = new ArrayList<String>();
+		List<String> expressions = new ArrayList<String>();
 	    
 	    if (targetNode != null) {
 	        List<Node> children = XMLUtil.getChildNodeList(targetNode);
