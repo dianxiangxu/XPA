@@ -16,7 +16,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.seal.xacml.Attr;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
-import org.seal.xacml.components.CombiningAlgorithmURI;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XACMLElementUtil;
@@ -49,6 +48,8 @@ public class MCDC2 extends RequestGeneratorBase{
 	private String currentPolicyCA;
 	private Map<String,List<Attr>> ruleAttrMap;
 	private List<String> covered;
+	private List<String> falseTargetRequests;
+
 	
 	public MCDC2(String policyFilePath,boolean error) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		init(policyFilePath);
@@ -56,6 +57,8 @@ public class MCDC2 extends RequestGeneratorBase{
 		this.error = error;
 		ruleAttrMap = new HashMap<String,List<Attr>>();
 		covered = new ArrayList<String>();
+		this.falseTargetRequests = new ArrayList<String>();
+
 	}
 	
 	private void traverse(Element node, StringBuilder preExpression,List<Rule> previousRules) throws IOException, ParsingException, ParserConfigurationException, SAXException {
@@ -78,113 +81,50 @@ public class MCDC2 extends RequestGeneratorBase{
 		    }
 		    
 		    StringBuffer falsifyPreviousRules = new StringBuffer();
-		    StringBuffer falsifyPreviousRules2 = new StringBuffer();
-
-		    StringBuffer allTarget = new StringBuffer();
-		    StringBuffer allCondition = new StringBuffer();
-		    List<String> conditionsErr = new ArrayList<String>(); 
-		    Rule lastRule = null;
+		   		    Rule lastRule = null;
 		    for(Rule rule:previousRules){
 		    	falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule)+ System.lineSeparator());
-		    	
-		    	
-		    	if(node.getNextSibling().getNextSibling()==null) {
-		    		Target t = (Target)rule.getTarget();
-		    		if(t!=null) {
-		    			allTarget.append(z3ExpressionHelper.getFalseTargetExpression(t) + System.lineSeparator());
-		    		}
-		    		Condition c = (Condition)rule.getCondition();	
-		    		if(c!=null) {
-		    			if(t==null) {
-		    			allCondition.append(z3ExpressionHelper.getFalseConditionExpression(c) + System.lineSeparator());
-		    			
-		    			} else {
-		    				String cCondition ;
-		    				if(lastRule!=null) {
-		    				cCondition = falsifyPreviousRules2.toString() + System.lineSeparator() + z3ExpressionHelper.getTrueTargetExpression(t) ;
-		    				} else {
-		    					cCondition =  z3ExpressionHelper.getTrueTargetExpression(t).toString() ;
-		    				}
-		    			}
-		    		}
-				}
-		    	lastRule = rule;
-		    }
+		   }
 
 		    Rule r = Rule.getInstance(node, policyMetaData, null);
 		    ruleAttrMap.put(r.getId().toString(),curRuleAttr);
 
-		    if(falsifyPreviousRules.toString().trim().length()> 0) {
-		    boolean sat2 = Z3StrUtil.processExpression(falsifyPreviousRules.toString(), z3ExpressionHelper);
-			if (sat2){
-				String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-				for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
-					Target t = (Target)currentPolicyRules.get(i).getTarget();
-					if(t != null) {
-						int res = XACMLElementUtil.TargetEvaluate(t, req);
-						if(res==0) {
-							boolean rev = false;
-							Condition c = (Condition)currentPolicyRules.get(i).getCondition();
-							if(c != null) {
-								res = XACMLElementUtil.ConditionEvaluate(c, req);
-								if(res==0) {
-									rev = true;	
-								}
-							} else {
-								rev = true;
-							}
-							
-				       
+		    		    
+		    boolean f = false;
 
-							
-						}
-					}
-				}
-			}
-		    }
 	    	if(node.getNextSibling().getNextSibling()==null) {
-			    if(allTarget.length()>0) {
+			    	StringBuffer b = new StringBuffer(falsifyPreviousRules.toString());
+
 			    	if(target!=null) {
-			    		allTarget.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());
+			    		b.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());
 			    		
 			    	}
-			    	boolean sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + allTarget.toString(), z3ExpressionHelper);
+			    	boolean sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + b.toString(), z3ExpressionHelper);
 	    			if (sat == true) {
-	    				 //addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-		    				
-//	    				if(error) {
-//	    					for(StringBuilder req:RequestBuilder.buildAllIDRequest2(z3ExpressionHelper.getAttributeList())) {
-//	    						addRequest(req.toString());
-//	    					}
-//	    				}
-	    			}
-			    }
-			    if(allCondition.length()>0) {
-			    	if(condition!=null) {
-			    		allCondition.append(z3ExpressionHelper.getFalseConditionExpression(condition) + System.lineSeparator());
-			    		
-			    	}
-			    	boolean sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() +allCondition.toString(), z3ExpressionHelper);
-	    			if (sat == true) {
-//	    			   if(error)
-//	    			    addRequest(RequestBuilder.buildAllIDRequest(z3ExpressionHelper.getAttributeList()));
-	    				/*if(error) {
-	    					for(StringBuilder req:RequestBuilder.buildAllIDRequest2(z3ExpressionHelper.getAttributeList())) {
-	    						addRequest(req.toString());
+	    				 String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+	    					for(int i = 0; i < currentPolicyRules.size(); i++) {
+								Target t = (Target)currentPolicyRules.get(i).getTarget();
+								if(t != null) {
+									int res = XACMLElementUtil.TargetEvaluate(t, req);
+									if(res==1) {
+										currentPolicyRulesCoverage[i][0][1]	= true;
+									} else {
+										f = true;
+									}
+								}
+							}
+	    					if(f) {
+	    						for(String re:falseTargetRequests) {
+	    							addRequest(re);
+	    						}
+	    					} else {
+	    						addRequest(req);
 	    					}
-	    				}*/
-	    			} 
-			    }
-	    	}
+	    	    }
+			}
 	    	 if((target == null)&& (condition == null)) {
-	    		boolean sat = false;
-	    		 sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + allTarget.toString(), z3ExpressionHelper);
-	    			if (sat == true) {
-	    				
-	    				addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-					}
-			    	return;
-			    }
+	    			return;
+			}
 	    	     
 			StringBuffer ruleTargetExpression = new StringBuffer();
 			StringBuffer ruleNotConditionExpression = new StringBuffer();
@@ -197,16 +137,21 @@ public class MCDC2 extends RequestGeneratorBase{
 				    
 					sat = Z3StrUtil.processExpression(falseExpression , z3ExpressionHelper);
 				    if (sat) {
-				    	    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+				    	String req =     RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+				    	falseTargetRequests.add(req);
 				    }
 				}else if ( node.getNextSibling().getNextSibling()==null) {
-					allTarget.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());
+					StringBuffer b = new StringBuffer(falsifyPreviousRules);
+					b.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());
 		    		
-			    	
-			    	sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + allTarget.toString(), z3ExpressionHelper);
+			    	sat = Z3StrUtil.processExpression(preExpression.toString() + System.lineSeparator() + b.toString(), z3ExpressionHelper);
 	    			if (sat == true) {
-	    				
-	    				addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+	    				String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+	    				if(f) {
+	    					addRequest(req);
+	    				} else {
+	    					falseTargetRequests.add(req);
+		    			}
 					}
 				}
 				
@@ -223,13 +168,10 @@ public class MCDC2 extends RequestGeneratorBase{
 			List<String> mcdcExps = getRuleMCDCExpression(node);
 			if(mcdcExps.size()<=1) {
 				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
-				
 				if (sat){
 					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-					
 				}
 			} else {
-				List<String> expressions = new ArrayList<String>();
 				for(String exp:mcdcExps) {
 					String e = exp.replaceAll(System.lineSeparator(), "");
 					String expression = e + System.lineSeparator() + z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator();
@@ -238,7 +180,6 @@ public class MCDC2 extends RequestGeneratorBase{
 					
 					if (sat){
 						addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-						String req = getRequests().get(getRequests().size()-1);
 						
 					}
 				}
@@ -265,8 +206,34 @@ public class MCDC2 extends RequestGeneratorBase{
 				if(target!=null) {
 					sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
 					if (sat) {
-				    	addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-				    }
+				    	String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+				    	if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]) {
+				    		addRequest(req);
+				    	}
+				    	for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
+							Target t = (Target)currentPolicyRules.get(i).getTarget();
+							if(t != null) {
+								int res = XACMLElementUtil.TargetEvaluate(t, req);
+								if(res==0) {
+									Condition c = (Condition)currentPolicyRules.get(i).getCondition();
+									
+									int resC = XACMLElementUtil.ConditionEvaluate(c, req);
+									if(resC==1) {
+										
+										currentPolicyRulesCoverage[i][1][1]	= true;
+									}
+								}
+							}
+						}
+					}
+				} else if ( node.getNextSibling().getNextSibling()==null) {
+					sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
+					if (sat) {
+				    	String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+				    	if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]) {
+				    		addRequest(req);
+				    	}
+					}
 				}
 				if(error){
 					if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][2]) {
@@ -734,7 +701,13 @@ public class MCDC2 extends RequestGeneratorBase{
 			List<Attr> gAttrs = z3ExpressionHelper.getAttributeList();
 			List<Attr> attrs = getTargetAttrList(target);
 			String request = RequestBuilder.buildIDRequest(gAttrs,attrs);
-			addRequest(request);
+			int res = XACMLElementUtil.TargetEvaluate(target, request);
+			if(res==2) {
+				addRequest(request);
+				
+			
+			return true;
+			}
 			return true;
 		}
 		return false;
@@ -764,7 +737,13 @@ public class MCDC2 extends RequestGeneratorBase{
 		if (sat) {
 			
 			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
-			addRequest(request);
+			int res = XACMLElementUtil.ConditionEvaluate(condition, request);
+			if(res==2) {
+				addRequest(request);
+				
+			
+			return true;
+			}
 			return true;
 		}
 		return false;
