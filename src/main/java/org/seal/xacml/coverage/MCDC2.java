@@ -268,8 +268,12 @@ public class MCDC2 extends RequestGeneratorBase{
 	            if(target.getAnyOfSelections().size()>0){
 	            	StringBuffer expresion = z3ExpressionHelper.getFalseTargetExpression(target);
 	            	expresion.append(preExpression);
-	            	//boolean sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
 	            	boolean sat = false;
+	            	
+	            	sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
+	            	if (sat){
+    					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+    				}
 	            	List<String> mcdcExps = getMCDCExpression(node);
 	    			if(mcdcExps.size()<=1) {
 	    				sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
