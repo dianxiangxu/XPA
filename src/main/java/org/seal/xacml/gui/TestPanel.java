@@ -229,7 +229,12 @@ public class TestPanel extends JPanelPB {
 			} else if (MCDCRadio.isSelected()) {
 				try{
 					MCDC2 requestGenerator = new MCDC2(policyFilePath,true);
+					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateTests();
+					long millis2 = System.currentTimeMillis();
+					System.out.println("-------------");
+					System.out.println((millis2-millis));
+					System.out.println("-------------");
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.MCDC_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MCDC_COVERAGE);
@@ -239,7 +244,13 @@ public class TestPanel extends JPanelPB {
 			} else if (MCDCRadio_NoError.isSelected()) {
 				try{
 					MCDC2 requestGenerator = new MCDC2(policyFilePath,false);
+					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateTests();
+					long millis2 = System.currentTimeMillis();
+					System.out.println("-------------");
+					System.out.println((millis2-millis));
+					System.out.println("-------------");
+					
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.MCDC_COVERAGE_NO_ERROR);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MCDC_COVERAGE_NO_ERROR);
@@ -298,7 +309,13 @@ public class TestPanel extends JPanelPB {
 			if (result == JOptionPane.OK_OPTION) {
 				this.startProgressStatus();
 				List<String> mutationMethods = mbtMethods.getMutationOperatorList(true);
+				long millis = System.currentTimeMillis();
 				taggedRequests = testGenerator.generateRequests(mutationMethods);
+				long millis2 = System.currentTimeMillis();
+				System.out.println("-------------");
+				System.out.println((millis2-millis));
+				System.out.println("-------------");
+				
 				PolicyTestSuite suite = new PolicyTestSuite(policyFilePath, this.type, taggedRequests);
 				suite.save();
 				this.testSuite = suite;

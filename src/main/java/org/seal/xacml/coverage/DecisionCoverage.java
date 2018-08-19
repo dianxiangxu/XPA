@@ -201,11 +201,12 @@ public class DecisionCoverage extends RequestGeneratorBase{
 								int res = XACMLElementUtil.TargetEvaluate(t, req);
 								if(res==0) {
 									Condition c = (Condition)currentPolicyRules.get(i).getCondition();
-									
+									if(c!=null) {
 									int resC = XACMLElementUtil.ConditionEvaluate(c, req);
 									if(resC==1) {
 										
 										currentPolicyRulesCoverage[i][1][1]	= true;
+									}
 									}
 								}
 							}
