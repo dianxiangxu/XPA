@@ -40,7 +40,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 	public int totalheight;
 
 	protected Action newAction, openAction, saveAction, saveAsAction, checkSchemaAction;
-	protected Action openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, runTestsAction, evaluateCoverageAction;
+	protected Action openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, generatePNOMutationTestsAction, runTestsAction, evaluateCoverageAction;
 	protected Action openMutantsAction, generateMutantsAction, generateSecondOrderMutantsAction, testMutantsAction;
 	protected Action localizeFaultAction, fixFaultAction;
 	protected JCheckBoxMenuItem[] items;
@@ -111,6 +111,10 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 				new Integer(KeyEvent.VK_G));
 
 		generateMutationTestsAction = new GenerateMutationBasedTestsAction("Generate Mutation-Based Tests...",
+				createNavigationIcon("generatemutationtests"), "GenerateMutationBasedTests",
+				new Integer(KeyEvent.VK_M));
+
+		generatePNOMutationTestsAction = new GeneratePNOMutationBasedTestsAction("Generate PNO Mutation-Based Tests...",
 				createNavigationIcon("generatemutationtests"), "GenerateMutationBasedTests",
 				new Integer(KeyEvent.VK_M));
 
@@ -232,7 +236,7 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 
 	protected JMenu createTestMenu() {
 		JMenu testMenu = new JMenu("Test");
-		Action[] actions = { openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, runTestsAction, saveOracleValuesAction, evaluateCoverageAction};
+		Action[] actions = { openTestsAction, generateCoverageTestsAction, generateMutationTestsAction, generatePNOMutationTestsAction,runTestsAction, saveOracleValuesAction, evaluateCoverageAction};
 		for (int i = 0; i < actions.length; i++) {
 			JMenuItem menuItem = new JMenuItem(actions[i]);
 			menuItem.setIcon(null); // arbitrarily chose not to use icon
@@ -402,6 +406,19 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 		
 		public void actionPerformed(ActionEvent e) {
 			testPanel.generateMutationBasedTests();		
+		}
+	}
+	
+	public class GeneratePNOMutationBasedTestsAction extends AbstractAction {
+		public GeneratePNOMutationBasedTestsAction(String text, ImageIcon icon, String desc,
+				Integer mnemonic) {
+			super(text, icon);
+			putValue(SHORT_DESCRIPTION, desc);
+			putValue(MNEMONIC_KEY, mnemonic);
+		}
+		
+		public void actionPerformed(ActionEvent e) {
+			testPanel.generatePNOMutationBasedTests();		
 		}
 	}
 

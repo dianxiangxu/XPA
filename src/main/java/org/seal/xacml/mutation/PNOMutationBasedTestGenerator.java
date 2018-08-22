@@ -10,7 +10,6 @@ import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.seal.xacml.Attr;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
 import org.seal.xacml.TaggedRequest;
@@ -38,12 +37,12 @@ import org.wso2.balana.xacml3.AllOfSelection;
 import org.wso2.balana.xacml3.Target;
 import org.xml.sax.SAXException;
 
-public class MutationBasedTestGenerator extends RequestGeneratorBase {
+public class PNOMutationBasedTestGenerator extends RequestGeneratorBase {
 	private AbstractPolicy policy;
 	private String currentMutationMethod;
 	private boolean trueRuleFlag;
 	private boolean falseRuleFlag;
-	public MutationBasedTestGenerator(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+	public PNOMutationBasedTestGenerator(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		init(policyFilePath);
 		this.policy = PolicyLoader.loadPolicy(new File(policyFilePath));
 	}	   
@@ -51,8 +50,7 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	public List<TaggedRequest> generateRequests(List<String> mutationMethods) throws IOException, ParserConfigurationException, ParsingException, SAXException, InvocationTargetException, IllegalAccessException, NoSuchMethodException{
 		Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFilePath)));
 		boolean flagLargeSpace = false;
-//		List<Mutant> mutants = new ArrayList<Mutant>();
-		Class<? extends MutationBasedTestGenerator> cls = this.getClass();
+		Class<? extends PNOMutationBasedTestGenerator> cls = this.getClass();
         trueRuleFlag = false;
         falseRuleFlag = false;
         Class[] noParams = {};
@@ -62,51 +60,24 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 		for(String meth:mutationMethods) {
 			List<String> methods = new ArrayList<String>();
 			methods.add(meth);
- 			List<Mutant> muts  = mutator.generateSelectedMutants(methods);
-			currentMutationMethod = meth;
+ 			currentMutationMethod = meth;
 			System.out.println(currentMutationMethod);
 			String tag = MutationMethodAbbrDirectory.getAbbr(currentMutationMethod);
 			setRequests(new ArrayList<String>());
 			String methodName = "generate" + tag + "Requests";
 			Method method = cls.getDeclaredMethod(methodName, noParams);
-//			if(tag.equals("CCA")) {
-//				String hi = "";
-//			}
-			if(meth.equals("createRuleEffectFlippingMutants")) {
-				List<String> requests = (List<String>)method.invoke(this, null);
-				if(requests.size()>300) {
-					flagLargeSpace = true;
-				}
-				for(int i = 0; i< requests.size();i++){
+			
+			
+			List<String> requests = (List<String>)method.invoke(this, null);
+			
+			for(int i = 0; i< requests.size();i++){
 					taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
-				}
-			} else {
-				List<TaggedRequest> tReqs = new ArrayList<TaggedRequest>();
-				List<Mutant> notCovered= null;
-				if(flagLargeSpace && meth.equals("createRuleTargetTrueMutants")) {
-					tReqs.add(taggedRequests.get(taggedRequests.size()-1));
-					notCovered = notCoveredMutants(tReqs,muts);
-				} else if(flagLargeSpace) {
-					notCovered = muts;
-						
-						
-				} else {
-					notCovered = notCoveredMutants(taggedRequests,muts);
-				}
-				if(!notCovered.isEmpty()) {
-					List<String> requests = (List<String>)method.invoke(this, null);
-					
-					for(int i = 0; i< requests.size();i++){
-						if(doRequestPropagatesMutationFault(requests.get(i), policy, notCovered)){
-							taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
-						}
-					}
-				}
 				
 			}
+			
+				
+			
 		}
-		//List<TaggedRequest> finalTaggedRequests = new ArrayList<TaggedRequest>();
-		
 		
 		return taggedRequests;
 	}
@@ -1084,14 +1055,10 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 		        
 	        	List<EffectTCMap> lst = new ArrayList<EffectTCMap>();
 	        	String errExpression = "";
-	        	Rule fRule = null;
 	        	for (int i = 0; i < children.getLength(); i++) {
 	        		Node child = children.item(i);
 	        		if(XACMLElementUtil.isRule(child)){
 	        			Rule rule = Rule.getInstance(child, policyMetaData, null);
-	        			if(i <= 3) {
-	        				fRule = rule;
-	        			}
 	        			String expression = z3ExpressionHelper.getTrueTargetTrueConditionExpression(rule).append(System.lineSeparator()).toString();
 	        			if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
 	        				errExpression += z3ExpressionHelper.getTrueTargetTrueConditionExpression(rule).append(System.lineSeparator()).toString();
@@ -1131,21 +1098,7 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 				boolean sat = Z3StrUtil.processExpression(errExp, z3ExpressionHelper);
     			if (sat == true) {
     			    addRequest(RequestBuilder.buildAllIDRequest(z3ExpressionHelper.getAttributeList()));
-    			}
-    			if(fRule!=null) {
-    				Target tar = (Target)fRule.getTarget();
-	    			String exp =  z3ExpressionHelper.getTrueTargetExpression(tar) + System.lineSeparator()+ preExpression.toString() + System.lineSeparator();
-	    			
-	    			sat = Z3StrUtil.processExpression(exp, z3ExpressionHelper);
-	    			if (sat == true) {
-	    				List<Attr> gAttrs = z3ExpressionHelper.getAttributeList();
-
-	    				List<Attr> attrs = getTargetAttrList(tar);
-	    				String request = RequestBuilder.buildIDRequest(gAttrs,attrs);
-	    				
-	    			    addRequest(request);
-	    			}
-    			}
+    			} 
 	
 	         }else{
 	        	boolean foundFlag = false;
@@ -1218,10 +1171,6 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 	        }
 		}	
     }
-	 public List<Attr> getTargetAttrList(Target target) throws IOException {
-	    	Z3StrUtil.processExpression(z3ExpressionHelper.getTrueTargetExpression(target).toString(), z3ExpressionHelper);
-	    	return z3ExpressionHelper.getAttributeList();
-		}
 	
 	private List<EffectTCMap> getEffectTCMapForPolicyRules(Node node, StringBuilder preExp) throws ParsingException{
 		boolean isPolicy = XACMLElementUtil.isPolicy(node);
@@ -1277,7 +1226,5 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 			return expression;
 		}
 	}
-	
-	
 
 }

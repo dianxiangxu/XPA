@@ -36,6 +36,7 @@ import org.seal.xacml.coverage.MCDC2;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.coverage.RulePairCoverage;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
+import org.seal.xacml.mutation.PNOMutationBasedTestGenerator;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.semanticCoverage.Coverage;
 import org.seal.xacml.semanticCoverage.PolicyCoverageFactory;
@@ -199,7 +200,13 @@ public class TestPanel extends JPanelPB {
 				try{
 					this.type = NameDirectory.RULE_COVERAGE;
 					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
+					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateRequests();
+					long millis2 = System.currentTimeMillis();
+					System.out.println("-------------");
+					System.out.println((millis2-millis));
+					System.out.println("-------------");
+					
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.RULE_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_COVERAGE);
@@ -209,7 +216,14 @@ public class TestPanel extends JPanelPB {
 			} else if (DecisionCoverageRadio.isSelected()) {
 				try{
 					DecisionCoverage requestGenerator = new DecisionCoverage(policyFilePath,true);
+					//List<String> requests = requestGenerator.generateTests();
+					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateTests();
+					long millis2 = System.currentTimeMillis();
+					System.out.println("-------------");
+					System.out.println((millis2-millis));
+					System.out.println("-------------");
+					
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.DECISION_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.DECISION_COVERAGE);
@@ -219,7 +233,14 @@ public class TestPanel extends JPanelPB {
 			} else if (DecisionCoverageRadio_NoError.isSelected()) {
 				try{
 					DecisionCoverage requestGenerator = new DecisionCoverage(policyFilePath,false);
+					//List<String> requests = requestGenerator.generateTests();
+					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateTests();
+					long millis2 = System.currentTimeMillis();
+					System.out.println("-------------");
+					System.out.println((millis2-millis));
+					System.out.println("-------------");
+					
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.DECISION_COVERAGE_NO_ERROR);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.DECISION_COVERAGE_NO_ERROR);
@@ -302,6 +323,41 @@ public class TestPanel extends JPanelPB {
 		List<TaggedRequest> taggedRequests;
 		try{
 			testGenerator = new MutationBasedTestGenerator(xpa.getWorkingPolicyFilePath());
+			MutationBasedTestMutationMethods mbtMethods = new MutationBasedTestMutationMethods();
+			int result = JOptionPane.showConfirmDialog(xpa, mbtMethods.createPanel(),"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
+			String policyFilePath = xpa.getWorkingPolicyFilePath();
+			this.type = NameDirectory.MUTATION_BASED_TEST;
+			if (result == JOptionPane.OK_OPTION) {
+				this.startProgressStatus();
+				List<String> mutationMethods = mbtMethods.getMutationOperatorList(true);
+				long millis = System.currentTimeMillis();
+				taggedRequests = testGenerator.generateRequests(mutationMethods);
+				long millis2 = System.currentTimeMillis();
+				System.out.println("-------------");
+				System.out.println((millis2-millis));
+				System.out.println("-------------");
+				
+				PolicyTestSuite suite = new PolicyTestSuite(policyFilePath, this.type, taggedRequests);
+				suite.save();
+				this.testSuite = suite;
+				this.workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.MUTATION_BASED_TEST);
+				setUpTestPanel();
+				this.stopProgressStatus();
+			}
+		}catch(Exception e){
+			ExceptionUtil.handleInDefaultLevel(e);
+		}
+	}
+	
+	public void generatePNOMutationBasedTests() {
+		if (!xpa.hasWorkingPolicy()) {
+			JOptionPane.showMessageDialog(xpa, "There is no policy!");
+			return;
+		}
+		PNOMutationBasedTestGenerator testGenerator;
+		List<TaggedRequest> taggedRequests;
+		try{
+			testGenerator = new PNOMutationBasedTestGenerator(xpa.getWorkingPolicyFilePath());
 			MutationBasedTestMutationMethods mbtMethods = new MutationBasedTestMutationMethods();
 			int result = JOptionPane.showConfirmDialog(xpa, mbtMethods.createPanel(),"Please Select Mutation Methods",JOptionPane.OK_CANCEL_OPTION);
 			String policyFilePath = xpa.getWorkingPolicyFilePath();
