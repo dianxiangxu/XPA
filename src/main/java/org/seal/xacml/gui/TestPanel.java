@@ -34,6 +34,7 @@ import org.seal.xacml.coverage.DecisionCoverage;
 import org.seal.xacml.coverage.MCDC;
 import org.seal.xacml.coverage.MCDC2;
 import org.seal.xacml.coverage.RuleCoverage;
+import org.seal.xacml.coverage.RuleCoverage2;
 import org.seal.xacml.coverage.RulePairCoverage;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
 import org.seal.xacml.mutation.PNOMutationBasedTestGenerator;
@@ -199,7 +200,7 @@ public class TestPanel extends JPanelPB {
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				try{
 					this.type = NameDirectory.RULE_COVERAGE;
-					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
+					RuleCoverage2 requestGenerator = new RuleCoverage2(policyFilePath); 
 					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateRequests();
 					long millis2 = System.currentTimeMillis();

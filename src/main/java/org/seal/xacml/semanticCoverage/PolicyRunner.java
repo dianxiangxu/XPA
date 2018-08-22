@@ -17,7 +17,7 @@ import org.wso2.balana.ctx.xacml3.XACML3EvaluationCtx;
 public class PolicyRunner {
     private static Log logger = LogFactory.getLog(PolicyRunner.class);
 
-    static int evaluate(AbstractPolicy policy, String request) {
+    public static int evaluate(AbstractPolicy policy, String request) {
         logger.debug("policy: " + policy);
         logger.debug("request: " + request);
         RequestCtxFactory rc = new RequestCtxFactory();

@@ -261,7 +261,8 @@ public class PolicySpreadSheetMutantSuite {
 					e.printStackTrace();
 				}
 				m.setPolicy(policy);
-				writeDetectionInfoRow(sheet, rowIndex++, m, suite, detectionCount,i+1);
+				String name = m.getName();
+				writeDetectionInfoRow(sheet, rowIndex++, m, suite, detectionCount,i+1,name);
 				m.setPolicy(null);
 			}
 			
@@ -378,32 +379,32 @@ public class PolicySpreadSheetMutantSuite {
 		for (int i = 0; i < numTests+3; i++) {
 			titleCells[i] = titleRow.createCell(i);
 			if (i==0)
-				titleCells[i].setCellValue(""); // header for mutant name
+				titleCells[i].setCellValue("Name"); // header for mutant name
 			if (i==1)
-				titleCells[i].setCellValue("Bug Position");
+				titleCells[i].setCellValue("status");
 			if (i>=2 && i<=numTests+1) {
 				titleCells[i].setCellValue("Test" + (i-1));
 			}
-			if (i==numTests+2) {
-				titleCells[i].setCellValue("Status");
-			}			
+//			if (i==numTests+1) {
+//				titleCells[i].setCellValue("Status");
+//			}			
 		}
 	}
 	
 	private void writeDetectionInfoRow(Sheet sheet, int rowIndex,
-			Mutant mutant, TestSuite suite, int[] detectionCount, int number) throws Exception {
-
+			Mutant mutant, TestSuite suite, int[] detectionCount, int number, String name) throws Exception {
+		int offset = 2;
 		// initialize
 		Row mutantRow = sheet.createRow(rowIndex);
-		Cell[] mutantCells = new Cell[suite.getSize()+3];
+		Cell[] mutantCells = new Cell[suite.getSize()+offset];
 		boolean killed = false; // fault detected?
 		// create cells.
-		for (int i = 0; i < suite.getSize()+3; i++) {
+		for (int i = 0; i < suite.getSize()+offset; i++) {
 			mutantCells[i] = mutantRow.createCell(i);
 		}
 		// set values.
-		mutantCells[0].setCellValue(number);
-		mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
+		mutantCells[0].setCellValue(name);
+		//mutantCells[1].setCellValue(Arrays.toString(mutant.getFaultLocations().toArray()));
 		//PolicySpreadSheetTestSuite mutantTestSuite = 
 		//		new PolicySpreadSheetTestSuite(tests.getTestRecord(), mutant.getMutantFilePath(mutantsDirectory));
 		
@@ -418,12 +419,12 @@ public class PolicySpreadSheetMutantSuite {
 			if(b) {
 				
 			//mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
-				mutantCells[j+2].setCellValue(b);
+				mutantCells[j+2].setCellValue("");
 				
 			} else {
 				// just count
 				//mutantCells[j+2].setCellValue(rowResult[j].getLiteralDetail());
-			mutantCells[j+2].setCellValue(b);
+			mutantCells[j+2].setCellValue("X");
 				detectionCount[j]++;
 				killed = true;
 			}
@@ -432,9 +433,9 @@ public class PolicySpreadSheetMutantSuite {
 		//mutant.setTestResult(killed ? "Yes" : "No");
 		if (killed) {
 			detectionCount[suite.getSize()]++;
-			mutantCells[results.size()+2].setCellValue("killed");
+			mutantCells[1].setCellValue("killed");
 		} else {
-			mutantCells[results.size()+2].setCellValue("live");
+			mutantCells[1].setCellValue("live");
 		}
 	}
 	

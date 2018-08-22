@@ -30,11 +30,15 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.apache.commons.io.FileUtils;
+import org.seal.xacml.NameDirectory;
+import org.seal.xacml.TaggedRequest;
 import org.seal.xacml.TestRecord;
 import org.seal.xacml.components.JPanelPB;
 import org.seal.xacml.components.MutationBasedTestMutationMethods;
+import org.seal.xacml.mutation.MutationBasedTestGenerator;
 import org.seal.xacml.mutation.PolicySpreadSheetMutantSuite;
 import org.seal.xacml.policyUtils.PolicyLoader;
+import org.seal.xacml.semanticCoverage.PolicyRunner;
 import org.seal.xacml.semanticCoverage.TestSuite;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.semanticMutation.Mutator;
@@ -353,16 +357,44 @@ public class MutationPanel extends JPanelPB {
 		        } else{
 		        	mutantsFolder.mkdir();
 		        }
-		       
+		        MutationBasedTestGenerator testGenerator = new MutationBasedTestGenerator(xpa.getWorkingPolicyFilePath());
+				MutationBasedTestMutationMethods mbtMethods = new MutationBasedTestMutationMethods();
+				String policyFilePath = xpa.getWorkingPolicyFilePath();
+				//this.startProgressStatus();
+				List<String> mutationMethods = new ArrayList<String>();
+				mutationMethods.add("createCombiningAlgorithmMutants");
+				List<TaggedRequest> taggedRequests = testGenerator.generateRequests(mutationMethods);
+				AbstractPolicy p = PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile());
+				List<Mutant> tR = new ArrayList<Mutant>();
+		        
 		        for(String method:mutPanel.getMutationOperatorList(false)) {
 		        	List<String> methods = new ArrayList<String>();
 		        	methods.add(method);
 			        List<Mutant> muts = mutator.generateSelectedMutants(methods);
-			        
 			        for(Mutant mutant: muts){
+			        	if(methods.get(0).equals("createCombiningAlgorithmMutants")) {
+			        		boolean live = true;
+			        		for(TaggedRequest t:taggedRequests) {
+			        			
+			        			int rp = PolicyRunner.evaluate(p, t.getBody());
+			        			int rm = PolicyRunner.evaluate(mutant.getPolicy(), t.getBody());
+			        			if (rp!=rm) {
+			        				live = false;
+			        				break;
+			        			}
+			        			
+			        		}
+			        		if(live) {
+			        			tR.add(mutant);
+			        			
+			        			continue;
+			        		}
+			        		
+			        	}
 						FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
 						mutant.setPolicy(null);
 					}
+			        muts.removeAll(tR);
 			        mutants.addAll(muts);
 		        }
 				mutantSuite = new PolicySpreadSheetMutantSuite(mutantsFolder.toString(),mutants,XACMLElementUtil.getPolicyName(policyFile)); // write to spreadsheet		
