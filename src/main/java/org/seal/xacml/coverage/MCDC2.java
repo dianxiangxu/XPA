@@ -139,11 +139,13 @@ public class MCDC2 extends RequestGeneratorBase{
 				String falseExpression = preExpression.toString()+z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator() + falsifyPreviousRules;
 				if(condition!=null) {
 				    
+					if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][0][1]) {
 					sat = Z3StrUtil.processExpression(falseExpression , z3ExpressionHelper);
 				    if (sat) {
 				    	String req =     RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
 				    	falseTargetRequests.add(req);
 				    }
+					}
 				}else if ( node.getNextSibling().getNextSibling()==null) {
 					StringBuffer b = new StringBuffer(falsifyPreviousRules);
 					b.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());

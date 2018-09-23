@@ -60,10 +60,39 @@ public class RequestBuilder {
 	public static String buildIDRequest(List<Attr> attrs,List<Attr> lAttrs) {
 		StringBuilder request = new StringBuilder();
 		request.append(getRequestHead());
+		
 		List<String> list = new ArrayList<String>();
 		boolean injected = false;
+		boolean errF;
+		List<String> lCats = new ArrayList<String>();
+		List<String> lNames = new ArrayList<String>();
+		
+		for(Attr a:lAttrs) {
+			lCats.add(a.getCategory().toString());
+			lNames.add(a.getName().toString());
+		}
+		
+		List<Attr> bag = new ArrayList<Attr>();
+		for(Attr a:attrs) {
+			if(lCats.contains(a.getCategory().toString())) {
+				bag.add(a);
+			}
+		}
+		List<Attr> tBag = new ArrayList<Attr>();
+		for(Attr a:bag) {
+			if(lNames.contains(a.getName().toString())) {
+				tBag.add(a);
+			}
+		}
+		bag.removeAll(tBag);
+		tBag.addAll(bag);
+		attrs.removeAll(tBag);
+		attrs.addAll(tBag);
+		
+	
 		for (int j = 0; j < attrs.size(); j++) {
-			if(list.contains(attrs.get(j).getCategory().toString())){
+			errF = false;
+			if(list.contains(attrs.get(j).getCategory().toString()) && injected){
 				continue;
 			} else {
 				list.add(attrs.get(j).getCategory().toString());
@@ -71,18 +100,26 @@ public class RequestBuilder {
 				if(!injected) {
 					if(lAttrs.contains(attrs.get(j))) {
 						request.append(getIDCategoryHead());
+						errF = true;
 						injected = true;	
 					} else
 						request.append(getCategoryHead(attrs.get(j)));
 
 				} else {
+					if(lNames.contains(attrs.get(j).getName().toString())) {
+						continue;
+					}
 					request.append(getCategoryHead(attrs.get(j)));
 					
 				}
 			}
 			for (int k = j; k < attrs.size(); k++) {
 				if (attrs.get(k).getCategory().equals(attrs.get(j).getCategory())) {
-					request.append(getRequest(attrs.get(k), attrs.get(k).getDomain().get(0)));
+					if(errF) {
+						request.append(getIDRequest(attrs.get(k), attrs.get(k).getDomain().get(0)));
+					} else {
+						request.append(getRequest(attrs.get(k), attrs.get(k).getDomain().get(0)));
+					}
 				}
 			}
 			request.append(getCategoryEnd());

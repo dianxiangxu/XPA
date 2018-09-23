@@ -13,6 +13,7 @@ Z3-str/z3/shell.srcs
 Z3-str/**
 z3/**
 
+Experiments/**
 #ignore temprorary experiment result files
 #experiments/
 #Experiments/*
