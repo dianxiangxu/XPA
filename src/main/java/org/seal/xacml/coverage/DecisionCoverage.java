@@ -79,6 +79,9 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		    
 		    StringBuffer falsifyPreviousRules = new StringBuffer();
 		    for(Rule rule:previousRules){
+		    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
+		    		continue;
+		    	}
 		    	falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule)+ System.lineSeparator());
 		    	
 		    }
@@ -165,10 +168,13 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			String expresion = preExpression.toString() + ruleExpression + System.lineSeparator() + falsifyPreviousRules;
 			String notExpresion = preExpression.toString() +  ruleNotConditionExpression + System.lineSeparator() + falsifyPreviousRules;
 			
-			sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
-			if (sat){
-				addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+			if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][0]) {
+
+				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
+				if (sat){
+					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 				
+				}
 			}
 			if(target!=null) {
 				if(error){
@@ -197,8 +203,10 @@ public class DecisionCoverage extends RequestGeneratorBase{
 				    	}
 				    	for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
 							Target t = (Target)currentPolicyRules.get(i).getTarget();
+							int res = 0;
 							if(t != null) {
-								int res = XACMLElementUtil.TargetEvaluate(t, req);
+								res = XACMLElementUtil.TargetEvaluate(t, req);
+							}
 								if(res==0) {
 									Condition c = (Condition)currentPolicyRules.get(i).getCondition();
 									if(c!=null) {
@@ -207,9 +215,13 @@ public class DecisionCoverage extends RequestGeneratorBase{
 										
 										currentPolicyRulesCoverage[i][1][1]	= true;
 									}
+									if(resC== 0) {
+										currentPolicyRulesCoverage[i][1][0]	= true;
+										//currentPolicyRulesCoverage[i][0][0]	= true;
+									}
 									}
 								}
-							}
+							
 						}
 				    }
 				} else if ( node.getNextSibling().getNextSibling()==null) {
@@ -221,6 +233,26 @@ public class DecisionCoverage extends RequestGeneratorBase{
 				    	}
 					}
 				}
+//				if(error){
+//					if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][2]) {
+//				
+//						String pref = preExpression.toString() + System.lineSeparator();
+//						if(target!=null) {
+//							pref += z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator();
+//						}
+//						IndCondition(condition, pref + falsifyPreviousRules + System.lineSeparator() );
+//						String req = getRequests().get(getRequests().size()-1);
+//						for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
+//							Condition c = (Condition)currentPolicyRules.get(i).getCondition();
+//							if(c != null) {
+//								int res = XACMLElementUtil.ConditionEvaluate(c, req);
+//								if(res==2) {
+//									currentPolicyRulesCoverage[i][1][2]	= true;
+//								}
+//							}
+//						}
+//					}
+//				}
 				if(error){
 					if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][2]) {
 				
@@ -232,10 +264,21 @@ public class DecisionCoverage extends RequestGeneratorBase{
 						String req = getRequests().get(getRequests().size()-1);
 						for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
 							Condition c = (Condition)currentPolicyRules.get(i).getCondition();
+							Target t = (Target)currentPolicyRules.get(i).getTarget();
+
 							if(c != null) {
 								int res = XACMLElementUtil.ConditionEvaluate(c, req);
-								if(res==2) {
-									currentPolicyRulesCoverage[i][1][2]	= true;
+								if (t !=null) {
+									int resT = XACMLElementUtil.TargetEvaluate(t, req);
+									if(resT==0) {
+									if(res==2) {
+										currentPolicyRulesCoverage[i][1][2]	= true;
+									}
+									}
+								} else {
+									if(res==2) {
+										currentPolicyRulesCoverage[i][1][2]	= true;
+									}
 								}
 							}
 						}
@@ -248,6 +291,16 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		}
 		if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
 		    Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
+		    Policy pol = Policy.getInstance(node);
+        	String ca = pol.getCombiningAlg().getIdentifier().toString();
+        	if(ca.equals(CombiningAlgorithmURI.map.get("PO")) || ca.equals(CombiningAlgorithmURI.map.get("OPO")) ||ca.equals(CombiningAlgorithmURI.map.get("DUP"))) {
+        		falsifyRulesFlag = 1;
+        	} 
+        	else if(ca.equals(CombiningAlgorithmURI.map.get("DO")) || ca.equals(CombiningAlgorithmURI.map.get("ODO")) ||ca.equals(CombiningAlgorithmURI.map.get("PUD"))) {
+        		falsifyRulesFlag = 2;
+        	} else {
+        		falsifyRulesFlag = 0;
+        	}
 		    if (targetNode != null) {
 	            target = Target.getInstance(targetNode, policyMetaData);
 	            if(target.getAnyOfSelections().size()>0){
@@ -361,10 +414,10 @@ public class DecisionCoverage extends RequestGeneratorBase{
 
 			sb.append(False_Target(target, temp) + "\n");
 			Attr unique = getDifferentAttribute(z3ExpressionHelper.getAttributeList(), temp);
-			if (unique == null) {
-				if(this.currentPolicyRuleIndex!=0)
-				return false;
-			}
+//			if (unique == null) {
+//				//if(this.currentPolicyRuleIndex!=0)
+//				//return false;
+//			}
 			temp.add(invalidAttr());
 			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
 			temp.remove(unique);
@@ -392,30 +445,73 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return false;
 	}
 
+//    private  boolean IndCondition(Condition condition,String prefix) throws IOException{
+//		StringBuffer sb = new StringBuffer();
+//		ArrayList<Attr> temp = new ArrayList<Attr>();
+//		if (policy.getCombiningAlg().getIdentifier().toString().equals("urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable")) {
+//			sb.append(True_Condition(condition, temp) + "\n");
+//			Attr unique = getDifferentAttribute(z3ExpressionHelper.getAttributeList(), temp);
+//			if (unique == null) {
+//				return false;
+//			}
+//			temp.add(invalidAttr());
+//			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
+//			temp.remove(unique);
+//			sb.append(prefix);
+//		} else {
+//			sb.append(True_Condition(condition, temp) + "\n");
+//			temp.add(invalidAttr());
+//			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
+//			temp.remove(0);
+//			sb.append(prefix);
+//		}
+//		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
+//		if (sat) {
+//			
+//			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
+//			int res = XACMLElementUtil.ConditionEvaluate(condition, request);
+//			if(res==2) {
+//				addRequest(request);
+//				
+//			
+//			return true;
+//			}
+//			
+//		}
+//		return false;
+//	}
+    
     private  boolean IndCondition(Condition condition,String prefix) throws IOException{
 		StringBuffer sb = new StringBuffer();
 		ArrayList<Attr> temp = new ArrayList<Attr>();
 		if (policy.getCombiningAlg().getIdentifier().toString().equals("urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable")) {
-			sb.append(True_Condition(condition, temp) + "\n");
+			sb.append(True_Condition(condition, temp) + System.lineSeparator());
 			Attr unique = getDifferentAttribute(z3ExpressionHelper.getAttributeList(), temp);
 			if (unique == null) {
-				return false;
+				//return false;
 			}
-			temp.add(invalidAttr());
-			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
-			temp.remove(unique);
+			//temp.add(invalidAttr());
+			//mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
+			//temp.remove(unique);
 			sb.append(prefix);
 		} else {
-			sb.append(True_Condition(condition, temp) + "\n");
-			temp.add(invalidAttr());
-			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
-			temp.remove(0);
+			//True_Condition(condition, temp);
+			sb.append(True_Condition(condition, temp) + System.lineSeparator());
+
+			//temp.add(invalidAttr());
+			//mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
+			//temp.remove(0);
 			sb.append(prefix);
 		}
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {
+			//List<Attr> lst = z3ExpressionHelper.getAttributeList();
+			//lst.removeAll(temp);
+			//String request = RequestBuilder.buildRequest(lst);
+			List<Attr> gAttrs = z3ExpressionHelper.getAttributeList();
+			//List<Attr> attrs = getTargetAttrList(target);
+			String request = RequestBuilder.buildIDRequest(gAttrs,temp);
 			
-			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
 			int res = XACMLElementUtil.ConditionEvaluate(condition, request);
 			if(res==2) {
 				addRequest(request);
@@ -423,7 +519,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			
 			return true;
 			}
-			
+			return true;
 		}
 		return false;
 	}
@@ -490,7 +586,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			StringBuffer sb = new StringBuffer();
 			if (expression instanceof Apply) {
 				Apply apply = (Apply) expression;
-				sb = z3ExpressionHelper.ApplyStatements(apply, "", sb);
+				sb = z3ExpressionHelper.ApplyStatements(apply, "", sb,collector);
 			}
 			return sb.toString();
 		}

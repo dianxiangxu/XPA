@@ -87,8 +87,8 @@ public class RuleCoverage2 extends RequestGeneratorBase {
 	        previousRules = null;
 	        if(XACMLElementUtil.isPolicy(node)){
 	        	previousRules = new ArrayList<Rule>();
-	        	Policy p = Policy.getInstance(node);
-	        	String ca = p.getCombiningAlg().getIdentifier().toString();
+	        	Policy pol = Policy.getInstance(node);
+	        	String ca = pol.getCombiningAlg().getIdentifier().toString();
 	        	if(ca.equals(CombiningAlgorithmURI.map.get("PO")) || ca.equals(CombiningAlgorithmURI.map.get("OPO")) ||ca.equals(CombiningAlgorithmURI.map.get("DUP"))) {
 	        		falsifyRulesFlag = 1;
 	        	} 
@@ -143,11 +143,10 @@ public class RuleCoverage2 extends RequestGeneratorBase {
 	    
 	    StringBuffer falsifyPreviousRules = new StringBuffer();
 	    for(Rule rule:previousRules){
-//	    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
-//	    		continue;
-//	    	}
+	    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
+	    		continue;
+	    	}
 	    	
-	    	//if(ruleAttrMap.get(rule.getId().toString()).containsAll(ruleAttrMap.get(r.getId().toString()))){
 				falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 
 	    	//}

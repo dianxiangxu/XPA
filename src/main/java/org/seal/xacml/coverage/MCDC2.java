@@ -16,6 +16,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.seal.xacml.Attr;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
+import org.seal.xacml.components.CombiningAlgorithmURI;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XACMLElementUtil;
@@ -49,7 +50,7 @@ public class MCDC2 extends RequestGeneratorBase{
 	private Map<String,List<Attr>> ruleAttrMap;
 	private List<String> covered;
 	private List<String> falseTargetRequests;
-
+	private boolean notConditionFlag;
 	
 	public MCDC2(String policyFilePath,boolean error) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		init(policyFilePath);
@@ -66,7 +67,7 @@ public class MCDC2 extends RequestGeneratorBase{
 		Target target = null;
 		Condition condition = null;
 	    List<Attr> curRuleAttr = new ArrayList<Attr>();
-
+	    notConditionFlag = false;
 		if (rulePattern.matcher(name).matches()) {
 		    Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
 		    if (!XMLUtil.isEmptyNode(targetNode)) {
@@ -83,6 +84,9 @@ public class MCDC2 extends RequestGeneratorBase{
 		    StringBuffer falsifyPreviousRules = new StringBuffer();
 		   		    Rule lastRule = null;
 		    for(Rule rule:previousRules){
+		    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
+		    		continue;
+		    	}
 		    	falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule)+ System.lineSeparator());
 		   }
 
@@ -167,20 +171,45 @@ public class MCDC2 extends RequestGeneratorBase{
 			
 			List<String> mcdcExps = getMCDCExpression(node,false);
 			if(mcdcExps.size()<=1) {
+				if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][0]) {
+
 				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
 				if (sat){
 					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 				}
+				}
 			} else {
 				for(String exp:mcdcExps) {
-					String e = exp.replaceAll(System.lineSeparator(), "");
-					String expression = e + System.lineSeparator() + z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator();
+					//String e = exp.replaceAll(System.lineSeparator(), "");
+					//String expression = e + System.lineSeparator() + z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator();
+					String expression = exp +  System.lineSeparator();
+					
 					expression += preExpression.toString() + System.lineSeparator() +  falsifyPreviousRules;
 					sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
 					
 					if (sat){
-						addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-						
+						String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+						addRequest(req);
+						for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
+							Target t = (Target)currentPolicyRules.get(i).getTarget();
+							int res = 0;
+							if(t != null) {
+								res = XACMLElementUtil.TargetEvaluate(t, req);
+								if(res<2) {
+									currentPolicyRulesCoverage[i][0][res]	= true;
+								}
+								
+							}
+							
+							Condition c = (Condition)currentPolicyRules.get(i).getCondition();
+							if(c != null) {
+								res = XACMLElementUtil.ConditionEvaluate(c, req);
+								if(res<2) {
+									currentPolicyRulesCoverage[i][1][res]	= true;
+								}
+								
+							}
+						}
 					}
 				}
 			}
@@ -203,37 +232,44 @@ public class MCDC2 extends RequestGeneratorBase{
 				}
 			}
 			if(condition!=null){
-				if(target!=null) {
-					sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
-					if (sat) {
-				    	String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-				    	if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]) {
-				    		addRequest(req);
-				    	}
-				    	for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
-							Target t = (Target)currentPolicyRules.get(i).getTarget();
-							if(t != null) {
-								int res = XACMLElementUtil.TargetEvaluate(t, req);
-								if(res==0) {
-									Condition c = (Condition)currentPolicyRules.get(i).getCondition();
-									if(c!=null) {
-									int resC = XACMLElementUtil.ConditionEvaluate(c, req);
-									if(resC==1) {
-										
-										currentPolicyRulesCoverage[i][1][1]	= true;
-									}
-									}
+				if(!notConditionFlag) {
+					if(target!=null) {
+						sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
+						if (sat) {
+					    	String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+					    	if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]) {
+					    		addRequest(req);
+					    	}
+					    	for(int i = currentPolicyRuleIndex; i < currentPolicyRules.size(); i++) {
+								Target t = (Target)currentPolicyRules.get(i).getTarget();
+								int res = 0;
+								if(t != null) {
+									 res = XACMLElementUtil.TargetEvaluate(t, req);
 								}
+									if(res==0) {
+										Condition c = (Condition)currentPolicyRules.get(i).getCondition();
+										if(c!=null) {
+										int resC = XACMLElementUtil.ConditionEvaluate(c, req);
+										if(resC==1) {
+											
+											currentPolicyRulesCoverage[i][1][1]	= true;
+										}
+										if(resC== 0) {
+											currentPolicyRulesCoverage[i][1][0]	= true;
+										}
+										}
+									}
+								
 							}
 						}
-					}
-				} else if ( node.getNextSibling().getNextSibling()==null) {
-					sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
-					if (sat) {
-				    	String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-				    	if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]) {
-				    		addRequest(req);
-				    	}
+					} else if ( node.getNextSibling().getNextSibling()==null) {
+						sat = Z3StrUtil.processExpression(notExpresion, z3ExpressionHelper);
+						if (sat) {
+					    	String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+					    	if(!currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]) {
+					    		addRequest(req);
+					    	}
+						}
 					}
 				}
 				if(error){
@@ -274,6 +310,16 @@ public class MCDC2 extends RequestGeneratorBase{
 		}
 		if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
 		    Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
+		    Policy pol = Policy.getInstance(node);
+        	String ca = pol.getCombiningAlg().getIdentifier().toString();
+        	if(ca.equals(CombiningAlgorithmURI.map.get("PO")) || ca.equals(CombiningAlgorithmURI.map.get("OPO")) ||ca.equals(CombiningAlgorithmURI.map.get("DUP"))) {
+        		falsifyRulesFlag = 1;
+        	} 
+        	else if(ca.equals(CombiningAlgorithmURI.map.get("DO")) || ca.equals(CombiningAlgorithmURI.map.get("ODO")) ||ca.equals(CombiningAlgorithmURI.map.get("PUD"))) {
+        		falsifyRulesFlag = 2;
+        	} else {
+        		falsifyRulesFlag = 0;
+        	}
 		    if (targetNode != null) {
 	            target = Target.getInstance(targetNode, policyMetaData);
 	            if(target.getAnyOfSelections().size()>0){
@@ -287,10 +333,10 @@ public class MCDC2 extends RequestGeneratorBase{
     				}
 	            	List<String> mcdcExps = getMCDCExpression(node,true);
 	    			if(mcdcExps.size()<=1) {
-	    				sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
-	    				if (sat){
-	    					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-	    				}
+//	    				sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
+//	    				if (sat){
+//	    					addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+//	    				}
 	    			} else {
 	    				for(String exp:mcdcExps) {
 	    					if(exp.equals("R")) {
@@ -346,8 +392,12 @@ public class MCDC2 extends RequestGeneratorBase{
 	    }
 		return getRequests();
 	}
-	 
-	public List<String> getMCDCExpressions(String expression, boolean coveredFlag){
+	
+//	public static void main(String[] args) throws Exception{
+//		MCDC2 obj = new MCDC2(null, false);
+//		obj.getMCDCExpressions
+//	}
+	public  List<String> getMCDCExpressions(String expression, boolean coveredFlag){
 		
 		List<String> aExprs = new ArrayList<String>();
 		List<Integer> lIndex = new ArrayList<Integer>();
@@ -519,9 +569,50 @@ public class MCDC2 extends RequestGeneratorBase{
 	            	}
 	            }
 	        }
+	        List<String> bag = new ArrayList<String>();
+	    	for(String exp:expressions) {
+				String e = exp.replaceAll(System.lineSeparator(), "");
+				bag.add(e);
+	    	}
+	    	expressions = bag;
 	    } 
+	    if(!policyTargetFlag) {
 		
-
+		    Node conditionNode = XMLUtil.findInChildNodes(node, NameDirectory.CONDITION);
+		    
+		    if(conditionNode!=null) {
+		    	List<String> bag = new ArrayList<String>();
+		    	Condition c = Condition.getInstance(conditionNode, policyMetaData, null);
+		    	for(String exp:expressions) {
+					//String e = exp.replaceAll(System.lineSeparator(), "");
+					String expression = exp + System.lineSeparator() + z3ExpressionHelper.getTrueConditionExpression(c) + System.lineSeparator();
+					bag.add(expression);
+					
+				}
+		    	if(bag.size()>0) {
+		    		expressions = bag;
+		    	}
+		    	String cExp = z3ExpressionHelper.getTrueConditionExpression(c).toString();
+		    	List<String> cMCDCs = getMCDCExpressions(cExp, false);
+		    	if(cMCDCs.size()>2) {
+		    		
+		    		if(cExp.indexOf("(and ")>=0) {
+		    			notConditionFlag = true ;
+		    		}
+		    		for(int i = 1; i < cMCDCs.size();i++) {
+		    			String e = cMCDCs.get(i).replaceAll(System.lineSeparator(), "");
+		    		    if (targetNode != null) {
+		    		    	Target t = Target.getInstance(targetNode, policyMetaData);
+		    		    	String expression = e + System.lineSeparator() + z3ExpressionHelper.getTrueTargetExpression(t) + System.lineSeparator();
+		    		    	expressions.add(expression);
+		    		    } else {
+		    		    	expressions.add(e);
+		    		    }
+		    		}
+		    	}
+		    }
+	    }
+		
 		return expressions;
 	}
 
@@ -718,8 +809,8 @@ public class MCDC2 extends RequestGeneratorBase{
 			sb.append(False_Target(target, temp) + "\n");
 			Attr unique = getDifferentAttribute(z3ExpressionHelper.getAttributeList(), temp);
 			if (unique == null) {
-				if(this.currentPolicyRuleIndex!=0)
-				return false;
+				//if(this.currentPolicyRuleIndex!=0)
+				//return false;
 			}
 			temp.add(invalidAttr());
 			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
@@ -756,7 +847,7 @@ public class MCDC2 extends RequestGeneratorBase{
 			sb.append(True_Condition(condition, temp) + System.lineSeparator());
 			Attr unique = getDifferentAttribute(z3ExpressionHelper.getAttributeList(), temp);
 			if (unique == null) {
-				return false;
+				//return false;
 			}
 			//temp.add(invalidAttr());
 			//mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
@@ -862,16 +953,36 @@ public class MCDC2 extends RequestGeneratorBase{
 	}
 
 	private Attr getDifferentAttribute(List<Attr> globle,List<Attr> local) {
-		out: for (Attr l : local) {
-			for (Attr g : globle) {
-				if (g.getName().equals(l.getName())) {
-					continue out;
+		List<Attr> bag = new ArrayList<Attr>();
+		List<Attr> bag2 = new ArrayList<Attr>();
+		
+		bag.addAll(local);
+		for(Attr a:bag) {
+			for(Attr ga:globle) {
+				if(ga.getName().toString().equals(a.getName().toString())) {
+					bag2.add(a);
 				}
 			}
-			return l;
 		}
-		return null;
+		bag.removeAll(bag2);
+		if(bag.size()>1) {
+			return bag.get(0);
+		} else {
+			return null;
+		}
 	}
+	
+//	private Attr getDifferentAttribute(List<Attr> globle,List<Attr> local) {
+//		out: for (Attr l : local) {
+//			for (Attr g : globle) {
+//				if (g.getName().equals(l.getName())) {
+//					continue out;
+//				}
+//			}
+//			return l;
+//		}
+//		return null;
+//	}
 	
 	public void mergeAttribute(List<Attr> Globalattributes,List<Attr> Localattributes) {
 		for (Attr localmyattr : Localattributes) {

@@ -363,6 +363,8 @@ public class MutationPanel extends JPanelPB {
 				//this.startProgressStatus();
 				List<String> mutationMethods = new ArrayList<String>();
 				mutationMethods.add("createCombiningAlgorithmMutants");
+				mutationMethods.add("createRuleConditionTrueMutants");
+				mutationMethods.add("createRuleTargetTrueMutants");
 				List<TaggedRequest> taggedRequests = testGenerator.generateRequests(mutationMethods);
 				AbstractPolicy p = PolicyLoader.loadPolicy(xpa.getWorkingPolicyFile());
 				List<Mutant> tR = new ArrayList<Mutant>();
@@ -372,7 +374,7 @@ public class MutationPanel extends JPanelPB {
 		        	methods.add(method);
 			        List<Mutant> muts = mutator.generateSelectedMutants(methods);
 			        for(Mutant mutant: muts){
-			        	if(methods.get(0).equals("createCombiningAlgorithmMutants")) {
+			        	if(methods.get(0).equals("createCombiningAlgorithmMutants")||methods.get(0).equals("createRuleConditionTrueMutants")||methods.get(0).equals("createRuleTargetTrueMutants")) {
 			        		boolean live = true;
 			        		for(TaggedRequest t:taggedRequests) {
 			        			
@@ -394,6 +396,9 @@ public class MutationPanel extends JPanelPB {
 						FileIOUtil.saveMutant(mutant,mutantsFolder.toString());
 						mutant.setPolicy(null);
 					}
+			        for(Mutant m:tR) {
+			        System.out.println("Equivalent mutant -----> " + m.getName());
+			        }
 			        muts.removeAll(tR);
 			        mutants.addAll(muts);
 		        }
