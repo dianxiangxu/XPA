@@ -29,13 +29,13 @@ import org.xml.sax.SAXException;
 /**
  * Created by roshanshrestha on 2/10/17.
  */
-public class RuleCoverage2 extends RequestGeneratorBase {
+public class RuleBodyCoverage extends RequestGeneratorBase {
 	private boolean conditionFlag;
 	private boolean targetFlag;
 	private Map<String,List<Attr>> ruleAttrMap;
 	
 	
-	public RuleCoverage2(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+	public RuleBodyCoverage(String policyFilePath) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		init(policyFilePath);
 		ruleAttrMap = new HashMap<String,List<Attr>>();
 	}
@@ -67,7 +67,8 @@ public class RuleCoverage2 extends RequestGeneratorBase {
 	    	}
 			boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
 			if (sat == true) {
-			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+				String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+			    addRequest(req);
 			}
 		    previousRules.add(Rule.getInstance(node, policyMetaData, null));
 		    return;
@@ -87,8 +88,8 @@ public class RuleCoverage2 extends RequestGeneratorBase {
 	        previousRules = null;
 	        if(XACMLElementUtil.isPolicy(node)){
 	        	previousRules = new ArrayList<Rule>();
-	        	Policy pol = Policy.getInstance(node);
-	        	String ca = pol.getCombiningAlg().getIdentifier().toString();
+	        	Policy p = Policy.getInstance(node);
+	        	String ca = p.getCombiningAlg().getIdentifier().toString();
 	        	if(ca.equals(CombiningAlgorithmURI.map.get("PO")) || ca.equals(CombiningAlgorithmURI.map.get("OPO")) ||ca.equals(CombiningAlgorithmURI.map.get("DUP"))) {
 	        		falsifyRulesFlag = 1;
 	        	} 
@@ -143,13 +144,18 @@ public class RuleCoverage2 extends RequestGeneratorBase {
 	    
 	    StringBuffer falsifyPreviousRules = new StringBuffer();
 	    for(Rule rule:previousRules){
-	    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
-	    		continue;
-	    	}
-	    	
+//	    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
+//	    		continue;
+//	    	}
+	    	if(falsifyRulesFlag==0) {
+	    		falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
+
+	    	} else {
+	    	if(ruleAttrMap.get(rule.getId().toString()).containsAll(ruleAttrMap.get(r.getId().toString()))){
 				falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 
-	    	//}
+	    	}
+	    	}
 //	    	if(trueRuleExpr.contains(ruleExpression)) {
 //				falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 //

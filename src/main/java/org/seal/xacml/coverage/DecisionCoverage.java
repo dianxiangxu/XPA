@@ -6,9 +6,7 @@ import static org.seal.xacml.policyUtils.XpathSolver.rulePattern;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -41,12 +39,13 @@ import org.wso2.balana.xacml3.Target;
 import org.xml.sax.SAXException;
 
 public class DecisionCoverage extends RequestGeneratorBase{
-	private AbstractPolicy policy;
-	private boolean error;
-	private boolean[][][] currentPolicyRulesCoverage;
-	private List<Rule> currentPolicyRules;
-	private int currentPolicyRuleIndex;
-	private String currentPolicyCA;
+	protected AbstractPolicy policy;
+	protected boolean error;
+	protected boolean[][][] currentPolicyRulesCoverage;
+	protected List<Rule> currentPolicyRules;
+	protected int currentPolicyRuleIndex;
+	protected String currentPolicyCA;
+	protected boolean falsePolicyTarget;
 	
 	public DecisionCoverage(String policyFilePath,boolean error) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		init(policyFilePath);
@@ -54,57 +53,19 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		this.error = error;
 	}
 	
-	private void traverse(Element node, StringBuilder preExpression,List<Rule> previousRules) throws IOException, ParsingException {
+	protected void traverse(Element node, StringBuilder preExpression,List<Rule> previousRules) throws IOException, ParsingException, SAXException, ParserConfigurationException {
 		String name = DOMHelper.getLocalName(node);
-		Target target = null;
-		Condition condition = null;
-
-
-	    List<Attr> curRuleAttr = new ArrayList<Attr>();
-
-		if (rulePattern.matcher(name).matches()) {
-		    Rule r = Rule.getInstance(node, policyMetaData, null);
-		    Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
-		    if (!XMLUtil.isEmptyNode(targetNode)) {
-		        target = Target.getInstance(targetNode, policyMetaData);
-		        z3ExpressionHelper.getTrueTargetExpression(target,curRuleAttr);
-		    }
-		    
-		    Node conditionNode = findInChildNodes(node, NameDirectory.CONDITION);
-		    if (!XMLUtil.isEmptyNode(conditionNode)) {
-		        condition = Condition.getInstance(conditionNode, policyMetaData, null);
-		        z3ExpressionHelper.getTrueConditionExpression(condition,curRuleAttr);
-		    }
-		    
-		    if((target == null)&& (condition == null)) {
+		
+	    if (rulePattern.matcher(name).matches()) {
+	    	RuleBody rb = new RuleBody(node,previousRules,preExpression);
+			
+	    	if((rb.getTarget() == null)&& (rb.getCondition() == null)) {
     		    return;
 			}
 		    
-		    if(target==null) {
-		    	currentPolicyRulesCoverage[currentPolicyRuleIndex][0][0]= true;
-		    	currentPolicyRulesCoverage[currentPolicyRuleIndex][0][1]= true;
-		    	currentPolicyRulesCoverage[currentPolicyRuleIndex][0][2]= true;
-		    }
-		    
-		    if(condition==null) {
-		    	currentPolicyRulesCoverage[currentPolicyRuleIndex][1][0]= true;
-		    	currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]= true;
-		    	currentPolicyRulesCoverage[currentPolicyRuleIndex][1][2]= true;
-		    }
-		    
-		    StringBuffer falsifyPreviousRules = new StringBuffer();
-		    for(Rule rule:previousRules){
-		    	if(shouldFalisfy(rule.getEffect())) {
-		    		falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule)+ System.lineSeparator());
-			 	}
-		    }
-		    
 			boolean sat;
 			if(!isTrueTargetCovered() || !isTrueConditionCovered()) {
-				StringBuffer ruleExpression = new StringBuffer();
-				ruleExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
-				ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
-				String expresion = preExpression.toString() + ruleExpression + System.lineSeparator() + falsifyPreviousRules;
+				String expresion = rb.getRuleCoverageExpression();
 				sat = Z3StrUtil.processExpression(expresion, z3ExpressionHelper);
 				if (sat){
 					String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
@@ -113,99 +74,19 @@ public class DecisionCoverage extends RequestGeneratorBase{
 				}
 			}
 			
-			if(target!=null){
-				if(!isFalseTargetCovered()) {
-					String falseTargetExpression = preExpression.toString()+z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator() + falsifyPreviousRules;
-					sat = Z3StrUtil.processExpression(falseTargetExpression, z3ExpressionHelper);
-					if(sat) {
-						String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-						addRequest(req);
-						updateCoverage(req);
-					}
-				}
-				
-				if(error && !isErrorTargetCovered()){
-						String req = IndTarget(target, preExpression.toString() + System.lineSeparator() + falsifyPreviousRules + System.lineSeparator() );
-						if(req !=null) {
-							if(isReachable(req)) {
-								addRequest(req);
-								updateCoverage(req);
-							}
-							
-						}
-					
-				}
-			}
-			if(condition!=null){
-				String targetExp = "";
-				if(target!=null) {
-					targetExp = z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator();
-				}
-				if(!isFalseConditionCovered()) {
-					
-					String falseConditionExpression = preExpression.toString()+ targetExp +z3ExpressionHelper.getFalseConditionExpression(condition) + System.lineSeparator() + falsifyPreviousRules;
-					sat = Z3StrUtil.processExpression(falseConditionExpression, z3ExpressionHelper);
-					if(sat) {
-						String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-						addRequest(req);
-						updateCoverage(req);
-					}
-				}
-				
-				if(error && !isErrorConditionCovered()){
-						String req = IndCondition(condition, preExpression.toString() + targetExp + System.lineSeparator() + falsifyPreviousRules + System.lineSeparator() );
-						if(req !=null) {
-							if(isReachable(req)) {
-								addRequest(req);
-								updateCoverage(req);
-							}
-						}
-					
-				}
-				
-			}
-			previousRules.add(r);
+			coverErrorNFalse(rb);
+			
+			
+			previousRules.add(Rule.getInstance(node, policyMetaData, null));
+		    
 			currentPolicyRuleIndex++;
 			return;
 		}
 		if (policyPattern.matcher(name).matches() || policysetPattern.matcher(name).matches()) {
-		    Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
-		    Policy pol = Policy.getInstance(node);
-		    currentPolicyCA = pol.getCombiningAlg().getIdentifier().toString();
-        	
-		    if (targetNode != null) {
-	            target = Target.getInstance(targetNode, policyMetaData);
-	            if(target.getAnyOfSelections().size()>0){
-	            	StringBuffer expresion = z3ExpressionHelper.getFalseTargetExpression(target);
-	            	expresion.append(preExpression);
-	            	boolean sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
-	            	if (sat){
-	            		addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-	            	}
-	            	if(error){
-	            		addRequest(IndTarget(target,preExpression.toString()));
-	            	}
-	            	preExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
-	            }
+			if(policyPattern.matcher(name).matches()){
+		    	udpatePolicyMeta(node);
 		    }
-		    
-		    NodeList children = node.getChildNodes();
-		    previousRules = null;
-		    if(policyPattern.matcher(name).matches()){
-		    	previousRules = new ArrayList<Rule>();
-		    	Policy p = Policy.getInstance(node);
-				currentPolicyRules = XACMLElementUtil.getRuleFromPolicy(p);
-		    	currentPolicyRulesCoverage = new boolean[currentPolicyRules.size()][2][3];
-		    	currentPolicyRuleIndex = 0;
-		    	currentPolicyCA = p.getCombiningAlg().getIdentifier().toString();
-		    }
-		    for (int i = 0; i < children.getLength(); i++) {
-		        Node child = children.item(i);
-		        StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
-		        if (child instanceof Element && isTraversableElement(child)) {
-		        	traverse((Element) child, preExpressionCurrent,previousRules);
-		        }
-		    }
+		    coverPolicyTarget(name, node, previousRules, preExpression);
 		}
     }
 
@@ -217,6 +98,96 @@ public class DecisionCoverage extends RequestGeneratorBase{
 	    	e.printStackTrace();
 	    }
 		return getRequests();
+	}
+	
+	protected void coverPolicyTarget(String name, Node node, List<Rule> previousRules, StringBuilder preExpression) throws ParsingException, IOException, SAXException , ParserConfigurationException{
+		Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
+	    previousRules = null;
+	    if(policyPattern.matcher(name).matches()){
+	    	previousRules = new ArrayList<Rule>();
+	    	//udpatePolicyMeta(node);
+	    }
+	    
+	    Target target = null;
+	    if (targetNode != null) {
+            target = Target.getInstance(targetNode, policyMetaData);
+            if(target.getAnyOfSelections().size()>0){
+	            	if(!falsePolicyTarget) {
+	            	StringBuffer expresion = z3ExpressionHelper.getFalseTargetExpression(target);
+	            	expresion.append(preExpression);
+	            	boolean sat = Z3StrUtil.processExpression(expresion.toString(), z3ExpressionHelper);
+	            	if (sat){
+	            		addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+	            	}
+            	}
+            	if(error){
+            		addRequest(IndTarget(target,preExpression.toString()));
+            	}
+            	preExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
+            }
+	    }
+	    
+	    NodeList children = node.getChildNodes();
+	    
+	    for (int i = 0; i < children.getLength(); i++) {
+	        Node child = children.item(i);
+	        StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
+	        if (child instanceof Element && isTraversableElement(child)) {
+	        	traverse((Element) child, preExpressionCurrent,previousRules);
+	        }
+	    }
+	}
+	
+	protected void coverErrorNFalse(RuleBody rb) throws IOException {
+		boolean sat = false;
+		if(rb.getTarget()!=null){
+			if(!isFalseTargetCovered()) {
+				String falseTargetExpression = rb.getReachabilityExp() + rb.getFalseRuleTargetExpression() + rb.getFalseRuleConditionExpression();
+				sat = Z3StrUtil.processExpression(falseTargetExpression, z3ExpressionHelper);
+				if(sat) {
+					String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+					addRequest(req);
+					updateCoverage(req);
+				}
+			}
+			
+			if(error && !isErrorTargetCovered()){
+				String req = IndTarget(rb.getTarget(), rb.getReachabilityExp() );
+				if(req !=null) {
+					if(isReachable(req)) {
+						addRequest(req);
+						updateCoverage(req);
+					}
+				}
+			}
+		}
+		
+		if(rb.getCondition()!=null){
+			String targetExp = "";
+			if(rb.getTarget()!=null) {
+				targetExp = rb.getRuleTargetExpression();
+			}
+			if(!isFalseConditionCovered()) {
+				
+				String falseConditionExpression = rb.getReachabilityExp() + targetExp + rb.getFalseRuleConditionExpression();
+				sat = Z3StrUtil.processExpression(falseConditionExpression, z3ExpressionHelper);
+				if(sat) {
+					String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
+					addRequest(req);
+					updateCoverage(req);
+				}
+			}
+			
+			if(error && !isErrorConditionCovered()){
+				String req = IndCondition(rb.getCondition(), rb.getReachabilityExp() + targetExp );
+				if(req !=null) {
+					if(isReachable(req)) {
+						addRequest(req);
+						updateCoverage(req);
+					}
+				}
+			}
+		}
 	}
 	 
 	protected boolean isFalseTargetCovered() {
@@ -282,26 +253,28 @@ public class DecisionCoverage extends RequestGeneratorBase{
 	
 	protected boolean isReachable(String req) {
 		boolean flag = true;
-		for(int i = 0; i < currentPolicyRuleIndex; i++) {
-			Target t = (Target)currentPolicyRules.get(i).getTarget();
-			int resT = 0;
-			if (t !=null) {
-				resT = XACMLElementUtil.TargetEvaluate(t, req);
-				currentPolicyRulesCoverage[i][0][resT] = true;
-			}
-			Condition c = (Condition)currentPolicyRules.get(i).getCondition();
-			int resC = 0;
-			if(c != null && resT==0) {
-				resC = XACMLElementUtil.ConditionEvaluate(c, req);
-				currentPolicyRulesCoverage[i][1][resC] = true;
-			}
-			if(resT == 0 && resC == 0) {
-				flag = false;
-				break;
-			}
-			if(resT == 2 || resC == 2) {
-				flag = false;
-				break;
+		if(currentPolicyCA.equals(CombiningAlgorithmURI.map.get("FA"))) {
+			for(int i = 0; i < currentPolicyRuleIndex; i++) {
+				Target t = (Target)currentPolicyRules.get(i).getTarget();
+				int resT = 0;
+				if (t !=null) {
+					resT = XACMLElementUtil.TargetEvaluate(t, req);
+					currentPolicyRulesCoverage[i][0][resT] = true;
+				}
+				Condition c = (Condition)currentPolicyRules.get(i).getCondition();
+				int resC = 0;
+				if(c != null && resT==0) {
+					resC = XACMLElementUtil.ConditionEvaluate(c, req);
+					currentPolicyRulesCoverage[i][1][resC] = true;
+				}
+				if(resT == 0 && resC == 0) {
+					flag = false;
+					break;
+				}
+				if(resT == 2 || resC == 2) {
+					flag = false;
+					break;
+				}
 			}
 		}
 		return flag;
@@ -369,7 +342,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return "";
 	}
     
-    private Attr invalidAttr() {
+    protected Attr invalidAttr() {
 		Attr myattr = new Attr(randomAttribute(), randomAttribute(),"http://www.w3.org/2001/XMLSchema#string");
 		myattr.addValue("Indeterminate");
 		return myattr;
@@ -383,7 +356,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		}
 	}
    
-    private String IndTarget(Target target,String prefix) throws IOException{
+    protected String IndTarget(Target target,String prefix) throws IOException{
 		StringBuffer sb = new StringBuffer();
 		ArrayList<Attr> temp = new ArrayList<Attr>();
 		sb.append(False_Target(target, temp) + "\n");
@@ -398,43 +371,8 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return null;
 	}
 
-//    private  boolean IndCondition(Condition condition,String prefix) throws IOException{
-//		StringBuffer sb = new StringBuffer();
-//		ArrayList<Attr> temp = new ArrayList<Attr>();
-//		if (policy.getCombiningAlg().getIdentifier().toString().equals("urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable")) {
-//			sb.append(True_Condition(condition, temp) + "\n");
-//			Attr unique = getDifferentAttribute(z3ExpressionHelper.getAttributeList(), temp);
-//			if (unique == null) {
-//				return false;
-//			}
-//			temp.add(invalidAttr());
-//			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
-//			temp.remove(unique);
-//			sb.append(prefix);
-//		} else {
-//			sb.append(True_Condition(condition, temp) + "\n");
-//			temp.add(invalidAttr());
-//			mergeAttribute(z3ExpressionHelper.getAttributeList(),temp);
-//			temp.remove(0);
-//			sb.append(prefix);
-//		}
-//		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
-//		if (sat) {
-//			
-//			String request = RequestBuilder.buildIDRequest(z3ExpressionHelper.getAttributeList());
-//			int res = XACMLElementUtil.ConditionEvaluate(condition, request);
-//			if(res==2) {
-//				addRequest(request);
-//				
-//			
-//			return true;
-//			}
-//			
-//		}
-//		return false;
-//	}
     
-    private  String IndCondition(Condition condition,String prefix) throws IOException{
+    protected  String IndCondition(Condition condition,String prefix) throws IOException{
 		StringBuffer sb = new StringBuffer();
 		ArrayList<Attr> temp = new ArrayList<Attr>();
 		sb.append(True_Condition(condition, temp) + System.lineSeparator());
@@ -442,10 +380,8 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {
 			List<Attr> gAttrs = z3ExpressionHelper.getAttributeList();
-			
 			String request = RequestBuilder.buildIDRequest(gAttrs,temp);
 			return request;
-			
 		}
 		return null;
 	}
@@ -495,7 +431,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return sb;
 	}
     
-    private String randomAttribute() {
+    protected String randomAttribute() {
 		String base = "abcdefghijklmnopqrstuvwxyz0123456789";
 		Random random = new Random();
 		StringBuffer sb = new StringBuffer();
@@ -506,7 +442,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return sb.toString();
 	}
 	
-	private String getConditionAttribute(Condition condition, ArrayList<Attr> collector) {
+	protected String getConditionAttribute(Condition condition, ArrayList<Attr> collector) {
 		if (condition != null) {
 			Expression expression = condition.getExpression();
 			StringBuffer sb = new StringBuffer();
@@ -519,7 +455,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		return "";
 	}
 
-	private Attr getDifferentAttribute(List<Attr> globle,List<Attr> local) {
+	protected Attr getDifferentAttribute(List<Attr> globle,List<Attr> local) {
 		out: for (Attr l : local) {
 			for (Attr g : globle) {
 				if (g.getName().equals(l.getName())) {
@@ -546,7 +482,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		}
 	}
 	
-	private Node findInChildNodes(Node parent, String localName) {
+	protected Node findInChildNodes(Node parent, String localName) {
         List<Node> childNodes = XMLUtil.getChildNodeList(parent);
         for (Node child : childNodes) {
             if (localName.equals(child.getLocalName())) {
@@ -556,11 +492,143 @@ public class DecisionCoverage extends RequestGeneratorBase{
         return null;
     }
 
-	private boolean isTraversableElement(Node e){
+	protected boolean isTraversableElement(Node e){
 		if(rulePattern.matcher(e.getLocalName()).matches()||policysetPattern.matcher(e.getLocalName()).matches() || policyPattern.matcher(e.getLocalName()).matches()){
 			return true;
 		} else{
 			return false;
+		}
+	}
+	
+	protected void udpatePolicyMeta(Node node) throws ParsingException {
+		Policy p = Policy.getInstance(node);
+		currentPolicyRules = XACMLElementUtil.getRuleFromPolicy(p);
+    	currentPolicyRulesCoverage = new boolean[currentPolicyRules.size()][2][3];
+    	currentPolicyRuleIndex = 0;
+    	currentPolicyCA = p.getCombiningAlg().getIdentifier().toString();
+	}
+	
+	protected class RuleBody{
+		private Target target;
+		
+		private Condition condition;
+		private String reachabilityExp;
+		
+		public RuleBody(Node node, List<Rule> previousRules, StringBuilder preExpression) throws ParsingException {
+			List<Attr> curRuleAttr = new ArrayList<Attr>();
+			Node targetNode = findInChildNodes(node, NameDirectory.TARGET);
+		    if (!XMLUtil.isEmptyNode(targetNode)) {
+		        target = Target.getInstance(targetNode, policyMetaData);
+		        z3ExpressionHelper.getTrueTargetExpression(target,curRuleAttr);
+		    }
+		    
+		    Node conditionNode = findInChildNodes(node, NameDirectory.CONDITION);
+		    if (!XMLUtil.isEmptyNode(conditionNode)) {
+		        condition = Condition.getInstance(conditionNode, policyMetaData, null);
+		        z3ExpressionHelper.getTrueConditionExpression(condition,curRuleAttr);
+		    }
+		    
+		    updateMeta(preExpression, previousRules);
+		    
+		   
+		    
+		}
+		
+		public RuleBody(Rule rule, List<Rule> previousRules, StringBuilder preExpression) throws ParsingException {
+		    target = (Target)rule.getTarget();
+		    condition = (Condition)rule.getCondition();
+		    
+		    updateMeta(preExpression, previousRules);
+		    
+		   
+		    
+		}
+		protected void updateMeta(StringBuilder preExpression, List<Rule> previousRules) {
+			 if(target==null) {
+			    	currentPolicyRulesCoverage[currentPolicyRuleIndex][0][0]= true;
+			    	currentPolicyRulesCoverage[currentPolicyRuleIndex][0][1]= true;
+			    	currentPolicyRulesCoverage[currentPolicyRuleIndex][0][2]= true;
+			    }
+			    
+			    if(condition==null) {
+			    	currentPolicyRulesCoverage[currentPolicyRuleIndex][1][0]= true;
+			    	currentPolicyRulesCoverage[currentPolicyRuleIndex][1][1]= true;
+			    	currentPolicyRulesCoverage[currentPolicyRuleIndex][1][2]= true;
+			    }
+			    
+			    StringBuffer falsifyPreviousRules = new StringBuffer();
+			    if(preExpression !=null) {
+			    	falsifyPreviousRules.append(preExpression + System.lineSeparator());
+			    }
+			    if(previousRules !=null) {
+				    for(Rule rule:previousRules){
+				    	if(shouldFalisfy(rule.getEffect())) {
+				    		falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule)+ System.lineSeparator());
+					 	}
+				    }
+			    }
+			    reachabilityExp = falsifyPreviousRules.toString();
+		}
+		public Target getTarget() {
+			return target;
+		}
+
+		public void setTarget(Target target) {
+			this.target = target;
+		}
+
+		public Condition getCondition() {
+			return condition;
+		}
+
+		public void setCondition(Condition condition) {
+			this.condition = condition;
+		}
+
+		public String getReachabilityExp() {
+			return reachabilityExp;
+		}
+
+		public void setReachabilityExp(String reachabilityExp) {
+			this.reachabilityExp = reachabilityExp;
+		}
+		
+		public String getRuleExpression() {
+			StringBuffer ruleExpression = new StringBuffer();
+			ruleExpression.append(getRuleTargetExpression());
+			ruleExpression.append(getRuleConditionExpression());
+			return ruleExpression.toString();
+		}
+		
+		public String getRuleTargetExpression() {
+			StringBuffer ruleTExpression = new StringBuffer();
+			ruleTExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
+			return ruleTExpression.toString();
+		}
+		
+		public String getRuleConditionExpression() {
+			StringBuffer ruleCExpression = new StringBuffer();
+			ruleCExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
+			return ruleCExpression.toString();
+		}
+		
+		public String getFalseRuleTargetExpression() {
+			StringBuffer ruleTExpression = new StringBuffer();
+			ruleTExpression.append(z3ExpressionHelper.getFalseTargetExpression(target) + System.lineSeparator());
+			return ruleTExpression.toString();
+		}
+		
+		public String getFalseRuleConditionExpression() {
+			StringBuffer ruleCExpression = new StringBuffer();
+			ruleCExpression.append(z3ExpressionHelper.getFalseConditionExpression(condition) + System.lineSeparator());
+			return ruleCExpression.toString();
+		}
+		
+		public String getRuleCoverageExpression() {
+			StringBuffer ruleExpression = new StringBuffer();
+			ruleExpression.append(reachabilityExp);
+			ruleExpression.append(getRuleExpression());
+			return ruleExpression.toString();
 		}
 	}
 }

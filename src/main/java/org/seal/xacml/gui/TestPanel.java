@@ -33,8 +33,8 @@ import org.seal.xacml.coverage.CoverageHelper;
 import org.seal.xacml.coverage.DecisionCoverage;
 import org.seal.xacml.coverage.MCDC;
 import org.seal.xacml.coverage.MCDC2;
+import org.seal.xacml.coverage.RuleBodyCoverage;
 import org.seal.xacml.coverage.RuleCoverage;
-import org.seal.xacml.coverage.RuleCoverage2;
 import org.seal.xacml.coverage.RulePairCoverage;
 import org.seal.xacml.mutation.MutationBasedTestGenerator;
 import org.seal.xacml.mutation.PNOMutationBasedTestGenerator;
@@ -200,7 +200,7 @@ public class TestPanel extends JPanelPB {
 			if (exclusiveRuleCoverageRadio.isSelected()) {
 				try{
 					this.type = NameDirectory.RULE_COVERAGE;
-					RuleCoverage2 requestGenerator = new RuleCoverage2(policyFilePath); 
+					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
 					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateRequests();
 					long millis2 = System.currentTimeMillis();
@@ -250,7 +250,7 @@ public class TestPanel extends JPanelPB {
 				}
 			} else if (MCDCRadio.isSelected()) {
 				try{
-					MCDC2 requestGenerator = new MCDC2(policyFilePath,true);
+					MCDC requestGenerator = new MCDC(policyFilePath,true);
 					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateTests();
 					long millis2 = System.currentTimeMillis();
@@ -265,7 +265,7 @@ public class TestPanel extends JPanelPB {
 				}
 			} else if (MCDCRadio_NoError.isSelected()) {
 				try{
-					MCDC2 requestGenerator = new MCDC2(policyFilePath,false);
+					MCDC requestGenerator = new MCDC(policyFilePath,false);
 					long millis = System.currentTimeMillis();
 					List<String> requests = requestGenerator.generateTests();
 					long millis2 = System.currentTimeMillis();

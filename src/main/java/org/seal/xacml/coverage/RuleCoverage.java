@@ -67,8 +67,7 @@ public class RuleCoverage extends RequestGeneratorBase {
 	    	}
 			boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
 			if (sat == true) {
-				String req = RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList());
-			    addRequest(req);
+			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
 			}
 		    previousRules.add(Rule.getInstance(node, policyMetaData, null));
 		    return;
@@ -88,8 +87,8 @@ public class RuleCoverage extends RequestGeneratorBase {
 	        previousRules = null;
 	        if(XACMLElementUtil.isPolicy(node)){
 	        	previousRules = new ArrayList<Rule>();
-	        	Policy p = Policy.getInstance(node);
-	        	String ca = p.getCombiningAlg().getIdentifier().toString();
+	        	Policy pol = Policy.getInstance(node);
+	        	String ca = pol.getCombiningAlg().getIdentifier().toString();
 	        	if(ca.equals(CombiningAlgorithmURI.map.get("PO")) || ca.equals(CombiningAlgorithmURI.map.get("OPO")) ||ca.equals(CombiningAlgorithmURI.map.get("DUP"))) {
 	        		falsifyRulesFlag = 1;
 	        	} 
@@ -144,18 +143,13 @@ public class RuleCoverage extends RequestGeneratorBase {
 	    
 	    StringBuffer falsifyPreviousRules = new StringBuffer();
 	    for(Rule rule:previousRules){
-//	    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
-//	    		continue;
-//	    	}
-	    	if(falsifyRulesFlag==0) {
-	    		falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
-
-	    	} else {
-	    	if(ruleAttrMap.get(rule.getId().toString()).containsAll(ruleAttrMap.get(r.getId().toString()))){
+	    	if((rule.getEffect()==0 && falsifyRulesFlag == 2) || (rule.getEffect()==1 && falsifyRulesFlag == 1)) {
+	    		continue;
+	    	}
+	    	
 				falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 
-	    	}
-	    	}
+	    	//}
 //	    	if(trueRuleExpr.contains(ruleExpression)) {
 //				falsifyPreviousRules.append(z3ExpressionHelper.getFalseTargetFalseConditionExpression(rule) + System.lineSeparator());
 //

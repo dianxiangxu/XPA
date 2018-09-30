@@ -15,7 +15,7 @@ import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
 import org.seal.xacml.TaggedRequest;
 import org.seal.xacml.components.CombiningAlgorithmURI;
-import org.seal.xacml.coverage.RuleCoverage;
+import org.seal.xacml.coverage.RuleBodyCoverage;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.semanticMutation.Mutator;
@@ -248,12 +248,12 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 		} else {
 			trueRuleFlag = true;
 		}
-		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		RuleBodyCoverage coverage = new RuleBodyCoverage(policyFilePath);
 		return coverage.generateRequestsForTruthValues(true,true,true);
 	}
 	
 	public List<String> generateRTTRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
-		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		RuleBodyCoverage coverage = new RuleBodyCoverage(policyFilePath);
 		return coverage.generateRequestsForTruthValues(false,true,true);
 	}
 	
@@ -264,7 +264,7 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 	}
 	
 	public List<String> generateRCTRequests() throws IOException, ParsingException, ParserConfigurationException, SAXException {
-		RuleCoverage coverage = new RuleCoverage(policyFilePath);
+		RuleBodyCoverage coverage = new RuleBodyCoverage(policyFilePath);
 		return coverage.generateRequestsForTruthValues(true,false,true);
 	}
 	
