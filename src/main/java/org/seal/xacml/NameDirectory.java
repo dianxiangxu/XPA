@@ -11,4 +11,5 @@ public class NameDirectory {
 	public final static String RULE_PAIR_COVERAGE = "rulePairCoverage";
 	public final static String PERMIT_DENY_RULE_PAIR_COVERAGE = "permitDenyRulePairCoverage";
 	public final static String MUTATION_BASED_TEST = "mutation_based";
+	public final static String NON_OPTIMIZED_MUTATION_BASED_TEST = "NoSMT";
 }

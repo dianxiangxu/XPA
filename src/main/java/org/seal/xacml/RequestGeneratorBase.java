@@ -2,6 +2,7 @@ package org.seal.xacml;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,4 +54,19 @@ public class RequestGeneratorBase {
     public void removeLastRequest(){
     	 requests.set(requests.size()-1, null);
     }
+    
+    public  List<String> generateTests() throws ParsingException, IOException, SAXException, ParserConfigurationException{
+    	return null;
+    	
+    	
+    }
+    
+	public List<String> generateTests(boolean permitDeny) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+		return null;
+	}
+	
+	public List<TaggedRequest> generateRequests(List<String> mutationMethods) throws IOException, ParserConfigurationException, ParsingException, SAXException, InvocationTargetException, IllegalAccessException, NoSuchMethodException{
+		return null;
+	}
+	
 }

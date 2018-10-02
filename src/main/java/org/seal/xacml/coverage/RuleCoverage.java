@@ -40,7 +40,7 @@ public class RuleCoverage extends RequestGeneratorBase {
 		ruleAttrMap = new HashMap<String,List<Attr>>();
 	}
 	
-	public List<String> generateRequests() throws ParsingException, IOException, SAXException, ParserConfigurationException{
+	public List<String> generateTests() throws ParsingException, IOException, SAXException, ParserConfigurationException{
 		conditionFlag = targetFlag = true;
         StringBuilder preExpression = new StringBuilder();
         

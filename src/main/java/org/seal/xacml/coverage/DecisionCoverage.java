@@ -121,7 +121,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 	            	}
             	}
             	if(error){
-            		addRequest(IndTarget(target,preExpression.toString()));
+            		addRequest(IndTarget(target,null,preExpression.toString()));
             	}
             	preExpression.append(z3ExpressionHelper.getTrueTargetExpression(target) + System.lineSeparator());
             }
@@ -152,7 +152,7 @@ public class DecisionCoverage extends RequestGeneratorBase{
 			}
 			
 			if(error && !isErrorTargetCovered()){
-				String req = IndTarget(rb.getTarget(), rb.getReachabilityExp() );
+				String req = IndTarget(rb.getTarget(),rb.getCondition(), rb.getReachabilityExp() );
 				if(req !=null) {
 					if(isReachable(req)) {
 						addRequest(req);
@@ -356,11 +356,18 @@ public class DecisionCoverage extends RequestGeneratorBase{
 		}
 	}
    
-    protected String IndTarget(Target target,String prefix) throws IOException{
+    protected String IndTarget(Target target,Condition c,String prefix) throws IOException{
 		StringBuffer sb = new StringBuffer();
 		ArrayList<Attr> temp = new ArrayList<Attr>();
 		sb.append(False_Target(target, temp) + "\n");
 		sb.append(prefix);
+		
+		if(c!=null) {
+			ArrayList<Attr> t = new ArrayList<Attr>();
+				
+			sb.append(False_Condition(c, t) + "\n");
+				
+		}
 
 		boolean sat = Z3StrUtil.processExpression(sb.toString(), z3ExpressionHelper);
 		if (sat) {

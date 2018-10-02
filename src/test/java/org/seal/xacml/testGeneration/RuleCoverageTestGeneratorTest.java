@@ -26,7 +26,7 @@ public class RuleCoverageTestGeneratorTest {
 			policyEditor.openFile(policyPath);
 			demo.setEditorPanel(policyEditor);
 			requestGenerator = new RuleCoverage(policyPath);
-			PolicyTestSuite testSuite = new PolicyTestSuite(policyPath,requestGenerator.generateRequests(),NameDirectory.MUTATION_BASED_TEST);
+			PolicyTestSuite testSuite = new PolicyTestSuite(policyPath,requestGenerator.generateTests(),NameDirectory.MUTATION_BASED_TEST);
 			testSuite.save();
 			
 			File requestsFolder = new File(System.getProperty("user.dir")+"/src/test/resources/org/seal/policies/"+ policies[l]+"/test_suites/"+ policies[l]+"_Exclusive");

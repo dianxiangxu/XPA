@@ -202,7 +202,7 @@ public class TestPanel extends JPanelPB {
 					this.type = NameDirectory.RULE_COVERAGE;
 					RuleCoverage requestGenerator = new RuleCoverage(policyFilePath); 
 					long millis = System.currentTimeMillis();
-					List<String> requests = requestGenerator.generateRequests();
+					List<String> requests = requestGenerator.generateTests();
 					long millis2 = System.currentTimeMillis();
 					System.out.println("-------------");
 					System.out.println((millis2-millis));
@@ -282,7 +282,7 @@ public class TestPanel extends JPanelPB {
 			} else if (rulePairCoverage.isSelected()) {
 				try{
 					RulePairCoverage requestGenerator = new RulePairCoverage(policyFilePath);
-					List<String> requests = requestGenerator.generateRequests(false);
+					List<String> requests = requestGenerator.generateTests(false);
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.RULE_PAIR_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.RULE_PAIR_COVERAGE);
@@ -292,7 +292,7 @@ public class TestPanel extends JPanelPB {
 			} else if (permitDenyRulePairCoverage.isSelected()) {
 				try{
 					RulePairCoverage requestGenerator = new RulePairCoverage(policyFilePath);
-					List<String> requests = requestGenerator.generateRequests(true);
+					List<String> requests = requestGenerator.generateTests(true);
 					testSuite = new PolicyTestSuite(policyFilePath,requests,NameDirectory.PERMIT_DENY_RULE_PAIR_COVERAGE);
 					testSuite.save();
 					workingTestSuiteFileName = TestUtil.getTestSuiteMetaFilePath(policyFilePath, NameDirectory.PERMIT_DENY_RULE_PAIR_COVERAGE);

@@ -9,33 +9,35 @@ import java.util.Stack;
 
 public class MCDCGen {
 
-	private static HashMap mcdcName  ; // attribute id in z3 and mcdc
+	private HashMap mcdcName  ; // attribute id in z3 and mcdc
 	private MCDCConditionSet mcdcSet ;
 	private String z3Exp;
 	private boolean orWithSameAttributeFlag;
 	private boolean andOrFlag;
 
-	public MCDCGen(String z3Exp) {
+	public MCDCGen(String z3Exp, HashMap nameMap) {
 		
-		//mcdcName = new HashMap();
-		String e = convert(z3Exp);
-		mcdcSet = new MCDCConditionSet(e,false);
-		this.z3Exp = z3Exp;
-		if(e.indexOf("&") < 0){
-			orWithSameAttributeFlag = true;
-		} else {
-			orWithSameAttributeFlag = false;
-			if(e.indexOf("|")>=0) {
-				andOrFlag = true;;
+		mcdcName = nameMap;
+		if(z3Exp !=null) {
+			String e = convert(z3Exp);
+			mcdcSet = new MCDCConditionSet(e,false);
+			this.z3Exp = z3Exp;
+			if(e.indexOf("&") < 0){
+				orWithSameAttributeFlag = true;
+			} else {
+				orWithSameAttributeFlag = false;
+				if(e.indexOf("|")>=0) {
+					andOrFlag = true;;
+				}
 			}
 		}
 	}
 	
-	public static void initializeAttributeMap() {
+	public  void initializeAttributeMap() {
 		mcdcName = new HashMap();
 	}
 	
-	public static String getValue(String key) {
+	public  String getValue(String key) {
 		if(mcdcName.containsKey(key)) {
 			return mcdcName.get(key).toString();
 		} else {
@@ -149,7 +151,7 @@ public class MCDCGen {
 	public static void main(String args[]) {
 		String input = "(and (or  (and  (= abcde \"IT\") (= mdiay \"HR\")) (and (= efgcg \"GH\") (= mdiay \"HR\"))))";
 		
-		MCDCGen m = new MCDCGen(input);
+		MCDCGen m = new MCDCGen(input,new HashMap() );
 		for(String s:m.getCases()) {
 			System.out.println();
 		}

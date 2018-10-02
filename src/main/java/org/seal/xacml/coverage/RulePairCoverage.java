@@ -32,7 +32,7 @@ public class RulePairCoverage extends RequestGeneratorBase {
 		init(policyFilePath);
 	}
 	
-	public List<String> generateRequests(boolean permitDeny) throws ParsingException, IOException, SAXException, ParserConfigurationException{
+	public List<String> generateTests(boolean permitDeny) throws ParsingException, IOException, SAXException, ParserConfigurationException{
 	    StringBuilder preExpression = new StringBuilder();
         traverse( doc.getDocumentElement(), preExpression, permitDeny);
         return getRequests();

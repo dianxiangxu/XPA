@@ -34,11 +34,10 @@ public class MCDC extends DecisionCoverage{
 	private MCDCCoverageRecord [][][] mcdcCoverage;
 	private  MCDCPolicyTargetCoverageRecord [] mcdcCoveragePT;
 	private int targetCoverageIndex;
-	
+	private HashMap mcdcName;
 	public MCDC(String policyFilePath,boolean error) throws ParsingException, IOException, SAXException, ParserConfigurationException{ 
 		super(policyFilePath,error);
-		MCDCGen.initializeAttributeMap();
-		
+		mcdcName = new HashMap<>();
 		covered = new ArrayList<String>();
 		List<Rule> rules = XACMLElementUtil.getRuleFromPolicy(this.policy);
 		
@@ -51,7 +50,7 @@ public class MCDC extends DecisionCoverage{
 	    	Target target = (Target) Target.getInstance(targetNode, policyMetaData);
 	    	String targetExp = z3ExpressionHelper.getTrueTargetExpression(target).toString();
 	    	if(targetExp.indexOf("and")>=0||targetExp.indexOf("or")>=0) {
-		    	MCDCGen mcdcGen = new MCDCGen(targetExp);
+		    	MCDCGen mcdcGen = new MCDCGen(targetExp,mcdcName);
 		    	if(mcdcGen.isMCDCFeasible()) {
 		    		MCDCConditionSet mcdcSet = mcdcGen.getMCDCConditionSet();
 			    	List<String> positives = mcdcGen.getPositiveCases();
@@ -74,7 +73,7 @@ public class MCDC extends DecisionCoverage{
 			if(rb.getTarget()!=null) {
 				String tExp = rb.getRuleTargetExpression();
 		    	if(tExp.indexOf("and") >= 0 || tExp.indexOf("or")>=0) {
-					MCDCGen mcdcGenT = new MCDCGen(tExp);
+					MCDCGen mcdcGenT = new MCDCGen(tExp,mcdcName);
 			    	
 			    	if(mcdcGenT.isMCDCFeasible()) {
 			    		int count = mcdcGenT.getConditionSet().size();
@@ -92,7 +91,7 @@ public class MCDC extends DecisionCoverage{
 			    					if(key.charAt(0)=='!') {
 			    						key = key.substring(1);
 			    					}
-			    					lst.add(MCDCGen.getValue(key));
+			    					lst.add(mcdcGenT.getValue(key));
 			    				}
 			    			}
 			    			mcdcCoverage[i][0][j] = new MCDCCoverageRecord(c,lst,false);
@@ -104,7 +103,7 @@ public class MCDC extends DecisionCoverage{
 			if(rb.getCondition()!=null) {
 				String cExp = rb.getRuleConditionExpression();
 				if(cExp.indexOf("and") >= 0 || cExp.indexOf("or")>=0) {
-					MCDCGen mcdcGenC = new MCDCGen(cExp);
+					MCDCGen mcdcGenC = new MCDCGen(cExp,mcdcName);
 			    	if(mcdcGenC.isMCDCFeasible()) {
 			    		int count = mcdcGenC.getConditionSet().size();
 				    	
@@ -121,7 +120,7 @@ public class MCDC extends DecisionCoverage{
 			    					if(key.charAt(0)=='!') {
 			    						key = key.substring(1);
 			    					}
-			    					lst.add(MCDCGen.getValue(key));
+			    					lst.add(mcdcGenC.getValue(key));
 			    				}
 			    			}
 			    			mcdcCoverage[i][1][j] = new MCDCCoverageRecord(c,lst,false);
@@ -154,7 +153,7 @@ public class MCDC extends DecisionCoverage{
 	    	boolean sat;
 			if(rb.getTarget()!=null) {
 		    	String tExp = rb.getRuleTargetExpression();
-		    	MCDCGen mcdcGenT = new MCDCGen(tExp);
+		    	MCDCGen mcdcGenT = new MCDCGen(tExp,mcdcName);
 		    	if(mcdcGenT.isMCDCFeasible()) {
 		    		
 		    		List<String> cases = mcdcGenT.getCases();
@@ -195,7 +194,7 @@ public class MCDC extends DecisionCoverage{
 	    	if(rb.getCondition()!=null) {
 		    	String cExp = rb.getRuleConditionExpression();
 		    	if(cExp.indexOf("and")>=0 || cExp.indexOf("or")>=0) {
-			    	MCDCGen mcdcGenC = new MCDCGen(cExp);
+			    	MCDCGen mcdcGenC = new MCDCGen(cExp,mcdcName);
 			    	if(mcdcGenC.isMCDCFeasible()) {
 			    		List<String> cases;
 			    		List<String> conditionsC;
@@ -261,7 +260,7 @@ public class MCDC extends DecisionCoverage{
 		    	Target target = (Target) Target.getInstance(targetNode, policyMetaData);
 		    	String targetExp = z3ExpressionHelper.getTrueTargetExpression(target).toString();
 		    	if(targetExp.indexOf("and")>=0||targetExp.indexOf("or")>=0) {
-			    	MCDCGen mcdcGen = new MCDCGen(targetExp);
+			    	MCDCGen mcdcGen = new MCDCGen(targetExp,mcdcName);
 			    	if(mcdcGen.isMCDCFeasible() && !mcdcGen.isOrWithSameAttributeExp()) {
 			    		List<String> cases = mcdcGen.getNegativeCases();
 			    		for(int i = 0; i < cases.size();i++) {
@@ -354,7 +353,7 @@ public class MCDC extends DecisionCoverage{
 		boolean flag = false;
 		
 		coverCurrentRule(exp,selector);
-		
+		MCDCGen mcdcGen = new MCDCGen(null, mcdcName);
 		for(int i = currentPolicyRuleIndex+1; i < currentPolicyRules.size();i++) {
 			if(doesFurtherEvaluatesRule(i, req)) {
 				MCDCCoverageRecord[] records = mcdcCoverage[i][selector];
@@ -411,9 +410,9 @@ public class MCDC extends DecisionCoverage{
 								if(notTokens.contains(k)) {
 									continue;
 								}
-								String[] value = MCDCGen.getValue(k.substring(1)).split("\\s+");
+								String[] value = mcdcGen.getValue(k.substring(1)).split("\\s+");
 								for(String nt:notTokens) {
-									String[] v = MCDCGen.getValue(nt.substring(1)).split("\\s+");
+									String[] v = mcdcGen.getValue(nt.substring(1)).split("\\s+");
 									if(v[1].equals(value[1])) {
 										diffCount++;
 									}
