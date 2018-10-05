@@ -278,9 +278,7 @@ public class MutationBasedTestMutationMethods {
 			flag = true;
 
 		}
-		if (boxRTT.isSelected()) {
-			lst.add("createRuleTargetTrueMutants");
-		}
+		
 		if (boxRTF.isSelected()) {
 			
 			if(!filter||!flag)
@@ -318,8 +316,14 @@ public class MutationBasedTestMutationMethods {
 			flag = true;
 
 		}
+		if (boxRPTE.isSelected()) {
+			lst.add("createRemoveParallelTargetElementMutants");
+		}
 		if (boxCCA.isSelected()) {
 			lst.add("createCombiningAlgorithmMutants");
+		}
+		if (boxRTT.isSelected()) {
+			lst.add("createRuleTargetTrueMutants");
 		}
 //		if (boxRCCF.isSelected()) {
 //			lst.add("createRuleChangeComparisonFunctionMutants");
@@ -327,9 +331,7 @@ public class MutationBasedTestMutationMethods {
 //		if (boxPCCF.isSelected()) {
 //			lst.add("createPolicyTargetChangeComparisonFunctionMutants");
 //		}
-		if (boxRPTE.isSelected()) {
-			lst.add("createRemoveParallelTargetElementMutants");
-		}
+		
 		if (boxPTT.isSelected()) {
 			lst.add("createPolicyTargetTrueMutants");
 		}

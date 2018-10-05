@@ -48,68 +48,124 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 		this.policy = PolicyLoader.loadPolicy(new File(policyFilePath));
 	}	   
 	
-	public List<TaggedRequest> generateRequests(List<String> mutationMethods) throws IOException, ParserConfigurationException, ParsingException, SAXException, InvocationTargetException, IllegalAccessException, NoSuchMethodException{
-		Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFilePath)));
-		boolean flagLargeSpace = false;
-//		List<Mutant> mutants = new ArrayList<Mutant>();
-		Class<? extends MutationBasedTestGenerator> cls = this.getClass();
-        trueRuleFlag = false;
-        falseRuleFlag = false;
-        Class[] noParams = {};
-        Class[] params = {AbstractPolicy.class};
-        
-        List<TaggedRequest> taggedRequests = new ArrayList<TaggedRequest>();
-		for(String meth:mutationMethods) {
-			List<String> methods = new ArrayList<String>();
-			methods.add(meth);
- 			List<Mutant> muts  = mutator.generateSelectedMutants(methods);
-			currentMutationMethod = meth;
-			System.out.println(currentMutationMethod);
-			String tag = MutationMethodAbbrDirectory.getAbbr(currentMutationMethod);
-			setRequests(new ArrayList<String>());
-			String methodName = "generate" + tag + "Requests";
-			Method method = cls.getDeclaredMethod(methodName, noParams);
-//			if(tag.equals("CCA")) {
-//				String hi = "";
+	
+
+
+//	public List<TaggedRequest> generateRequests(List<String> mutationMethods) throws IOException, ParserConfigurationException, ParsingException, SAXException, InvocationTargetException, IllegalAccessException, NoSuchMethodException{
+//		Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFilePath)));
+//		boolean flagLargeSpace = false;
+////		List<Mutant> mutants = new ArrayList<Mutant>();
+//		Class<? extends MutationBasedTestGenerator> cls = this.getClass();
+//        trueRuleFlag = false;
+//        falseRuleFlag = false;
+//        Class[] noParams = {};
+//        Class[] params = {AbstractPolicy.class};
+//        
+//        List<TaggedRequest> taggedRequests = new ArrayList<TaggedRequest>();
+//		for(String meth:mutationMethods) {
+//			List<String> methods = new ArrayList<String>();
+//			methods.add(meth);
+// 			List<Mutant> muts  = mutator.generateSelectedMutants(methods);
+//			currentMutationMethod = meth;
+//			System.out.println(currentMutationMethod);
+//			String tag = MutationMethodAbbrDirectory.getAbbr(currentMutationMethod);
+//			setRequests(new ArrayList<String>());
+//			String methodName = "generate" + tag + "Requests";
+//			Method method = cls.getDeclaredMethod(methodName, noParams);
+////			if(tag.equals("CCA")) {
+////				String hi = "";
+////			}
+//			if(meth.equals("createRuleEffectFlippingMutants")) {
+//				List<String> requests = (List<String>)method.invoke(this, null);
+//				if(requests.size()>300) {
+//					flagLargeSpace = true;
+//				}
+//				for(int i = 0; i< requests.size();i++){
+//					taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
+//				}
+//			} else {
+//				List<TaggedRequest> tReqs = new ArrayList<TaggedRequest>();
+//				List<Mutant> notCovered= null;
+//				if(flagLargeSpace && meth.equals("createRuleTargetTrueMutants")) {
+//					tReqs.add(taggedRequests.get(taggedRequests.size()-1));
+//					notCovered = notCoveredMutants(tReqs,muts);
+//				} else if(flagLargeSpace) {
+//					notCovered = muts;
+//						
+//						
+//				} else {
+//					notCovered = notCoveredMutants(taggedRequests,muts);
+//				}
+//				if(!notCovered.isEmpty()) {
+//					List<String> requests = (List<String>)method.invoke(this, null);
+//					
+//					for(int i = 0; i< requests.size();i++){
+//						if(doRequestPropagatesMutationFault(requests.get(i), policy, notCovered)){
+//							taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
+//						}
+//					}
+//				}
+//				
 //			}
-			if(meth.equals("createRuleEffectFlippingMutants")) {
+//		}
+//		//List<TaggedRequest> finalTaggedRequests = new ArrayList<TaggedRequest>();
+//		
+//		
+//		return taggedRequests;
+//	}
+
+	public List<TaggedRequest> generateRequests(List<String> mutationMethods) throws IOException, ParserConfigurationException, ParsingException, SAXException, InvocationTargetException, IllegalAccessException, NoSuchMethodException{
+	Mutator mutator = new Mutator(new Mutant(policy, XACMLElementUtil.getPolicyName(policyFilePath)));
+	boolean flagLargeSpace = false;
+//	List<Mutant> mutants = new ArrayList<Mutant>();
+	Class<? extends MutationBasedTestGenerator> cls = this.getClass();
+    trueRuleFlag = false;
+    falseRuleFlag = false;
+    Class[] noParams = {};
+    Class[] params = {AbstractPolicy.class};
+    
+    List<TaggedRequest> taggedRequests = new ArrayList<TaggedRequest>();
+	for(String meth:mutationMethods) {
+		List<String> methods = new ArrayList<String>();
+		methods.add(meth);
+			List<Mutant> muts  = mutator.generateSelectedMutants(methods);
+		currentMutationMethod = meth;
+		System.out.println(currentMutationMethod);
+		String tag = MutationMethodAbbrDirectory.getAbbr(currentMutationMethod);
+		setRequests(new ArrayList<String>());
+		String methodName = "generate" + tag + "Requests";
+		Method method = cls.getDeclaredMethod(methodName, noParams);
+
+		if(meth.equals("createRuleEffectFlippingMutants")) {
+			List<String> requests = (List<String>)method.invoke(this, null);
+			if(requests.size()>300) {
+				flagLargeSpace = true;
+			}
+			for(int i = 0; i< requests.size();i++){
+				taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
+			}
+		} else {
+			
+			List<Mutant>	notCovered = notCoveredMutants(taggedRequests,muts);
+			
+			if(!notCovered.isEmpty()) {
 				List<String> requests = (List<String>)method.invoke(this, null);
-				if(requests.size()>300) {
-					flagLargeSpace = true;
-				}
+				
 				for(int i = 0; i< requests.size();i++){
-					taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
-				}
-			} else {
-				List<TaggedRequest> tReqs = new ArrayList<TaggedRequest>();
-				List<Mutant> notCovered= null;
-				if(flagLargeSpace && meth.equals("createRuleTargetTrueMutants")) {
-					tReqs.add(taggedRequests.get(taggedRequests.size()-1));
-					notCovered = notCoveredMutants(tReqs,muts);
-				} else if(flagLargeSpace) {
-					notCovered = muts;
-						
-						
-				} else {
-					notCovered = notCoveredMutants(taggedRequests,muts);
-				}
-				if(!notCovered.isEmpty()) {
-					List<String> requests = (List<String>)method.invoke(this, null);
-					
-					for(int i = 0; i< requests.size();i++){
-						if(doRequestPropagatesMutationFault(requests.get(i), policy, notCovered)){
-							taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
-						}
+					if(doRequestPropagatesMutationFault(requests.get(i), policy, notCovered)){
+						taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
 					}
 				}
-				
 			}
+			
 		}
-		//List<TaggedRequest> finalTaggedRequests = new ArrayList<TaggedRequest>();
-		
-		
-		return taggedRequests;
 	}
+	//List<TaggedRequest> finalTaggedRequests = new ArrayList<TaggedRequest>();
+	
+	
+	return taggedRequests;
+}
+
 
 	private boolean doRequestPropagatesMutationFault(String request, AbstractPolicy aPolicy, List<Mutant> mutants) throws ParsingException,NoSuchMethodException,InvocationTargetException,IllegalAccessException,ParserConfigurationException,IOException,SAXException{
 		String req = request.replaceAll(System.lineSeparator(), " ").trim(); 
