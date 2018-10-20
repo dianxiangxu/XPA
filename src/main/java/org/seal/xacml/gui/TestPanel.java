@@ -32,7 +32,6 @@ import org.seal.xacml.components.MutationBasedTestMutationMethods;
 import org.seal.xacml.coverage.CoverageHelper;
 import org.seal.xacml.coverage.DecisionCoverage;
 import org.seal.xacml.coverage.MCDC;
-import org.seal.xacml.coverage.MCDC2;
 import org.seal.xacml.coverage.RuleBodyCoverage;
 import org.seal.xacml.coverage.RuleCoverage;
 import org.seal.xacml.coverage.RulePairCoverage;

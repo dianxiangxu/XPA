@@ -26,7 +26,6 @@ import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.semanticCoverage.TestSuite;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.utils.MutantUtil;
-import org.seal.xacml.xpa.Experiment;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.xml.sax.SAXException;
@@ -164,49 +163,49 @@ public class PolicySpreadSheetMutantSuite {
 		return killedCount;
 	}*/
 //	
-//	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder){
-//		int mutantIndex=0;
-//		int killedCount= 0;
-//		for (Mutant mutant : policyMutantSuite) {
-//			Vector<Object> vector = data.get(mutantIndex);
-//			//vector.set(vector.size()-1, TestSuite.runTests(mutant.getTestResult());
-//			
-//			// TO BE DONE
-//			String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + mutant.getName() + ".xml";
-//			AbstractPolicy policy = null;
-//			try{
-//				policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
-//			}catch(Exception e){
-//				e.printStackTrace();
-//			}
-//			mutant.setPolicy(policy);
-//			List<Boolean> results = testSuite.runTests(mutant);
-//			mutant.setPolicy(null);
-//			int countFailed = 0;
-//			for(Boolean b:results) {
-//				if(!b) {
-//					countFailed++;
-//				}
-//			}
-//			String col = "Live (0 test failed)";
-//			if(countFailed > 0) {
-//				killedCount++;
-//				if(countFailed == 1) {
-//					col = "Killed (1 test failed)";
-//				} else {
-//					col = "Killed (" + countFailed + " tests failed)";
-//				}
-//			}
-//			vector.set(vector.size()-1, col);
-//			mutantIndex++;
-//			if(mutantIndex%100==0) {
-//				System.out.println("------"+mutantIndex+"-kc-"+killedCount);
-//			}
-//		}
-//		return killedCount;
-//	}
+	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder)throws SAXException, IOException, ParsingException, ParserConfigurationException{
+		int mutantIndex=0;
+		int killedCount= 0;
+		for (Mutant mutant : policyMutantSuite) {
+			Vector<Object> vector = data.get(mutantIndex);
+			//vector.set(vector.size()-1, TestSuite.runTests(mutant.getTestResult());
+			
+			// TO BE DONE
+			String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + mutant.getName() + ".xml";
+			AbstractPolicy policy = null;
+			try{
+				policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			mutant.setPolicy(policy);
+			List<Boolean> results = testSuite.runTests(mutant);
+			mutant.setPolicy(null);
+			int countFailed = 0;
+			for(Boolean b:results) {
+				if(!b) {
+					countFailed++;
+				}
+			}
+			String col = "Live (0 test failed)";
+			if(countFailed > 0) {
+				killedCount++;
+				if(countFailed == 1) {
+					col = "Killed (1 test failed)";
+				} else {
+					col = "Killed (" + countFailed + " tests failed)";
+				}
+			}
+			vector.set(vector.size()-1, col);
+			mutantIndex++;
+			if(mutantIndex%100==0) {
+				System.out.println("------"+mutantIndex+"-kc-"+killedCount);
+			}
+		}
+		return killedCount;
+	}
 	
-	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder) throws SAXException, IOException, ParsingException, ParserConfigurationException{
+	/*public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder) throws SAXException, IOException, ParsingException, ParserConfigurationException{
 		int mutantIndex=0;
 		int killedCount= 0;
 		
@@ -464,6 +463,7 @@ public class PolicySpreadSheetMutantSuite {
 		//System.out.print(arg0);
 		return killedCount;
 	}
+	*/
 	
 	public void runAndWriteDetectionInfoToExcelFile(String fileName, String testSuiteSpreadSheet) throws Exception {
 		PolicySpreadSheetTestSuite tests = null;
