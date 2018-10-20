@@ -302,6 +302,28 @@ public class Mutator {
     }
     
     @SuppressWarnings("unchecked")
+    public List<Mutant> generateSelectedMutantsAndSave(List<String> mutationMethods,String mutantsFolder) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, IOException {
+        Class<?> cls = this.getClass();
+        List<Mutant> mutants = new ArrayList<Mutant>();
+        for (String xpath : xpathList) {
+            for (String mutationMethod : mutationMethods) {
+                if (isRuleXpathString(xpath) && ruleMutationMethods.contains(mutationMethod) ||
+                        isTargetXpathString(xpath) && targetMutationMethods.contains(mutationMethod)) {
+                    Method method = cls.getDeclaredMethod(mutationMethod, String.class);
+                    List<Mutant> muts = (ArrayList<Mutant>) method.invoke(this, xpath);
+                    for(Mutant mut:muts) {
+                    	FileIOUtil.saveMutant(mut,mutantsFolder);
+                    	mut.setFolder(mutantsFolder);
+						mut.setPolicy(null);
+                    }
+                    mutants.addAll(muts);
+                }
+            }
+        }
+        return mutants;
+    }
+    
+    @SuppressWarnings("unchecked")
     public Map<String,List<Mutant>> generateMutantsCategorizedByMethods(List<String> mutationMethods) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Class<?> cls = this.getClass();
         Map<String,List<Mutant>> mutantsMap = new HashMap<String,List<Mutant>>();
@@ -980,6 +1002,8 @@ public class Mutator {
         NodeList nodes = (NodeList) xPath.evaluate(targetXpathString, doc.getDocumentElement(), XPathConstants.NODESET);
         Node node = nodes.item(0);
         PolicyMetaData md = PolicyLoader.loadPolicy(doc).getMetaData();
+        int anyOfi = 0;
+        int allOfi = 0;
         if (node != null && !isEmptyNode(node)) {
             //change doc
             List<Node> children = getChildNodeList(node);
@@ -1002,7 +1026,9 @@ public class Mutator {
 	    	            						childAllOf.removeChild(childMatchOf);
 	    	            						Node nextChild = childMatchOf.getNextSibling();
 	    	            						Mutant mutant = new Mutant(PolicyLoader.loadPolicy(doc),(baseMutantName.equals("") ? "" : baseMutantName + "_") +MutationMethodAbbrDirectory.getAbbr("createRemoveParallelTargetElementMutants")+ "_" + faultLocation + "_" + 1 + "_" + i+"_"+i );
-	    	            				        list.add(mutant);
+	    	            						mutant.addFaultLocationAt(faultLocation, 0);
+	    	            						
+	    	            						list.add(mutant);
 	    	            				        childAllOf.insertBefore(childMatchOf, nextChild);  
 	    	            					}
 	    	            					
@@ -1018,7 +1044,9 @@ public class Mutator {
 	            						child.removeChild(childAllOf);
 	            						Node nextChild = childAllOf.getNextSibling();
 	            						Mutant mutant = new Mutant(PolicyLoader.loadPolicy(doc),(baseMutantName.equals("") ? "" : baseMutantName + "_") +MutationMethodAbbrDirectory.getAbbr("createRemoveParallelTargetElementMutants")+ "_" + faultLocation + "_" + 1 + "_" + i );
-	            				        list.add(mutant);
+	            						mutant.addFaultLocationAt(faultLocation, 0);
+	            						
+	            						list.add(mutant);
 	            				        child.insertBefore(childAllOf, nextChild);
 	            					}
 	            					

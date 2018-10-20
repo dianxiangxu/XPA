@@ -9,6 +9,7 @@ import org.seal.xacml.semanticFaultLocalization.SpectrumBasedDiagnosisResults;
 import org.seal.xacml.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.w3c.dom.Document;
+import org.wso2.balana.ParsingException;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -57,7 +58,7 @@ public class MutantNode implements Comparable<MutantNode> {
         this.mutant = mutant;
     }
 
-    List<Boolean> getTestResult() {
+    List<Boolean> getTestResult() throws SAXException, ParserConfigurationException, ParsingException, IOException{
         if (testResult == null) {
             testResult = testSuite.runTests(mutant);
         }
@@ -99,11 +100,11 @@ public class MutantNode implements Comparable<MutantNode> {
      * @return
      * @throws Exception
      */
-    boolean isPromising() {
+    boolean isPromising() throws SAXException, ParserConfigurationException, ParsingException, IOException{
         return parent == null || failedTestsIsSubset();
     }
 
-    private boolean failedTestsIsSubset() {
+    private boolean failedTestsIsSubset() throws SAXException, ParserConfigurationException, ParsingException, IOException {
         List<Boolean> result = getTestResult();
         List<Boolean> parentResult = parent.getTestResult();
         for (int i = 0; i < result.size(); i++)

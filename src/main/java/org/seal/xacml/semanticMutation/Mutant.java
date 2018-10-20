@@ -1,11 +1,15 @@
 package org.seal.xacml.semanticMutation;
 
+import org.seal.xacml.policyUtils.PolicyLoader;
 import org.wso2.balana.*;
 import org.wso2.balana.combine.CombinerElement;
 import org.wso2.balana.combine.CombiningAlgorithm;
 import org.wso2.balana.ctx.AbstractResult;
 import org.wso2.balana.ctx.EvaluationCtx;
+import org.xml.sax.SAXException;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,12 +17,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 /**
  * Created by shuaipeng on 9/8/16.
  */
 public class Mutant extends AbstractPolicy {
     private String name;
     private AbstractPolicy policy;
+    private String folder;
     /**
      * unmodifiable list
      */
@@ -53,7 +60,11 @@ public class Mutant extends AbstractPolicy {
     	faultLocations = Collections.unmodifiableList(faults);
     }
 
-    public AbstractPolicy getPolicy() {
+    public AbstractPolicy getPolicy() throws ParsingException, IOException, SAXException, ParserConfigurationException{
+    	if(policy==null) {
+    		policy = PolicyLoader.loadPolicy(new File(folder + File.separator + name + ".xml"));
+			
+    	}
         return policy;
     }
     
@@ -242,5 +253,13 @@ public class Mutant extends AbstractPolicy {
     public AbstractResult evaluate(EvaluationCtx context) {
         return policy.evaluate(context);
     }
+
+	public String getFolder() {
+		return folder;
+	}
+
+	public void setFolder(String folder) {
+		this.folder = folder;
+	}
 
 }

@@ -903,10 +903,19 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 		return new ArrayList<String>();
 	}
 
+//	if(condition != null){
+//		for(StringBuffer ruleExpression:ruleExpressions){
+//			ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
+//		}
+//	}
+	
+	List<StringBuffer> ls = new ArrayList<StringBuffer>();
 	if(condition != null){
 		for(StringBuffer ruleExpression:ruleExpressions){
+			ls.add(new StringBuffer(ruleExpression.toString()));
 			ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
 		}
+		ruleExpressions.addAll(ls);
 	}
    
 	while(true){

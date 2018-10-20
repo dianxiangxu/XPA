@@ -12,6 +12,8 @@ import org.seal.xacml.semanticFaultLocalization.FaultLocalizationExperiment;
 import org.seal.xacml.semanticFaultLocalization.SpectrumBasedDiagnosisResults;
 import org.seal.xacml.semanticFaultLocalization.SpectrumBasedFaultLocalizer;
 import org.seal.xacml.semanticMutation.Mutant;
+import org.wso2.balana.ParsingException;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 /**
  * A rather comprehensive test. Run test suite against a set of mutants; for each mutant, use a set of fault localizer
  * methods to get diagnosis results; compare the diagnosis results with expected results.
@@ -31,7 +35,7 @@ import java.util.List;
 public class faultLocalizationTest {
 
     @Test
-    public void faultLocalizationTestConference3() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void faultLocalizationTestConference3() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, SAXException, ParserConfigurationException, ParsingException {
         String mutantsCSVfileName = "org/seal/policies/conference3/mutants/mutants.csv";
         File mutantsCSVfile = new File(faultLocalizationTest.class.getClassLoader().getResource(mutantsCSVfileName).getFile());
         List<String> faultLocalizeMethods = Arrays.asList("jaccard", "tarantula", "ochiai", "ochiai2", "cbi", "hamann",

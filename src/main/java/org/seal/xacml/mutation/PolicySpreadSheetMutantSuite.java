@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.Vector;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -27,6 +29,7 @@ import org.seal.xacml.utils.MutantUtil;
 import org.seal.xacml.xpa.Experiment;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
+import org.xml.sax.SAXException;
 
 public class PolicySpreadSheetMutantSuite {
 
@@ -203,7 +206,7 @@ public class PolicySpreadSheetMutantSuite {
 //		return killedCount;
 //	}
 	
-	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder){
+	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder) throws SAXException, IOException, ParsingException, ParserConfigurationException{
 		int mutantIndex=0;
 		int killedCount= 0;
 		
@@ -362,6 +365,12 @@ public class PolicySpreadSheetMutantSuite {
 					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("DO"))) {
 						killedCRCs += ":{" +  Experiment.currentPolicyCA + "->" + "DO}  ";
 					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("OPO"))) {
+						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "OPO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("ODO"))) {
+						killedCRCs += ":{" +  Experiment.currentPolicyCA + "->" + "ODO}  ";
+					}
 					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("FA"))) {
 						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "FA}  ";
 					}
@@ -379,6 +388,12 @@ public class PolicySpreadSheetMutantSuite {
 					}
 					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("DO"))) {
 						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "DO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("OPO"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "OPO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("ODO"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "ODO}  ";
 					}
 					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("FA"))) {
 						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "FA}  ";

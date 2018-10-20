@@ -147,6 +147,9 @@ public class MCDCGen {
 		}
 	}
 
+	public static void test(boolean[] arr) {
+		arr[0]=true;
+	}
 	
 	public static void main(String args[]) {
 		String input = "(and (or  (and  (= abcde \"IT\") (= mdiay \"HR\")) (and (= efgcg \"GH\") (= mdiay \"HR\"))))";
@@ -155,6 +158,11 @@ public class MCDCGen {
 		for(String s:m.getCases()) {
 			System.out.println();
 		}
+		
+		boolean [] flags = new boolean[2];
+		flags[0]=flags[1]=false;
+		test(flags);
+		System.out.println(flags[0]);
 		//		String input = "(or  (= abcde IT) (= adfdfe TT))";
 //		
 //		System.out.println(input);

@@ -9,6 +9,7 @@ import org.seal.xacml.utils.XACMLElementUtil;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.ctx.AbstractResult;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileReader;
@@ -16,6 +17,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by shuaipeng on 9/8/16.
@@ -138,7 +141,7 @@ public class TestSuite {
         return flag;
     }
 
-    public List<Boolean> runTests(Mutant mutant) {
+    public List<Boolean> runTests(Mutant mutant) throws IOException, ParsingException, ParserConfigurationException, SAXException{
         return runTests(mutant.getPolicy());
     }
     

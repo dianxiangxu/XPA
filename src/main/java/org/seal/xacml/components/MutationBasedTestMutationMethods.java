@@ -272,6 +272,9 @@ public class MutationBasedTestMutationMethods {
 			lst.add("createRuleEffectFlippingMutants");
 			flag = true;
 		}
+		if (boxRPTE.isSelected()) {
+			lst.add("createRemoveParallelTargetElementMutants");
+		}
 		if (boxRER.isSelected()) {
 			if(!filter||!flag)
 			lst.add("createRemoveRuleMutants");
@@ -316,9 +319,7 @@ public class MutationBasedTestMutationMethods {
 			flag = true;
 
 		}
-		if (boxRPTE.isSelected()) {
-			lst.add("createRemoveParallelTargetElementMutants");
-		}
+		
 		if (boxCCA.isSelected()) {
 			lst.add("createCombiningAlgorithmMutants");
 		}

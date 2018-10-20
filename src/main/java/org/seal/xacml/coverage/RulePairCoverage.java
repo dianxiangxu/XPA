@@ -71,20 +71,19 @@ public class RulePairCoverage extends RequestGeneratorBase {
         		}
         		StringBuilder preExpressionCurrent = new StringBuilder(preExpression.toString());
 		           
-        		List<String> ruleExpressions = getRulePairExpressions(rules,preExpressionCurrent, permitDeny);
-        		for(String expression:ruleExpressions) {
-        			boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
-        			if (sat == true) {
-        			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
-        			}
-        		}
+        		coverRulePair(rules,preExpressionCurrent, permitDeny);
+//        		for(String expression:ruleExpressions) {
+//        			boolean sat = Z3StrUtil.processExpression(expression, z3ExpressionHelper);
+//        			if (sat == true) {
+//        			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+//        			}
+//        		}
         	}
 		}	
     }
 
 	
-	public List<String> getRulePairExpressions(List<Node> rules, StringBuilder preExpression,boolean permitDeny ) throws ParsingException{
-		List<String> expressions = new ArrayList<String>();
+	public void coverRulePair(List<Node> rules, StringBuilder preExpression,boolean permitDeny ) throws ParsingException,IOException{
 		int N = rules.size();
 		int n = N - 1;
 		
@@ -110,12 +109,15 @@ public class RulePairCoverage extends RequestGeneratorBase {
 			    	}
 			    }
 				pairExpressions.append(falsifyOtherRules);
-				expressions.add(pairExpressions.toString());
+				boolean sat = Z3StrUtil.processExpression(pairExpressions.toString(), z3ExpressionHelper);
+    			if (sat == true) {
+    			    addRequest(RequestBuilder.buildRequest(z3ExpressionHelper.getAttributeList()));
+    			}
+				
 			}
 		}
 		
-	    return expressions;
-	}
+	   	}
 	
 	private String getRuleExpression(Node node) throws ParsingException{
 		Target target = XMLUtil.getTarget(node, policyMetaData);

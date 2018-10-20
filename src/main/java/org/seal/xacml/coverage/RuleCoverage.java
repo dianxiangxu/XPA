@@ -155,7 +155,7 @@ public class RuleCoverage extends RequestGeneratorBase {
 //
 //	    	}
 		}                
-	    return preExpression.toString()+ruleExpression+falsifyPreviousRules;
+	    return preExpression.toString()+falsifyPreviousRules+ruleExpression;
 	}
 	
 	public String getRuleExpressionForTruthValuesWithPostRules(Element node, StringBuilder preExpression, List<Rule> previousRules) throws ParsingException{

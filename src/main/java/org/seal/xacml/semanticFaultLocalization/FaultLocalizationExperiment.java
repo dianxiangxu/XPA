@@ -74,7 +74,7 @@ public class FaultLocalizationExperiment {
 //                System.out.println(faultLocations.toString());
 //                System.out.println(diagnosisResults.getAverageNumberOfElementsToInspect(faultLocations));
             }
-        } catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException  | ParserConfigurationException | SAXException | ParsingException e) {
             e.printStackTrace();
         } finally {
             writer.close();

@@ -12,6 +12,7 @@ import org.seal.xacml.helpers.Z3StrExpressionHelper;
 import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.utils.XMLUtil;
 import org.w3c.dom.Document;
+import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.wso2.balana.PolicyMetaData;
 import org.xml.sax.SAXException;
@@ -20,15 +21,17 @@ public class RequestGeneratorBase {
 	protected String policyFilePath;
 	protected Document doc;
 	protected PolicyMetaData policyMetaData;
-	private List<String> requests;
+	protected List<String> requests;
 	protected Z3StrExpressionHelper z3ExpressionHelper;
+	protected String currentPolicyRCA;
 	protected short falsifyRulesFlag; // 0 - all
 									  // 1 - permit // 2 - deny
 	
     protected  void init(String path) throws IOException, SAXException, ParserConfigurationException, ParsingException{
 		policyFilePath = path;
 		doc = PolicyLoader.getDocument(new FileInputStream(policyFilePath));
-		PolicyMetaData policyMetaDataTmp = PolicyLoader.loadPolicy(doc).getMetaData();
+		AbstractPolicy p = PolicyLoader.loadPolicy(doc);
+		PolicyMetaData policyMetaDataTmp = p.getMetaData();
 		String docStr = XMLUtil.nodeToString(doc);
 		int xpathVersion = policyMetaDataTmp.getXPathVersion();
        	if(docStr.contains("http://www.w3.org/TR/1999/REC-xpath-19991116")) {
@@ -38,6 +41,7 @@ public class RequestGeneratorBase {
 	    requests = new ArrayList<String>();
 		z3ExpressionHelper = new Z3StrExpressionHelper();
 		falsifyRulesFlag = 0;
+		currentPolicyRCA = p.getCombiningAlg().getIdentifier().toString();
     }
     
     public void setRequests(List<String> reqs){
@@ -51,6 +55,7 @@ public class RequestGeneratorBase {
     public List<String> getRequests(){
     	return requests;
     }
+    
     public void removeLastRequest(){
     	 requests.set(requests.size()-1, null);
     }

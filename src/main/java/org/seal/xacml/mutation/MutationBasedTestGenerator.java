@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.FileUtils;
 import org.seal.xacml.Attr;
 import org.seal.xacml.NameDirectory;
 import org.seal.xacml.RequestGeneratorBase;
@@ -20,6 +21,7 @@ import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.semanticMutation.Mutator;
 import org.seal.xacml.utils.ExceptionUtil;
+import org.seal.xacml.utils.MutantUtil;
 import org.seal.xacml.utils.RequestBuilder;
 import org.seal.xacml.utils.XACMLElementUtil;
 import org.seal.xacml.utils.XMLUtil;
@@ -123,12 +125,17 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
     falseRuleFlag = false;
     Class[] noParams = {};
     Class[] params = {AbstractPolicy.class};
-    
+    File mutantsFolder = new File(MutantUtil.getMutantsFolderForPolicyFile(new File(policyFilePath)).toString());
+    if(mutantsFolder.exists()){
+    	FileUtils.cleanDirectory(mutantsFolder);
+    } else{
+    	mutantsFolder.mkdir();
+    }
     List<TaggedRequest> taggedRequests = new ArrayList<TaggedRequest>();
 	for(String meth:mutationMethods) {
 		List<String> methods = new ArrayList<String>();
 		methods.add(meth);
-			List<Mutant> muts  = mutator.generateSelectedMutants(methods);
+		List<Mutant> muts  = mutator.generateSelectedMutantsAndSave(methods, mutantsFolder.toString());
 		currentMutationMethod = meth;
 		System.out.println(currentMutationMethod);
 		String tag = MutationMethodAbbrDirectory.getAbbr(currentMutationMethod);
@@ -154,6 +161,7 @@ public class MutationBasedTestGenerator extends RequestGeneratorBase {
 				for(int i = 0; i< requests.size();i++){
 					if(doRequestPropagatesMutationFault(requests.get(i), policy, notCovered)){
 						taggedRequests.add(new TaggedRequest(tag,requests.get(i)));
+						System.out.println("size--->" + taggedRequests.size());
 					}
 				}
 			}
@@ -988,10 +996,13 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 		return new ArrayList<String>();
 	}
 
+	List<StringBuffer> ls = new ArrayList<StringBuffer>();
 	if(condition != null){
 		for(StringBuffer ruleExpression:ruleExpressions){
+			ls.add(new StringBuffer(ruleExpression.toString()));
 			ruleExpression.append(z3ExpressionHelper.getTrueConditionExpression(condition) + System.lineSeparator());
 		}
+		ruleExpressions.addAll(ls);
 	}
    
 	while(true){
