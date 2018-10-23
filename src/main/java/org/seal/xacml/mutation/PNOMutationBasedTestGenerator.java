@@ -951,6 +951,9 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 	private void traverseForPermitOrDeny(Element node, StringBuilder preExpression, String mutationMethod) throws ParsingException, IOException, InvalidMutationMethodException {
 	    boolean isPolicy = XACMLElementUtil.isPolicy(node);
 		if ( isPolicy || XACMLElementUtil.isPolicySet(node)) {
+			if(!currentPolicyRCA.equals(CombiningAlgorithmURI.map.get("FA"))) {
+				return;
+			}
 		    Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
 		    Target target;
 			if (targetNode != null) {

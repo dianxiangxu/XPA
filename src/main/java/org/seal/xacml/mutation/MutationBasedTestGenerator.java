@@ -1039,6 +1039,9 @@ public List<String> getRuleExpressionForTruthValuesWithPostRules(Element node, S
 	    boolean isPolicy = XACMLElementUtil.isPolicy(node);
 		if ( isPolicy || XACMLElementUtil.isPolicySet(node)) {
 		    Node targetNode = XMLUtil.findInChildNodes(node, NameDirectory.TARGET);
+		    if(!currentPolicyRCA.equals(CombiningAlgorithmURI.map.get("FA"))) {
+				return;
+			}
 		    Target target;
 			if (targetNode != null) {
 		        target = Target.getInstance(targetNode, policyMetaData);
