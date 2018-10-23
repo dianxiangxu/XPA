@@ -32,7 +32,7 @@ iii) run 'mvn install'
 
 
 ## Run XPA
-Run the mail class file org.seal.xacml.xpa.XPA
+Run the main class file org.seal.xacml.xpa.XPA
 
 
 ## running legacy code with aspectJ capability
