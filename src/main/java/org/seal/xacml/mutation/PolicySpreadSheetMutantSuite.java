@@ -26,6 +26,7 @@ import org.seal.xacml.policyUtils.PolicyLoader;
 import org.seal.xacml.semanticCoverage.TestSuite;
 import org.seal.xacml.semanticMutation.Mutant;
 import org.seal.xacml.utils.MutantUtil;
+import org.seal.xacml.xpa.Experiment;
 import org.wso2.balana.AbstractPolicy;
 import org.wso2.balana.ParsingException;
 import org.xml.sax.SAXException;
@@ -163,7 +164,7 @@ public class PolicySpreadSheetMutantSuite {
 		return killedCount;
 	}*/
 //	
-	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder)throws SAXException, IOException, ParsingException, ParserConfigurationException{
+	/*public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder)throws SAXException, IOException, ParsingException, ParserConfigurationException{
 		int mutantIndex=0;
 		int killedCount= 0;
 		for (Mutant mutant : policyMutantSuite) {
@@ -203,9 +204,11 @@ public class PolicySpreadSheetMutantSuite {
 			}
 		}
 		return killedCount;
-	}
+	}*/
 	
-	/*public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder) throws SAXException, IOException, ParsingException, ParserConfigurationException{
+	/* COUNT mode */
+	/*
+	 public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder) throws SAXException, IOException, ParsingException, ParserConfigurationException{
 		int mutantIndex=0;
 		int killedCount= 0;
 		
@@ -449,7 +452,268 @@ public class PolicySpreadSheetMutantSuite {
 		line += ","; skipDetailflag = false; if(crcCount > 0){ if(crcCount== crcKCount) {line += "Y"; skipDetailflag = true;} else { if(crcKCount>0){line+="B";}else{line+="N"; skipDetailflag = true;}} if(!skipDetailflag) { line += "; k=" +String.valueOf(crcKCount); line += "; t=" +String.valueOf(crcCount);}}
 		line += ","; skipDetailflag = false; if(rpteCount > 0){ if(rpteCount== rpteKCount) {line += "Y"; skipDetailflag = true;} else { if(rpteKCount>0){line+="B";}else{line+="N"; skipDetailflag = true;}} if(!skipDetailflag) { line += "; k=" +String.valueOf(rpteKCount); line += "; t=" +String.valueOf(rpteCount) ;}} line +=  ",k=" + killedCRCs + ",nk=" + notKilledCRCs +  System.lineSeparator();
 		try {
-			File file = new File("/home/roshan/Projects/XPA/Experiments/results.csv");
+			File file = new File("lives.csv");
+			FileWriter fr = new FileWriter(file, true);
+			BufferedWriter br = new BufferedWriter(fr);
+			br.write(line);
+			br.close();
+			fr.close();
+		}catch(Exception e) {
+			
+		}
+		boolean allKilled = false;
+		
+		//System.out.print(arg0);
+		return killedCount;
+	}*/
+	
+	/* percentage mode */
+	
+	public int updateMutantTestResult(Vector<Vector<Object>> data, TestSuite testSuite, File mutantFolder) throws SAXException, IOException, ParsingException, ParserConfigurationException{
+		int mutantIndex=0;
+		int killedCount= 0;
+		
+		
+		
+		int creCount= 0;
+		int rttCount= 0;
+		int rtfCount= 0;
+		int rctCount= 0;
+		int rcfCount= 0;
+		int anfCount= 0;
+		int rnfCount= 0;
+		int rerCount= 0;
+		int pttCount= 0;
+		int ptfCount= 0;
+		int fprCount= 0;
+		int fdrCount= 0;
+		int crcCount= 0;
+		int rpteCount= 0;
+		
+		
+		int creKCount= 0;
+		int rttKCount= 0;
+		int rtfKCount= 0;
+		int rctKCount= 0;
+		int rcfKCount= 0;
+		int anfKCount= 0;
+		int rnfKCount= 0;
+		int rerKCount= 0;
+		int pttKCount= 0;
+		int ptfKCount= 0;
+		int fprKCount= 0;
+		int fdrKCount= 0;
+		int crcKCount= 0;
+		int rpteKCount= 0;
+		
+		String killedCRCs="";
+		String notKilledCRCs="";
+		
+		
+		for (Mutant mutant : policyMutantSuite) {
+			Vector<Object> vector = data.get(mutantIndex);
+			//vector.set(vector.size()-1, TestSuite.runTests(mutant.getTestResult());
+			
+			
+			// TO BE DONE
+			String absoluteMutantFileName = mutantFolder.getAbsolutePath() + File.separator + mutant.getName() + ".xml";
+			AbstractPolicy policy = null;
+			try{
+				policy = PolicyLoader.loadPolicy(new File(absoluteMutantFileName));
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			mutant.setPolicy(policy);
+			List<Boolean> results = testSuite.runTests(mutant);
+			mutant.setPolicy(null);
+			int countFailed = 0;
+			for(Boolean b:results) {
+				if(!b) {
+					countFailed++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("CRE")>0) {
+				creCount++;
+				if(countFailed > 0) {
+					creKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("RTT")>0) {
+				rttCount++;
+				if(countFailed > 0) {
+					rttKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("RTF")>0) {
+				rtfCount++;
+				if(countFailed > 0) {
+					rtfKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("RCT")>0) {
+				rctCount++;
+				if(countFailed > 0) {
+					rctKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("RCF")>0) {
+				rcfCount++;
+				if(countFailed > 0) {
+					rcfKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("ANF")>0) {
+				anfCount++;
+				if(countFailed > 0) {
+					anfKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("RNF")>0) {
+				rnfCount++;
+				if(countFailed > 0) {
+					rnfKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("RER")>0) {
+				rerCount++;
+				if(countFailed > 0) {
+					rerKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("PTT")>0) {
+				pttCount++;
+				if(countFailed > 0) {
+					pttKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("PTF")>0) {
+				ptfCount++;
+				if(countFailed > 0) {
+					ptfKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("FPR")>0) {
+				fprCount++;
+				if(countFailed > 0) {
+					fprKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("FDR")>0) {
+				fdrCount++;
+				if(countFailed > 0) {
+					fdrKCount++;
+				}
+			}
+			
+			if(mutant.getName().indexOf("CRC")>0) {
+				crcCount++;
+				if(countFailed > 0) {
+					crcKCount++;
+					killedCRCs += "("+ mutant.getName().substring(mutant.getName().indexOf("CRC"));  
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("PO"))) {
+						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "PO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("DO"))) {
+						killedCRCs += ":{" +  Experiment.currentPolicyCA + "->" + "DO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("OPO"))) {
+						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "OPO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("ODO"))) {
+						killedCRCs += ":{" +  Experiment.currentPolicyCA + "->" + "ODO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("FA"))) {
+						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "FA}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("PUD"))) {
+						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "PUD}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("DUP"))) {
+						killedCRCs += ":{" + Experiment.currentPolicyCA + "->" + "DUP}  ";
+					}
+					killedCRCs += ")  ";
+				} else {
+					notKilledCRCs +=  "("+ mutant.getName().substring(mutant.getName().indexOf("CRC"));  
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("PO"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "PO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("DO"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "DO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("OPO"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "OPO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("ODO"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "ODO}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("FA"))) {
+						notKilledCRCs +=":{" + Experiment.currentPolicyCA + "->" + "FA}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("PUD"))) {
+						notKilledCRCs += ":{" + Experiment.currentPolicyCA + "->" + "PUD}  ";
+					}
+					if(policy.getCombiningAlg().getIdentifier().toString().equals(CombiningAlgorithmURI.map.get("DUP"))) {
+						notKilledCRCs += ":{" + Experiment.currentPolicyCA + "->" + "DUP}  ";
+					}
+					notKilledCRCs += ")  ";
+				}
+			}
+			
+			if(mutant.getName().indexOf("RPTE")>0) {
+				rpteCount++;
+				if(countFailed > 0) {
+					rpteKCount++;
+				}
+			}
+			
+			
+			String col = "Live (0 test failed)";
+			if(countFailed > 0) {
+				killedCount++;
+				if(countFailed == 1) {
+					col = "Killed (1 test failed)";
+				} else {
+					col = "Killed (" + countFailed + " tests failed)";
+				}
+			}
+			
+			vector.set(vector.size()-1, col);
+			mutantIndex++;
+			if(mutantIndex%100==0) {
+				System.out.println("------"+mutantIndex+"-kc-"+killedCount);
+			}
+		}
+		boolean skipDetailflag = false; 
+		String line = ","; if(creCount > 0){ if(creCount== creKCount) {line += "100"; skipDetailflag = true;} else { if(creKCount>0){line+="";}else{line+="0"; skipDetailflag = true; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(creKCount/creCount*100);}}
+		
+		line += ","; skipDetailflag = false; if(rttCount > 0){ if(rttCount== rttKCount) {line += "100"; skipDetailflag = true;} else { if(rttKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rttKCount/(float)rttCount*100);}}
+		line += ","; skipDetailflag = false; if(rtfCount > 0){ if(rtfCount== rtfKCount) {line += "100"; skipDetailflag = true;} else { if(rtfKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rtfKCount/(float)rtfCount*100);}}
+		line += ","; skipDetailflag = false; if(rctCount > 0){ if(rctCount== rctKCount) {line += "100"; skipDetailflag = true;} else { if(rctKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rctKCount/(float)rctCount*100);}}
+		line += ","; skipDetailflag = false; if(rcfCount > 0){ if(rcfCount== rcfKCount) {line += "100"; skipDetailflag = true;} else { if(rcfKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rcfKCount/(float)rcfCount*100);}}
+		line += ","; skipDetailflag = false; if(anfCount > 0){ if(anfCount== anfKCount) {line += "100"; skipDetailflag = true;} else { if(anfKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(anfKCount/(float)anfCount*100);}}
+		line += ","; skipDetailflag = false; if(rnfCount > 0){ if(rnfCount== rnfKCount) {line += "100"; skipDetailflag = true;} else { if(rnfKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rnfKCount/(float)rnfCount*100);}}
+		line += ","; skipDetailflag = false; if(rerCount > 0){ if(rerCount== rerKCount) {line += "100"; skipDetailflag = true;} else { if(rerKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rerKCount/(float)rerCount*100);}}
+	
+		line += ","; skipDetailflag = false; if(pttCount > 0){ if(pttCount== pttKCount) {line += "100"; skipDetailflag = true;} else { if(pttKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(pttKCount/(float)pttCount*100);}}
+		line += ","; skipDetailflag = false; if(ptfCount > 0){ if(ptfCount== ptfKCount) {line += "100"; skipDetailflag = true;} else { if(ptfKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(ptfKCount/(float)ptfCount*100);}}
+		line += ","; skipDetailflag = false; if(fprCount > 0){ if(fprCount== fprKCount) {line += "100"; skipDetailflag = true;} else { if(fprKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(fprKCount/(float)fprCount*100);}}
+		line += ","; skipDetailflag = false; if(fdrCount > 0){ if(fdrCount== fdrKCount) {line += "100"; skipDetailflag = true;} else { if(fdrKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(fdrKCount/(float)fdrCount*100);}}
+		line += ","; skipDetailflag = false; if(crcCount > 0){ if(crcCount== crcKCount) {line += "100"; skipDetailflag = true;} else { if(crcKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(crcKCount/(float)crcCount*100);}}
+		line += ","; skipDetailflag = false; if(rpteCount > 0){ if(rpteCount== rpteKCount) {line += "100"; skipDetailflag = true;} else { if(rpteKCount>0){line+="";}else{line+="0"; skipDetailflag = true;}} if(!skipDetailflag) { line += "" +String.valueOf(rpteKCount/(float)rpteCount*100); ;}} line +=  ",k=" + killedCRCs + ",nk=" + notKilledCRCs +  System.lineSeparator();
+		try {
+			File file = new File("lives.csv");
 			FileWriter fr = new FileWriter(file, true);
 			BufferedWriter br = new BufferedWriter(fr);
 			br.write(line);
@@ -463,7 +727,7 @@ public class PolicySpreadSheetMutantSuite {
 		//System.out.print(arg0);
 		return killedCount;
 	}
-	*/
+	
 	
 	public void runAndWriteDetectionInfoToExcelFile(String fileName, String testSuiteSpreadSheet) throws Exception {
 		PolicySpreadSheetTestSuite tests = null;
