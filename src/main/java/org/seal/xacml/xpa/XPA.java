@@ -110,20 +110,20 @@ public class XPA extends JFrame implements ItemListener, ActionListener {
 				createNavigationIcon("generatecoveragetests"), "GenerateCoverageBasedTests",
 				new Integer(KeyEvent.VK_G));
 
-		generateMutationTestsAction = new GenerateMutationBasedTestsAction("Generate Mutation-Based Tests...",
+		generateMutationTestsAction = new GenerateMutationBasedTestsAction("Generate Optimal Mutation-Based Tests...",
 				createNavigationIcon("generatemutationtests"), "GenerateMutationBasedTests",
 				new Integer(KeyEvent.VK_M));
 
-		generatePNOMutationTestsAction = new GeneratePNOMutationBasedTestsAction("Generate PNO Mutation-Based Tests...",
+		generatePNOMutationTestsAction = new GeneratePNOMutationBasedTestsAction("Generate Non-optimal Mutation-Based Tests...",
 				createNavigationIcon("generatemutationtests"), "GenerateMutationBasedTests",
-				new Integer(KeyEvent.VK_M));
+				new Integer(KeyEvent.VK_N));
 
 		runTestsAction = new RunTestsAction("Run Tests",
 				createNavigationIcon("runtests"), "RunTests", new Integer(
 						KeyEvent.VK_R));
 		evaluateCoverageAction = new EvaluateCoverageAction("Evaluate Coverage",
 				createNavigationIcon("evaluateCoverage"), "EvaluateCoverage", new Integer(
-						KeyEvent.VK_R));
+						KeyEvent.VK_E));
 
 		openMutantsAction = new OpenMutantsAction(
 				"Open Mutants...", createNavigationIcon("openmutants"),
